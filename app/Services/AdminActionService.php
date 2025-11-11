@@ -104,8 +104,8 @@ class AdminActionService
     {
         $campaign = Campaign::findOrFail($campaignId);
 
-        if ($campaign->status !== 'pending') {
-            throw new \InvalidArgumentException('Campaign is not pending approval');
+        if ($campaign->status !== 'under_review') {
+            throw new \InvalidArgumentException('Campaign is not under review');
         }
 
         $campaign->update(['status' => 'approved']);
@@ -130,8 +130,8 @@ class AdminActionService
     {
         $campaign = Campaign::findOrFail($campaignId);
 
-        if ($campaign->status !== 'pending') {
-            throw new \InvalidArgumentException('Campaign is not pending');
+        if ($campaign->status !== 'under_review') {
+            throw new \InvalidArgumentException('Campaign is not under review');
         }
 
         $campaign->update(['status' => 'rejected']);
@@ -262,6 +262,9 @@ class AdminActionService
      */
     public function notifyAllAdminsOfPendingCampaign(Campaign $campaign): void
     {
+        // Update campaign status to under_review when notifying admins
+        $campaign->update(['status' => 'under_review']);
+
         // Get all users with admin role
         $adminUsers = \App\Models\User::where('role', 'admin')->get();
 
