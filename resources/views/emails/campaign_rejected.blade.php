@@ -19,7 +19,7 @@
         </div>
 
         <div class="content">
-            <p>Dear {{ $campaign->client_name }},</p>
+            <p>Dear {{ $campaign->client->name }},</p>
 
             <p>We regret to inform you that your campaign submission has not been approved at this time.</p>
 
