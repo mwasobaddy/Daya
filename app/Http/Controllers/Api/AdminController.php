@@ -1,0 +1,143 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Campaign;
+use App\Models\User;
+use App\Services\VentureShareService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Mail;
+
+class AdminController extends Controller
+{
+    protected $ventureShareService;
+
+    public function __construct(VentureShareService $ventureShareService)
+    {
+        $this->ventureShareService = $ventureShareService;
+    }
+
+    /**
+     * Approve a pending campaign
+     */
+    public function approveCampaign(Request $request, $campaignId)
+    {
+        $request->validate([
+            'admin_token' => 'required|string', // Simple token-based auth for demo
+        ]);
+
+        // Simple admin authentication (in production, use proper auth)
+        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $campaign = Campaign::findOrFail($campaignId);
+
+        if ($campaign->status !== 'pending') {
+            return response()->json(['message' => 'Campaign is not pending'], 400);
+        }
+
+        $campaign->update(['status' => 'approved']);
+
+        // Notify DCD that campaign is approved
+        $dcd = User::find($campaign->dcd_id);
+        $client = User::find($campaign->client_id);
+
+        Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
+
+        return response()->json(['message' => 'Campaign approved successfully']);
+    }
+
+    /**
+     * Mark a campaign as completed and allocate venture shares
+     */
+    public function completeCampaign(Request $request, $campaignId)
+    {
+        $request->validate([
+            'admin_token' => 'required|string',
+        ]);
+
+        // Simple admin authentication
+        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $campaign = Campaign::findOrFail($campaignId);
+
+        if ($campaign->status !== 'approved') {
+            return response()->json(['message' => 'Campaign must be approved first'], 400);
+        }
+
+        $campaign->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        // Allocate venture shares for campaign completion
+        $dcd = User::find($campaign->dcd_id);
+        $this->ventureShareService->allocateSharesForCampaignCompletion($dcd, $campaign->budget);
+
+        // Notify client and DCD
+        $client = User::find($campaign->client_id);
+        Mail::to($client->email)->send(new \App\Mail\CampaignCompleted($campaign, $dcd));
+        Mail::to($dcd->email)->send(new \App\Mail\CampaignCompleted($campaign, $client));
+
+        return response()->json(['message' => 'Campaign completed successfully']);
+    }
+
+    /**
+     * Get all campaigns for admin review
+     */
+    public function getCampaigns(Request $request)
+    {
+        $request->validate([
+            'admin_token' => 'required|string',
+        ]);
+
+        // Simple admin authentication
+        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $campaigns = Campaign::with(['client', 'dcd'])
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+
+        return response()->json($campaigns);
+    }
+
+    /**
+     * Get venture shares summary for all users
+     */
+    public function getVentureSharesSummary(Request $request)
+    {
+        $request->validate([
+            'admin_token' => 'required|string',
+        ]);
+
+        // Simple admin authentication
+        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $users = User::whereIn('role', ['da', 'dcd', 'client'])
+                    ->with('ventureShares')
+                    ->get()
+                    ->map(function ($user) {
+                        $totalShares = $this->ventureShareService->getTotalShares($user);
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'role' => $user->role,
+                            'kedds_total' => $totalShares['kedds'],
+                            'kedws_total' => $totalShares['kedws'],
+                            'referral_code' => $user->referral_code,
+                        ];
+                    });
+
+        return response()->json($users);
+    }
+}
