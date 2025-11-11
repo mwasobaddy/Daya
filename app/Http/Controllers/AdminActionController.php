@@ -18,7 +18,7 @@ class AdminActionController extends Controller
     public function handleAction(Request $request, $action, $token)
     {
         try {
-            $result = $this->adminActionService->executeAction($action, $token);
+            $result = $this->adminActionService->executeAction($token, $action);
 
             if (!$result['success']) {
                 return response()->view('admin-action.error', [
