@@ -30,4 +30,5 @@ yarn-error.log
 
 # custom ignores
 PRD.md
-index.html
+index-client.html
+index-dcd.html
