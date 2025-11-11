@@ -16,10 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable()->unique();
+            $table->string('national_id')->nullable()->unique();
             $table->enum('role', ['da', 'dcd', 'client', 'admin'])->nullable();
             $table->string('referral_code')->unique()->nullable();
             $table->string('qr_code')->nullable();
             $table->string('wallet_status')->default('pending'); // pending, activated
+            $table->string('wallet_pin')->nullable();
+            $table->enum('wallet_type', ['personal', 'business', 'both'])->nullable();
             $table->json('profile')->nullable(); // for additional data
             $table->string('country')->nullable();
             $table->string('business_name')->nullable();
