@@ -26,11 +26,11 @@
 
             <div class="referral-code">
                 <strong>Referral Link:</strong><br>
-                <a href="{{ url('/dcd/register?ref=' . $user->referral_code) }}" style="color: #007bff; text-decoration: none; word-break: break-all;">
-                    {{ url('/dcd/register?ref=' . $user->referral_code) }}
+                <a href="{{ url('/?ref=' . $user->referral_code) }}" style="color: #007bff; text-decoration: none; word-break: break-all;">
+                    {{ url('/?ref=' . $user->referral_code) }}
                 </a>
                 <br><br>
-                <button onclick="copyToClipboard('{{ url('/dcd/register?ref=' . $user->referral_code) }}')" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                <button onclick="copyToClipboard('{{ url('/?ref=' . $user->referral_code) }}')" style="background-color: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                     📋 Copy Link
                 </button>
                 <span id="copy-status" style="margin-left: 10px; font-size: 12px; color: #666;"></span>

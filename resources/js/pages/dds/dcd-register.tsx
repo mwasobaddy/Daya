@@ -180,7 +180,7 @@ export default function DcdRegister() {
 
                 // Extract referral code from URL parameters (ref, referral, or code)
                 const referralCode = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('code');
-                if (referralCode && referralCode.length === 6 && /^[A-Za-z0-9]{6}$/.test(referralCode)) {
+                if (referralCode && referralCode.length >= 6 && /^[A-Za-z0-9]{6,8}$/.test(referralCode)) {
                     setData(prev => ({ ...prev, referral_code: referralCode.toUpperCase() }));
                 }
             }
@@ -286,7 +286,7 @@ export default function DcdRegister() {
     };
 
     const validateReferralCode = async (code: string) => {
-        if (!code || code.length !== 6) {
+        if (!code || code.length < 6) {
             setReferralValid(null);
             setReferralMessage('');
             return;

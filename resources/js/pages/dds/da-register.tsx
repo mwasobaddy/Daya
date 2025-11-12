@@ -189,7 +189,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 // Extract referral code from URL parameters (ref, referral, or code)
                 const referralCode = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('code');
 
-                if (referralCode && referralCode.length === 6 && /^[A-Za-z0-9]{6}$/.test(referralCode)) {
+                if (referralCode && referralCode.length >= 6 && /^[A-Za-z0-9]{6,8}$/.test(referralCode)) {
                     setData('referral_code', referralCode.toUpperCase());
                 } else {
                     // No referral code in URL, fetch admin's referral code
@@ -281,7 +281,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     };
 
     const validateReferralCode = async (code: string) => {
-        if (!code || code.length !== 6) {
+        if (!code || code.length < 6) {
             setReferralValid(null);
             setReferralMessage('');
             return;

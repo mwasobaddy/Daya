@@ -147,7 +147,7 @@ class AdminController extends Controller
     public function validateReferralCode(Request $request)
     {
         $request->validate([
-            'referral_code' => 'required|string|size:6|regex:/^[A-Z0-9]{6}$/',
+            'referral_code' => 'required|string|min:6|max:8|regex:/^[A-Z0-9]{6,8}$/',
         ]);
 
         $referralCode = strtoupper($request->referral_code);

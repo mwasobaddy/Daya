@@ -27,7 +27,7 @@ class DaController extends Controller
             \Log::info('DA Create request received', $request->all());
 
             $request->validate([
-                'referral_code' => 'nullable|string|regex:/^[A-Za-z0-9]{6}$/',
+                'referral_code' => 'nullable|string|regex:/^[A-Za-z0-9]{6,8}$/',
                 'full_name' => 'required|string|max:255',
                 'national_id' => 'required|string|unique:users,national_id',
                 'dob' => 'required|date|before:today',
@@ -56,7 +56,7 @@ class DaController extends Controller
 
             // Find the referrer (if referral code provided and valid)
             $referrer = null;
-            if ($request->referral_code && strlen($request->referral_code) === 6) {
+            if ($request->referral_code && strlen($request->referral_code) >= 6) {
                 $referrer = User::where('referral_code', strtoupper($request->referral_code))->first();
             }
 

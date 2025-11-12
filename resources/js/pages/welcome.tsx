@@ -71,7 +71,7 @@ export default function Welcome({
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-center">
-                                    <Link href="/da/register">
+                                    <Link href={`/da/register${window.location.search}`}>
                                         <Button className="w-full">
                                             Register as DA
                                         </Button>
@@ -88,7 +88,7 @@ export default function Welcome({
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-center">
-                                    <Link href="/dcd/register">
+                                    <Link href={`/dcd/register${window.location.search}`}>
                                         <Button className="w-full">
                                             Register as DCD
                                         </Button>
@@ -105,7 +105,7 @@ export default function Welcome({
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-center">
-                                    <Link href="/campaign/submit">
+                                    <Link href={`/campaign/submit${window.location.search}`}>
                                         <Button className="w-full">
                                             Submit Campaign
                                         </Button>
