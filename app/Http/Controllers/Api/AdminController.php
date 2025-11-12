@@ -140,4 +140,55 @@ class AdminController extends Controller
 
         return response()->json($users);
     }
+
+    /**
+     * Validate a referral code
+     */
+    public function validateReferralCode(Request $request)
+    {
+        $request->validate([
+            'referral_code' => 'required|string|size:6|regex:/^[A-Z0-9]{6}$/',
+        ]);
+
+        $referralCode = strtoupper($request->referral_code);
+
+        // Check if referral code exists in users table (case-insensitive search)
+        $user = User::whereRaw('UPPER(referral_code) = ?', [$referralCode])->first();
+
+        if (!$user) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Invalid referral code'
+            ], 400);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Valid referral code',
+            'referrer' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role
+            ]
+        ]);
+    }
+
+    /**
+     * Get the admin's referral code
+     */
+    public function getAdminReferralCode()
+    {
+        $admin = User::where('role', 'admin')->first();
+
+        if (!$admin || !$admin->referral_code) {
+            return response()->json([
+                'error' => 'Admin referral code not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'referral_code' => $admin->referral_code,
+            'admin_name' => $admin->name
+        ]);
+    }
 }

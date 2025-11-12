@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CountriesController;
 use App\Http\Controllers\Api\CountiesController;
 use App\Http\Controllers\Api\SubcountiesController;
+use App\Http\Controllers\Api\WardsController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\ScanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +43,11 @@ Route::prefix('client')->group(function () {
 Route::get('/countries', [CountriesController::class, 'index']);
 Route::get('/counties', [CountiesController::class, 'index']);
 Route::get('/subcounties', [SubcountiesController::class, 'index']);
+Route::get('/wards', [WardsController::class, 'index']);
+
+// Referral code validation
+Route::post('/validate-referral', [AdminController::class, 'validateReferralCode']);
+Route::get('/admin-referral-code', [AdminController::class, 'getAdminReferralCode']);
 
 Route::prefix('admin')->group(function () {
     Route::post('/campaigns/{campaignId}/approve', [AdminController::class, 'approveCampaign']);
