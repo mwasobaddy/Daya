@@ -1222,6 +1222,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <SelectContent className="bg-white dark:bg-slate-800 border-green-300 dark:border-green-600/20">
                                         <SelectItem value="personal">Personal</SelectItem>
                                         <SelectItem value="business">Business</SelectItem>
+                                        <SelectItem value="both">Both</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.wallet_type && (

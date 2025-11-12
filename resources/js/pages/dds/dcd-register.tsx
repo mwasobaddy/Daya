@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv, XCircle } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 declare global {
     interface Window {
@@ -628,17 +630,120 @@ export default function DcdRegister() {
         }
     };
 
-    const submit = (e: React.FormEvent) => {
+    const handleRegistrationError = (errors: any) => {
+        console.log('DCD registration error details:', errors);
+
+        // Check if errors is an object with field-specific errors
+        if (typeof errors === 'object' && errors !== null) {
+            // Get the first error message from validation errors
+            const errorKeys = Object.keys(errors);
+            if (errorKeys.length > 0) {
+                const firstErrorKey = errorKeys[0];
+                const firstError = errors[firstErrorKey];
+
+                // Handle array of errors or single error
+                const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+
+                // Show specific field error
+                toast.error(`Error: ${errorMessage}\nPlease check the ${firstErrorKey.replace('_', ' ')} field`, {
+                    autoClose: 6000
+                });
+                return;
+            }
+        }
+
+        // Check for specific error messages from the server
+        if (typeof errors === 'string') {
+            if (errors.includes('email') && errors.includes('unique')) {
+                toast.error('This email address is already registered. Please use a different email or try logging in.', {
+                    autoClose: 7000
+                });
+                return;
+            }
+            if (errors.includes('national_id') && errors.includes('unique')) {
+                toast.error('This National ID is already registered in our system.', {
+                    autoClose: 6000
+                });
+                return;
+            }
+            if (errors.includes('referral_code')) {
+                toast.error('Invalid referral code. Please check and try again.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+        }
+
+        // Check for network/server errors
+        if (errors?.message) {
+            if (errors.message.includes('network') || errors.message.includes('fetch')) {
+                toast.error('Network error. Please check your internet connection and try again.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+            if (errors.message.includes('500') || errors.message.includes('server')) {
+                toast.error('Server error. Please try again in a few moments.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+        }
+
+        // Default fallback error
+        toast.error('Registration failed. Please check your information and try again.\nIf the problem persists, contact support.', {
+            autoClose: 5000
+        });
+    };
+
+    const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (currentStep === 'account') {
             if (!validateStep('account')) {
+                toast.error('Please fill all required fields correctly before submitting.\nCheck the form for any highlighted errors.', {
+                    autoClose: 4000
+                });
                 return;
             }
+            
+            console.log('Submitting DCD registration with data:', data);
             setProcessing(true);
-            setTimeout(() => {
+
+            try {
+                const response = await fetch('/api/dcd/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log('DCD registration successful:', result);
+                    setProcessing(false);
+                    toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your account details.', {
+                        autoClose: 3000
+                    });
+                    // Redirect to welcome page after success
+                    setTimeout(() => {
+                        window.location.href = 'http://127.0.0.1:8000/dcd/register?started=true';
+                    }, 3000);
+                } else {
+                    console.log('DCD registration error:', result);
+                    setProcessing(false);
+                    handleRegistrationError(result);
+                }
+            } catch (error) {
+                console.log('Network error:', error);
                 setProcessing(false);
-                alert('Registration successful! (Demo mode)');
-            }, 2000);
+                toast.error('Network error. Please check your internet connection and try again.', {
+                    autoClose: 5000
+                });
+            }
         } else {
             nextStep();
         }
@@ -1282,12 +1387,12 @@ export default function DcdRegister() {
                                 </Label>
                                 <Select value={data.wallet_type} onValueChange={(value) => setData(prev => ({ ...prev, wallet_type: value }))}>
                                     <SelectTrigger className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none">
-                                        <SelectValue placeholder="Select your preferred wallet" />
+                                        <SelectValue placeholder="Select Wallet Type" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-green-300 dark:border-green-600/20">
-                                        <SelectItem value="mpesa">M-Pesa</SelectItem>
-                                        <SelectItem value="airtel">Airtel Money</SelectItem>
-                                        <SelectItem value="bank">Bank Account</SelectItem>
+                                        <SelectItem value="personal">Personal</SelectItem>
+                                        <SelectItem value="business">Business</SelectItem>
+                                        <SelectItem value="both">Both</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -1641,6 +1746,18 @@ export default function DcdRegister() {
                     </div>
                 </div>
             )}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
         </div>
     );
 }
