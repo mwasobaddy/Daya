@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -56,7 +56,6 @@ export default function CampaignSubmit({ flash }: Props) {
     const [subcounties, setSubcounties] = useState<Subcounty[]>([]);
     const [subcountiesLoading, setSubcountiesLoading] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState<string>('');
-    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const turnstileRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -83,10 +82,13 @@ export default function CampaignSubmit({ flash }: Props) {
             document.head.appendChild(script);
         }
 
+        // Capture the element reference for cleanup
+        const turnstileElement = turnstileRef.current;
+
         // Wait for Turnstile to be available and render the widget
         const renderTurnstile = () => {
-            if (window.turnstile && turnstileRef.current) {
-                window.turnstile.render(turnstileRef.current, {
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.render(turnstileElement, {
                     sitekey: '1x00000000000000000000AA',
                     callback: (token: string) => {
                         setTurnstileToken(token);
@@ -101,8 +103,8 @@ export default function CampaignSubmit({ flash }: Props) {
         renderTurnstile();
 
         return () => {
-            if (window.turnstile && turnstileRef.current) {
-                window.turnstile.remove(turnstileRef.current);
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.remove(turnstileElement);
             }
         };
     }, []);
@@ -298,7 +300,6 @@ export default function CampaignSubmit({ flash }: Props) {
             }
         }
 
-        setValidationErrors(newErrors);
         return isValid;
     };
 
@@ -332,7 +333,6 @@ export default function CampaignSubmit({ flash }: Props) {
                     reset();
                     setCurrentStep('account');
                     setTurnstileToken('');
-                    setValidationErrors({});
 
                     // Show success toast
                     toast.success(result.message || 'Campaign submitted successfully!');
@@ -349,7 +349,6 @@ export default function CampaignSubmit({ flash }: Props) {
                         Object.entries(result.errors).forEach(([key, messages]) => {
                             formattedErrors[key] = Array.isArray(messages) ? messages[0] : messages;
                         });
-                        setValidationErrors(formattedErrors);
                         toast.error('Please check the form for validation errors and try again.');
                     } else {
                         // Handle general errors
