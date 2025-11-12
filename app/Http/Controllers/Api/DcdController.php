@@ -77,13 +77,10 @@ class DcdController extends Controller
             'turnstile_token' => 'required|string',
         ]);
 
-        // Find the DA who referred this DCD (if referral code provided)
+        // Find the referrer (if referral code provided) - can be any role
         $referrer = null;
         if ($request->referral_code) {
             $referrer = User::where('referral_code', $request->referral_code)->first();
-            if ($referrer && $referrer->role !== 'da') {
-                return response()->json(['message' => 'Invalid referral code'], 400);
-            }
         }
 
         // Create the user with comprehensive profile data
