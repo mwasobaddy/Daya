@@ -31,6 +31,8 @@ interface Country {
     id: number;
     name: string;
     code: string;
+    county_label: string;
+    subcounty_label: string;
 }
 
 interface County {
@@ -51,6 +53,8 @@ export default function CampaignSubmit({ flash }: Props) {
     const [currentStep, setCurrentStep] = useState<Step>('account');
     const [countries, setCountries] = useState<Country[]>([]);
     const [countriesLoading, setCountriesLoading] = useState(true);
+    const [countyLabel, setCountyLabel] = useState('County');
+    const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
     const [counties, setCountys] = useState<County[]>([]);
     const [countiesLoading, setCountysLoading] = useState(false);
     const [subcounties, setSubcounties] = useState<Subcounty[]>([]);
@@ -134,6 +138,18 @@ export default function CampaignSubmit({ flash }: Props) {
             setSubcounties([]);
         } finally {
             setSubcountiesLoading(false);
+        }
+    };
+
+    // Update labels based on selected country
+    const updateLabels = (countryValue: string) => {
+        const selectedCountry = countries.find(country => country.code.toLowerCase() === countryValue);
+        if (selectedCountry) {
+            setCountyLabel(selectedCountry.county_label);
+            setSubcountyLabel(selectedCountry.subcounty_label);
+        } else {
+            setCountyLabel('County');
+            setSubcountyLabel('Sub-county');
         }
     };
 
@@ -487,7 +503,10 @@ export default function CampaignSubmit({ flash }: Props) {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="group">
                                     <Label htmlFor="country" className="text-sm font-medium text-gray-700 mb-2 block">Country *</Label>
-                                    <Select value={data.country} onValueChange={(value) => setData('country', value)} disabled={countriesLoading}>
+                                    <Select value={data.country} onValueChange={(value) => {
+                                        setData('country', value);
+                                        updateLabels(value);
+                                    }} disabled={countriesLoading}>
                                         <SelectTrigger className="transition-all duration-200 hover:border-blue-400 focus:ring-2 focus:ring-blue-500">
                                             <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select your country"} />
                                         </SelectTrigger>
@@ -779,6 +798,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                             value={data.target_country}
                                             onValueChange={(value) => {
                                                 setData('target_country', value);
+                                                updateLabels(value);
                                                 setData('target_county', '');
                                                 setData('target_subcounty', '');
                                                 setCountys([]);
@@ -803,7 +823,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_county" className="text-xs text-gray-600 mb-1.5 block">County</Label>
+                                        <Label htmlFor="target_county" className="text-xs text-gray-600 mb-1.5 block">{countyLabel}</Label>
                                         <Select
                                             value={data.target_county}
                                             onValueChange={(value) => {
@@ -818,7 +838,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                             disabled={countiesLoading || !data.target_country}
                                         >
                                             <SelectTrigger className="transition-all duration-200 hover:border-orange-400 focus:ring-2 focus:ring-orange-500">
-                                                <SelectValue placeholder={countiesLoading ? "Loading..." : "Select county"} />
+                                                <SelectValue placeholder={countiesLoading ? "Loading..." : `Select ${countyLabel.toLowerCase()}`} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {counties.map((county) => (
@@ -830,14 +850,14 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_subcounty" className="text-xs text-gray-600 mb-1.5 block">Sub-County</Label>
+                                        <Label htmlFor="target_subcounty" className="text-xs text-gray-600 mb-1.5 block">{subcountyLabel}</Label>
                                         <Select
                                             value={data.target_subcounty}
                                             onValueChange={(value) => setData('target_subcounty', value)}
                                             disabled={subcountiesLoading || !data.target_county}
                                         >
                                             <SelectTrigger className="transition-all duration-200 hover:border-orange-400 focus:ring-2 focus:ring-orange-500">
-                                                <SelectValue placeholder={subcountiesLoading ? "Loading..." : "Select sub-county"} />
+                                                <SelectValue placeholder={subcountiesLoading ? "Loading..." : `Select ${subcountyLabel.toLowerCase()}`} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {subcounties.map((subcounty) => (
