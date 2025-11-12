@@ -604,6 +604,17 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const handleRegistrationError = (errors: any) => {
         console.log('Registration error details:', errors);
 
+        // Check if this is actually a successful response coming through onError
+        if (typeof errors === 'object' && errors !== null && errors.message === 'DA registered successfully') {
+            console.log('Success response received through error handler:', errors);
+            setProcessing(false);
+            reset();
+            toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral code and QR code.', {
+                autoClose: 6000
+            });
+            return;
+        }
+
         // Check if errors is an object with field-specific errors
         if (typeof errors === 'object' && errors !== null) {
             // Get the first error message from validation errors
