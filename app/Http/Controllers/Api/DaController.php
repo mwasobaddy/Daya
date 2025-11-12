@@ -129,8 +129,13 @@ class DaController extends Controller
             // Send welcome email
             Mail::to($user->email)->send(new \App\Mail\DaWelcome($user, $referrer));
 
-            // Send admin notification email
-            Mail::to('admin@daya.com')->send(new \App\Mail\AdminDaRegistration($user, $referrer));
+            // Send admin notification email to all admin users
+            $adminUsers = User::where('role', 'admin')->get();
+            if ($adminUsers->count() > 0) {
+                foreach ($adminUsers as $admin) {
+                    Mail::to($admin->email)->send(new \App\Mail\AdminDaRegistration($user, $referrer));
+                }
+            }
 
             return response()->json([
                 'message' => 'DA registered successfully',
