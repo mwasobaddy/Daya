@@ -58,6 +58,23 @@ class DaController extends Controller
             $referrer = null;
             if ($request->referral_code && strlen($request->referral_code) >= 6) {
                 $referrer = User::where('referral_code', strtoupper($request->referral_code))->first();
+                if ($referrer) {
+                    \Log::info('Referrer found', [
+                        'referral_code' => $request->referral_code,
+                        'referrer_id' => $referrer->id,
+                        'referrer_name' => $referrer->name,
+                        'referrer_role' => $referrer->role
+                    ]);
+                } else {
+                    \Log::warning('Referral code provided but no referrer found', [
+                        'referral_code' => $request->referral_code
+                    ]);
+                }
+            } else {
+                \Log::info('No referral code provided or invalid length', [
+                    'referral_code' => $request->referral_code,
+                    'length' => $request->referral_code ? strlen($request->referral_code) : 0
+                ]);
             }
 
             // Create the user with comprehensive profile data
@@ -127,11 +144,20 @@ class DaController extends Controller
             }
 
             // Send welcome email
+            \Log::info('Sending welcome email', [
+                'user_id' => $user->id,
+                'referrer_id' => $referrer ? $referrer->id : null,
+                'referrer_name' => $referrer ? $referrer->name : 'None'
+            ]);
             Mail::to($user->email)->send(new \App\Mail\DaWelcome($user, $referrer));
 
             // Send admin notification email to all admin users
             $adminUsers = User::where('role', 'admin')->get();
             if ($adminUsers->count() > 0) {
+                \Log::info('Sending admin notifications', [
+                    'admin_count' => $adminUsers->count(),
+                    'referrer_info' => $referrer ? ['id' => $referrer->id, 'name' => $referrer->name, 'role' => $referrer->role] : null
+                ]);
                 foreach ($adminUsers as $admin) {
                     Mail::to($admin->email)->send(new \App\Mail\AdminDaRegistration($user, $referrer));
                 }

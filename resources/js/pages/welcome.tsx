@@ -114,7 +114,7 @@ export default function Welcome({
                             </Card>
                         </div>
 
-                        <div className="text-center">
+                        {/* <div className="text-center">
                             <p className="text-sm text-[color:var(--muted-foreground)] mb-4">
                                 Already have an account? Sign in to access your dashboard.
                             </p>
@@ -122,7 +122,7 @@ export default function Welcome({
                             <div className="mt-4 text-sm text-[color:var(--foreground)]">
                                 Selected role: <strong>{role ?? 'none'}</strong>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </main>
             </div>

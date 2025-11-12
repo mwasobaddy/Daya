@@ -63,11 +63,12 @@
                 <h4>📋 Referral Information</h4>
                 <p>This DA was referred by <strong>{{ $referrer->name }}</strong> ({{ $referrer->email }}).</p>
                 <p><strong>Referrer's Role:</strong> {{ ucfirst($referrer->role) }}</p>
+                <p><strong>Referral Code Used:</strong> {{ $referrer->referral_code }}</p>
             </div>
             @else
             <div class="referral-info">
                 <h4>📋 Referral Information</h4>
-                <p>This DA registered without a referral code.</p>
+                <p>This DA registered without a referral code or the referral code was invalid.</p>
             </div>
             @endif
 
@@ -102,12 +103,6 @@
                     <span class="value">{{ $user->profile['communication_channel'] ? ucfirst($user->profile['communication_channel']) : 'N/A' }}</span>
                 </div>
             </div>
-
-            <p style="text-align: center; margin: 30px 0;">
-                <a href="{{ url('/admin/users') }}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                    View All Users
-                </a>
-            </p>
 
             <div class="footer">
                 <p>This is an automated notification from the Daya platform.</p>
