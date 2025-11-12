@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv } from 'lucide-react';
+import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv, XCircle } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 declare global {
@@ -74,6 +74,9 @@ export default function DcdRegister() {
     const [countyLabel, setCountyLabel] = useState('County');
     const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
     const turnstileRef = useRef(null);
+    const [referralValidating, setReferralValidating] = useState(false);
+    const [referralValid, setReferralValid] = useState<boolean | null>(null);
+    const [referralMessage, setReferralMessage] = useState('');
 
     const [data, setData] = useState({
         referral_code: '',
@@ -164,35 +167,36 @@ export default function DcdRegister() {
         fetchCountries();
     }, []);
 
-    // Check location permission when URL has started=true parameter
+    // Show form when URL has started=true parameter and extract referral code
     useEffect(() => {
-        const checkLocationPermission = async () => {
+        const checkShowForm = () => {
             if (typeof window !== 'undefined') {
                 const urlParams = new URLSearchParams(window.location.search);
                 const hasStartedParam = urlParams.get('started') === 'true';
 
-                if (hasStartedParam && !locationPermissionGranted) {
-                    try {
-                        await requestLocationPermission();
-                        // If location permission is granted, show the form
-                        setShowForm(true);
-                    } catch {
-                        // If location permission is denied or fails, still show the form
-                        // but don't set any default country - let user choose manually
-                        setData(prev => ({
-                            ...prev,
-                            county: '',
-                            subcounty: '',
-                            ward: '',
-                        }));
-                        setShowForm(true);
-                    }
+                if (hasStartedParam) {
+                    setShowForm(true);
+                }
+
+                // Extract referral code from URL parameters (ref, referral, or code)
+                const referralCode = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('code');
+                if (referralCode && referralCode.length === 6 && /^[A-Za-z0-9]{6}$/.test(referralCode)) {
+                    setData(prev => ({ ...prev, referral_code: referralCode.toUpperCase() }));
                 }
             }
         };
 
-        checkLocationPermission();
-    }, [locationPermissionGranted]);
+        checkShowForm();
+    }, []);
+
+    // Validate referral code when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateReferralCode(data.referral_code);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.referral_code]);
 
     // Update labels based on selected country
     const updateLabels = (countryValue: string) => {
@@ -281,6 +285,168 @@ export default function DcdRegister() {
         }
     };
 
+    const validateReferralCode = async (code: string) => {
+        if (!code || code.length !== 6) {
+            setReferralValid(null);
+            setReferralMessage('');
+            return;
+        }
+
+        setReferralValidating(true);
+        try {
+            const response = await fetch('/api/validate-referral', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ referral_code: code.toUpperCase() }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setReferralValid(true);
+                setReferralMessage(`Valid referral code from ${result.referrer.name}`);
+            } else {
+                setReferralValid(false);
+                setReferralMessage(result.message || 'Invalid referral code');
+            }
+        } catch (error) {
+            setReferralValid(false);
+            setReferralMessage('Failed to validate referral code');
+        } finally {
+            setReferralValidating(false);
+        }
+    };
+
+    const autoFillLocation = async (locationData: any) => {
+        console.log('Auto-filling location with data:', locationData);
+        console.log('Full location data structure:', JSON.stringify(locationData, null, 2));
+
+        // Wait for countries to be loaded if they're not ready yet
+        if (countries.length === 0) {
+            console.log('Countries not loaded yet, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        if (countries.length === 0) {
+            console.log('Countries still not loaded, skipping auto-fill');
+            return;
+        }
+
+        // Check for country name with different possible field names
+        const countryName = locationData.countryName || locationData.country;
+        console.log('Country name from location data:', countryName);
+
+        if (countryName) {
+            console.log('Looking for country:', countryName);
+            console.log('Available countries:', countries.map(c => c.name));
+            
+            // Enhanced country matching with exact match priority
+            const detectedCountry = countries.find(country =>
+                country.name.toLowerCase() === countryName.toLowerCase()
+            ) || countries.find(country =>
+                country.name.toLowerCase().includes(countryName.toLowerCase()) ||
+                countryName.toLowerCase().includes(country.name.toLowerCase())
+            );
+
+            console.log('Detected country:', detectedCountry);
+
+            if (detectedCountry) {
+                // Set country and update labels
+                setData(prev => ({ ...prev, country: detectedCountry.name.toLowerCase() }));
+                updateLabels(detectedCountry.name.toLowerCase());
+
+                // Fetch counties for this country
+                await fetchCounties(detectedCountry.id);
+
+                // Wait for state to update
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // Get fresh counties data
+                const countiesResponse = await fetch(`/api/counties?country_id=${detectedCountry.id}`);
+                const countiesData = await countiesResponse.json();
+                console.log('Fetched counties:', countiesData);
+                console.log('Available county names:', countiesData.map((c: County) => c.name));
+
+                // Try to match county - check multiple possible field names
+                const subdivisionName = locationData.principalSubdivision || locationData.state || locationData.region || locationData.administrativeArea || locationData.locality;
+                console.log('Subdivision name from location data:', subdivisionName);
+
+                if (subdivisionName) {
+                    console.log('Looking for county:', subdivisionName);
+                    
+                    // Enhanced county matching with exact match priority
+                    const detectedCounty = countiesData.find((county: County) =>
+                        county.name.toLowerCase() === subdivisionName.toLowerCase()
+                    ) || countiesData.find((county: County) =>
+                        county.name.toLowerCase().includes(subdivisionName.toLowerCase()) ||
+                        subdivisionName.toLowerCase().includes(county.name.toLowerCase())
+                    );
+
+                    console.log('Detected county:', detectedCounty);
+
+                    if (detectedCounty) {
+                        setData(prev => ({ ...prev, county: detectedCounty.id.toString() }));
+
+                        // Fetch subcounties for this county
+                        await fetchSubcounties(detectedCounty.id);
+
+                        // Wait for state to update
+                        await new Promise(resolve => setTimeout(resolve, 200));
+
+                        // Get fresh subcounties data
+                        const subcountiesResponse = await fetch(`/api/subcounties?county_id=${detectedCounty.id}`);
+                        const subcountiesData = await subcountiesResponse.json();
+                        console.log('Fetched subcounties:', subcountiesData);
+                        console.log('Available subcounty names:', subcountiesData.map((s: Subcounty) => s.name));
+
+                        // Try to match subcounty/city - check multiple possible field names
+                        const cityName = locationData.city || locationData.locality || locationData.localityInfo?.localityName;
+                        console.log('City name from location data:', cityName);
+
+                        if (cityName) {
+                            console.log('Looking for subcounty/city:', cityName);
+                            
+                            // Enhanced subcounty matching with exact match priority
+                            const detectedSubcounty = subcountiesData.find((subcounty: Subcounty) =>
+                                subcounty.name.toLowerCase() === cityName.toLowerCase()
+                            ) || subcountiesData.find((subcounty: Subcounty) =>
+                                subcounty.name.toLowerCase().includes(cityName.toLowerCase()) ||
+                                cityName.toLowerCase().includes(subcounty.name.toLowerCase())
+                            );
+
+                            console.log('Detected subcounty:', detectedSubcounty);
+
+                            if (detectedSubcounty) {
+                                setData(prev => ({ ...prev, subcounty: detectedSubcounty.id.toString() }));
+
+                                // Fetch wards for this subcounty
+                                await fetchWards(detectedSubcounty.id);
+
+                                console.log('Location auto-filled successfully');
+                            } else {
+                                console.log('No matching subcounty found for:', cityName);
+                            }
+                        } else {
+                            console.log('No city/locality data in location response');
+                        }
+                    } else {
+                        console.log('No matching county found for:', subdivisionName);
+                    }
+                } else {
+                    console.log('No subdivision data in location response');
+                }
+            } else {
+                console.log('No matching country found for:', countryName);
+                console.log('Available countries:', countries.map(c => c.name));
+            }
+        } else {
+            console.log('No country name in location data');
+        }
+    };
+
     const requestLocationPermission = () => {
         return new Promise<void>((resolve, reject) => {
             if (!navigator.geolocation) {
@@ -302,31 +468,19 @@ export default function DcdRegister() {
                         longitude: longitude.toString(),
                     }));
 
-                    // Try to get location details using reverse geocoding (for logging/debugging only)
+                    // Try to get location details using reverse geocoding
                     try {
                         const response = await fetch(
                             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                         );
                         const locationData = await response.json();
+                        console.log('Reverse geocoding response:', locationData);
 
-                        // Log detected location for debugging (optional)
-                        console.log('Detected location:', {
-                            country: locationData.countryName,
-                            region: locationData.principalSubdivision,
-                            locality: locationData.locality
-                        });
-
+                        // Auto-populate location dropdowns
+                        await autoFillLocation(locationData);
                     } catch (error) {
-                        console.warn('Could not fetch location details:', error);
+                        console.log('Could not get detailed location info:', error);
                     }
-
-                    // Location coordinates saved, but don't set any default country
-                    setData(prev => ({
-                        ...prev,
-                        county: '',
-                        subcounty: '',
-                        ward: '',
-                    }));
 
                     setLocationPermissionGranted(true);
                     setLocationLoading(false);
@@ -351,18 +505,11 @@ export default function DcdRegister() {
                             break;
                     }
 
-                    alert(errorMessage);
-
-                    // Don't reject - allow the form to continue without location coordinates
-                    // Don't set any default country - let user choose manually
-                    setData(prev => ({
-                        ...prev,
-                        county: '',
-                        subcounty: '',
-                        ward: '',
-                    }));
-
-                    resolve();
+                    console.log('Location error:', errorMessage);
+                    
+                    // Reject so the button click handler can catch the error
+                    // Don't show alert since user explicitly clicked the button
+                    reject(new Error(errorMessage));
                 },
                 {
                     enableHighAccuracy: true,
@@ -596,6 +743,26 @@ export default function DcdRegister() {
                                     placeholder="Enter DA referral code if applicable"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                                {data.referral_code && (
+                                    <div className="mt-2 flex items-center space-x-2">
+                                        {referralValidating ? (
+                                            <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                                <span className="text-sm">Validating...</span>
+                                            </div>
+                                        ) : referralValid === true ? (
+                                            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                                <CheckCircle className="h-4 w-4" />
+                                                <span className="text-sm">{referralMessage}</span>
+                                            </div>
+                                        ) : referralValid === false ? (
+                                            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                                <XCircle className="h-4 w-4" />
+                                                <span className="text-sm">{referralMessage}</span>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -714,6 +881,55 @@ export default function DcdRegister() {
                                     <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                     <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Location Information</span>
                                 </div>
+
+                                {!locationPermissionGranted && (
+                                    <div className="mb-4 p-3 bg-cyan-50 dark:bg-slate-600 border border-cyan-200 dark:border-cyan-600 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium text-cyan-900 dark:text-cyan-300">Enable location detection</p>
+                                                <p className="text-xs text-cyan-700 dark:text-cyan-400">Auto-fill your location information for faster setup</p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={async () => {
+                                                    try {
+                                                        await requestLocationPermission();
+                                                    } catch (error) {
+                                                        console.log('Location permission failed:', error);
+                                                        // User can still continue with manual location entry
+                                                    }
+                                                }}
+                                                disabled={locationLoading}
+                                                size="sm"
+                                                className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 text-sm"
+                                            >
+                                                {locationLoading ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                        Getting location...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <MapPin className="w-4 h-4 mr-2" />
+                                                        Use My Location
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {locationPermissionGranted && (
+                                    <div className="mb-6 p-4 bg-green-50 dark:bg-slate-700 border border-green-200 dark:border-green-600 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-600" />
+                                            <div>
+                                                <p className="font-medium text-green-900 dark:text-green-300">Location detected</p>
+                                                <p className="text-sm text-green-700 dark:text-green-400">Your location has been automatically filled</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="country" className="text-sm font-medium mb-2 block">
