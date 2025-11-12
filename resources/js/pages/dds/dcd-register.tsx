@@ -178,20 +178,13 @@ export default function DcdRegister() {
                         setShowForm(true);
                     } catch {
                         // If location permission is denied or fails, still show the form
-                        // but set default country without location coordinates
+                        // but don't set any default country - let user choose manually
                         setData(prev => ({
                             ...prev,
-                            country: '', // Default to Kenya
                             county: '',
                             subcounty: '',
                             ward: '',
                         }));
-                        updateLabels('kenya');
-                        // Fetch counties for Kenya as default
-                        const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
-                        if (kenyaCountry) {
-                            fetchCounties(kenyaCountry.id);
-                        }
                         setShowForm(true);
                     }
                 }
@@ -327,21 +320,13 @@ export default function DcdRegister() {
                         console.warn('Could not fetch location details:', error);
                     }
 
-                    // Set default country (Kenya) instead of trying to detect location
+                    // Location coordinates saved, but don't set any default country
                     setData(prev => ({
                         ...prev,
-                        country: 'kenya', // Default to Kenya
                         county: '',
                         subcounty: '',
                         ward: '',
                     }));
-                    updateLabels('kenya');
-
-                    // Fetch counties for Kenya as default
-                    const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
-                    if (kenyaCountry) {
-                        fetchCounties(kenyaCountry.id);
-                    }
 
                     setLocationPermissionGranted(true);
                     setLocationLoading(false);
@@ -369,20 +354,13 @@ export default function DcdRegister() {
                     alert(errorMessage);
 
                     // Don't reject - allow the form to continue without location coordinates
-                    // Set default country
+                    // Don't set any default country - let user choose manually
                     setData(prev => ({
                         ...prev,
-                        country: 'kenya', // Default to Kenya
                         county: '',
                         subcounty: '',
                         ward: '',
                     }));
-                    updateLabels('kenya');
-                    // Fetch counties for Kenya as default
-                    const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
-                    if (kenyaCountry) {
-                        fetchCounties(kenyaCountry.id);
-                    }
 
                     resolve();
                 },
@@ -756,6 +734,7 @@ export default function DcdRegister() {
                                                 <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select Country"} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                <SelectItem value="-">-</SelectItem>
                                                 {countries.map((country) => (
                                                     <SelectItem key={country.id} value={country.name.toLowerCase()}>
                                                         {country.name}
@@ -782,6 +761,7 @@ export default function DcdRegister() {
                                                 <SelectValue placeholder={countiesLoading ? "Loading..." : `Select ${countyLabel.toLowerCase()}`} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                <SelectItem value="-">-</SelectItem>
                                                 {counties.map((county) => (
                                                     <SelectItem key={county.id} value={county.id.toString()}>
                                                         {county.name}
@@ -807,6 +787,7 @@ export default function DcdRegister() {
                                                 <SelectValue placeholder={subcountiesLoading ? "Loading..." : `Select ${subcountyLabel.toLowerCase()}`} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                <SelectItem value="-">-</SelectItem>
                                                 {subcounties.map((subcounty) => (
                                                     <SelectItem key={subcounty.id} value={subcounty.id.toString()}>
                                                         {subcounty.name}
@@ -825,6 +806,7 @@ export default function DcdRegister() {
                                                 <SelectValue placeholder={wardsLoading ? "Loading..." : "Select ward"} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                <SelectItem value="-">-</SelectItem>
                                                 {wards.map((ward) => (
                                                     <SelectItem key={ward.id} value={ward.id.toString()}>
                                                         {ward.name}
