@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Loader2, Shield, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Phone, Mail, Calendar, Globe, Building2, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music } from 'lucide-react';
+import { CheckCircle, Loader2, Shield, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Phone, Mail, Calendar, Globe, Building2, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 declare global {
@@ -25,6 +27,24 @@ interface Country {
     code: string;
     county_label: string;
     subcounty_label: string;
+}
+
+interface County {
+    id: number;
+    name: string;
+    country_id: number;
+}
+
+interface Subcounty {
+    id: number;
+    name: string;
+    county_id: number;
+}
+
+interface Ward {
+    id: number;
+    name: string;
+    subcounty_id: number;
 }
 
 type Step = 'personal' | 'social' | 'account';
@@ -45,9 +65,19 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
     const [locationLoading, setLocationLoading] = useState(false);
     const [countries, setCountries] = useState<Country[]>([]);
+    const [countriesLoading, setCountriesLoading] = useState(true);
+    const [counties, setCounties] = useState<County[]>([]);
+    const [countiesLoading, setCountiesLoading] = useState(false);
+    const [subcounties, setSubcounties] = useState<Subcounty[]>([]);
+    const [subcountiesLoading, setSubcountiesLoading] = useState(false);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [wardsLoading, setWardsLoading] = useState(false);
     const [countyLabel, setCountyLabel] = useState('County');
     const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
     const turnstileRef = useRef(null);
+    const [referralValidating, setReferralValidating] = useState(false);
+    const [referralValid, setReferralValid] = useState<boolean | null>(null);
+    const [referralMessage, setReferralMessage] = useState('');
 
     const { data, setData, post, errors, reset } = useForm({
         referral_code: '',
@@ -115,12 +145,15 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     // Fetch countries on component mount
     useEffect(() => {
         const fetchCountries = async () => {
+            setCountriesLoading(true);
             try {
                 const response = await fetch('/api/countries');
                 const data = await response.json();
                 setCountries(data);
             } catch (error) {
                 console.error('Failed to fetch countries:', error);
+            } finally {
+                setCountriesLoading(false);
             }
         };
 
@@ -134,7 +167,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 const urlParams = new URLSearchParams(window.location.search);
                 const hasStartedParam = urlParams.get('started') === 'true';
 
-                if (hasStartedParam && !locationPermissionGranted) {
+                if (hasStartedParam && !locationPermissionGranted && countries.length > 0) {
                     try {
                         await requestLocationPermission();
                     } catch (error) {
@@ -146,7 +179,44 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         };
 
         checkLocationPermission();
-    }, [locationPermissionGranted]);
+    }, [locationPermissionGranted, countries]);
+
+    // Extract referral code from URL parameters or fetch admin's code
+    useEffect(() => {
+        const extractReferralCode = async () => {
+            if (typeof window !== 'undefined') {
+                const urlParams = new URLSearchParams(window.location.search);
+                // Extract referral code from URL parameters (ref, referral, or code)
+                const referralCode = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('code');
+
+                if (referralCode && referralCode.length === 6 && /^[A-Za-z0-9]{6}$/.test(referralCode)) {
+                    setData('referral_code', referralCode.toUpperCase());
+                } else {
+                    // No referral code in URL, fetch admin's referral code
+                    try {
+                        const response = await fetch('/api/admin-referral-code');
+                        const result = await response.json();
+                        if (response.ok && result.referral_code) {
+                            setData('referral_code', result.referral_code);
+                        }
+                    } catch (error) {
+                        console.log('Could not fetch admin referral code:', error);
+                    }
+                }
+            }
+        };
+
+        extractReferralCode();
+    }, []);
+
+    // Validate referral code when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateReferralCode(data.referral_code);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.referral_code]);
 
     const handlePlatformChange = (platform: string, checked: boolean | "indeterminate") => {
         const isChecked = checked === true;
@@ -157,10 +227,222 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }
     };
 
+    const updateLabels = (countryId: string) => {
+        const selectedCountry = countries.find(country => country.id.toString() === countryId);
+        if (selectedCountry) {
+            setCountyLabel(selectedCountry.county_label);
+            setSubcountyLabel(selectedCountry.subcounty_label);
+        } else {
+            setCountyLabel('County');
+            setSubcountyLabel('Sub-county');
+        }
+    };
+
+    const fetchCounties = async (countryId: number) => {
+        setCountiesLoading(true);
+        try {
+            const response = await fetch(`/api/counties?country_id=${countryId}`);
+            const data = await response.json();
+            setCounties(data);
+        } catch (error) {
+            console.error('Failed to fetch counties:', error);
+            setCounties([]);
+        } finally {
+            setCountiesLoading(false);
+        }
+    };
+
+    const fetchSubcounties = async (countyId: number) => {
+        setSubcountiesLoading(true);
+        try {
+            const response = await fetch(`/api/subcounties?county_id=${countyId}`);
+            const data = await response.json();
+            setSubcounties(data);
+        } catch (error) {
+            console.error('Failed to fetch subcounties:', error);
+            setSubcounties([]);
+        } finally {
+            setSubcountiesLoading(false);
+        }
+    };
+
+    const fetchWards = async (subcountyId: number) => {
+        setWardsLoading(true);
+        try {
+            const response = await fetch(`/api/wards?subcounty_id=${subcountyId}`);
+            const data = await response.json();
+            setWards(data);
+        } catch (error) {
+            console.error('Failed to fetch wards:', error);
+            setWards([]);
+        } finally {
+            setWardsLoading(false);
+        }
+    };
+
+    const validateReferralCode = async (code: string) => {
+        if (!code || code.length !== 6) {
+            setReferralValid(null);
+            setReferralMessage('');
+            return;
+        }
+
+        setReferralValidating(true);
+        try {
+            const response = await fetch('/api/validate-referral', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ referral_code: code.toUpperCase() }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setReferralValid(true);
+                setReferralMessage(`Valid referral code from ${result.referrer.name}`);
+            } else {
+                setReferralValid(false);
+                setReferralMessage(result.message || 'Invalid referral code');
+            }
+        } catch (error) {
+            setReferralValid(false);
+            setReferralMessage('Failed to validate referral code');
+        } finally {
+            setReferralValidating(false);
+        }
+    };
+
+    const autoFillLocation = async (locationData: any) => {
+        console.log('Auto-filling location with data:', locationData);
+        console.log('Full location data structure:', JSON.stringify(locationData, null, 2));
+
+        // Wait for countries to be loaded if they're not ready yet
+        if (countries.length === 0) {
+            console.log('Countries not loaded yet, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        if (countries.length === 0) {
+            console.log('Countries still not loaded, skipping auto-fill');
+            return;
+        }
+
+        // Check for country name with different possible field names
+        const countryName = locationData.countryName || locationData.country;
+        console.log('Country name from location data:', countryName);
+
+        if (countryName) {
+            console.log('Looking for country:', countryName);
+            console.log('Available countries:', countries.map(c => c.name));
+            
+            // Enhanced country matching with exact match priority
+            const detectedCountry = countries.find(country =>
+                country.name.toLowerCase() === countryName.toLowerCase()
+            ) || countries.find(country =>
+                country.name.toLowerCase().includes(countryName.toLowerCase()) ||
+                countryName.toLowerCase().includes(country.name.toLowerCase())
+            );
+
+            console.log('Detected country:', detectedCountry);
+
+            if (detectedCountry) {
+                // Set country and update labels
+                setData('country', detectedCountry.id.toString());
+                updateLabels(detectedCountry.id.toString());
+
+                // Fetch counties for this country
+                await fetchCounties(detectedCountry.id);
+
+                // Wait for state to update
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // Get fresh counties data
+                const countiesResponse = await fetch(`/api/counties?country_id=${detectedCountry.id}`);
+                const countiesData = await countiesResponse.json();
+                console.log('Fetched counties:', countiesData);
+                console.log('Available county names:', countiesData.map((c: County) => c.name));
+
+                // Try to match county - check multiple possible field names
+                const subdivisionName = locationData.principalSubdivision || locationData.state || locationData.region || locationData.administrativeArea || locationData.locality;
+                console.log('Subdivision name from location data:', subdivisionName);
+
+                if (subdivisionName) {
+                    console.log('Looking for county:', subdivisionName);
+                    
+                    // Enhanced county matching with exact match priority
+                    const detectedCounty = countiesData.find((county: County) =>
+                        county.name.toLowerCase() === subdivisionName.toLowerCase()
+                    ) || countiesData.find((county: County) =>
+                        county.name.toLowerCase().includes(subdivisionName.toLowerCase()) ||
+                        subdivisionName.toLowerCase().includes(county.name.toLowerCase())
+                    );
+
+                    console.log('Detected county:', detectedCounty);
+
+                    if (detectedCounty) {
+                        setData('county', detectedCounty.id.toString());
+
+                        // Fetch subcounties for this county
+                        await fetchSubcounties(detectedCounty.id);
+
+                        // Wait for state to update
+                        await new Promise(resolve => setTimeout(resolve, 200));
+
+                        // Get fresh subcounties data
+                        const subcountiesResponse = await fetch(`/api/subcounties?county_id=${detectedCounty.id}`);
+                        const subcountiesData = await subcountiesResponse.json();
+                        console.log('Fetched subcounties:', subcountiesData);
+                        console.log('Available subcounty names:', subcountiesData.map((s: Subcounty) => s.name));
+
+                        // Try to match subcounty/city - check multiple possible field names
+                        const cityName = locationData.city || locationData.locality || locationData.localityInfo?.localityName;
+                        console.log('City name from location data:', cityName);
+
+                        if (cityName) {
+                            console.log('Looking for subcounty/city:', cityName);
+                            const detectedSubcounty = subcountiesData.find((subcounty: Subcounty) =>
+                                subcounty.name.toLowerCase() === cityName.toLowerCase() ||
+                                subcounty.name.toLowerCase().includes(cityName.toLowerCase()) ||
+                                cityName.toLowerCase().includes(subcounty.name.toLowerCase())
+                            );
+
+                            console.log('Detected subcounty:', detectedSubcounty);
+
+                            if (detectedSubcounty) {
+                                setData('subcounty', detectedSubcounty.id.toString());
+
+                                // Fetch wards for this subcounty
+                                await fetchWards(detectedSubcounty.id);
+
+                                console.log('Location auto-filled successfully');
+                            } else {
+                                console.log('No matching subcounty found for:', cityName);
+                            }
+                        } else {
+                            console.log('No city/locality data in location response');
+                        }
+                    } else {
+                        console.log('No matching county found for:', subdivisionName);
+                    }
+                } else {
+                    console.log('No subdivision data in location response');
+                }
+            } else {
+                console.log('No matching country found for:', countryName);
+                console.log('Available countries:', countries.map(c => c.name));
+            }
+        } else {
+            console.log('No country name in location data');
+        }
+    };
+
     const requestLocationPermission = () => {
         return new Promise<void>((resolve, reject) => {
             if (!navigator.geolocation) {
-                alert('Geolocation is not supported by this browser.');
+                toast.error('Geolocation is not supported by this browser.');
                 reject(new Error('Geolocation not supported'));
                 return;
             }
@@ -181,16 +463,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                         );
                         const locationData = await response.json();
+                        console.log('Reverse geocoding response:', locationData);
 
-                        if (locationData.countryName) {
-                            setData('country', locationData.countryName.toLowerCase());
-                        }
-                        if (locationData.principalSubdivision) {
-                            setData('county', locationData.principalSubdivision);
-                        }
-                        if (locationData.city) {
-                            setData('subcounty', locationData.city);
-                        }
+                        // Auto-populate location dropdowns
+                        await autoFillLocation(locationData);
                     } catch (error) {
                         console.log('Could not get detailed location info:', error);
                     }
@@ -217,7 +493,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                             errorMessage += 'An unknown error occurred.';
                     }
 
-                    alert(errorMessage);
+                    toast.error(errorMessage);
                     reject(error);
                 },
                 {
@@ -227,17 +503,6 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 }
             );
         });
-    };
-
-    const updateLabels = (countryValue: string) => {
-        const selectedCountry = countries.find(country => country.name.toLowerCase() === countryValue);
-        if (selectedCountry) {
-            setCountyLabel(selectedCountry.county_label);
-            setSubcountyLabel(selectedCountry.subcounty_label);
-        } else {
-            setCountyLabel('County');
-            setSubcountyLabel('Sub-county');
-        }
     };
 
     // Validation functions
@@ -311,9 +576,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             if (!data.terms) {
                 isValid = false;
             }
-            if (!data.turnstile_token) {
-                isValid = false;
-            }
+            // Turnstile token is now optional for development/demo
+            // if (!data.turnstile_token) {
+            //     isValid = false;
+            // }
         }
 
         return isValid;
@@ -339,17 +605,24 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         e.preventDefault();
         if (currentStep === 'account') {
             if (!validateStep('account')) {
+                console.log('Validation failed for account step');
+                console.log('Form data:', data);
+                toast.error('Please fill all required fields correctly before submitting.');
                 return;
             }
+            console.log('Submitting form with data:', data);
             setProcessing(true);
             post('/api/da/create', {
-                onSuccess: () => {
+                onSuccess: (response) => {
+                    console.log('Success response:', response);
                     setProcessing(false);
                     reset();
-                    alert('Registration successful! (Demo mode)');
+                    toast.success('Registration successful! (Demo mode)');
                 },
-                onError: () => {
+                onError: (errors) => {
+                    console.log('Error response:', errors);
                     setProcessing(false);
+                    toast.error('Registration failed. Please check the console for details.');
                 },
             });
         } else {
@@ -396,6 +669,26 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 />
                                 {errors.referral_code && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.referral_code}</p>
+                                )}
+                                {data.referral_code && (
+                                    <div className="mt-2 flex items-center space-x-2">
+                                        {referralValidating ? (
+                                            <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                                <span className="text-sm">Validating...</span>
+                                            </div>
+                                        ) : referralValid === true ? (
+                                            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                                <CheckCircle className="h-4 w-4" />
+                                                <span className="text-sm">{referralMessage}</span>
+                                            </div>
+                                        ) : referralValid === false ? (
+                                            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                                <XCircle className="h-4 w-4" />
+                                                <span className="text-sm">{referralMessage}</span>
+                                            </div>
+                                        ) : null}
+                                    </div>
                                 )}
                             </div>
 
@@ -468,6 +761,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
                                         <SelectItem value="male">Male</SelectItem>
                                         <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.gender && (
@@ -555,14 +849,27 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     </Label>
                                     <Select value={data.country} onValueChange={(value) => {
                                         setData('country', value);
+                                        setData('county', '');
+                                        setData('subcounty', '');
+                                        setData('ward', '');
                                         updateLabels(value);
-                                    }}>
+                                        setCounties([]);
+                                        setSubcounties([]);
+                                        setWards([]);
+                                        const selectedCountry = countries.find(c => c.id.toString() === value);
+                                        if (selectedCountry) {
+                                            fetchCounties(selectedCountry.id);
+                                        }
+                                    }} disabled={countriesLoading || countries.length === 0}>
                                         <SelectTrigger className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none">
-                                            <SelectValue placeholder="Select Country" />
+                                            <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select Country"} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white dark:bg-slate-800 border-cyan-300 dark:border-cyan-600/20">
-                                            <SelectItem value="kenya">Kenya</SelectItem>
-                                            <SelectItem value="nigeria">Nigeria</SelectItem>
+                                            {countries.map((country) => (
+                                                <SelectItem key={country.id} value={country.id.toString()}>
+                                                    {country.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.country && (
@@ -574,15 +881,28 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <Label htmlFor="county" className="text-sm font-medium mb-2 block">
                                         {countyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
-                                    <Input
-                                        id="county"
-                                        type="text"
-                                        value={data.county}
-                                        onChange={(e) => setData('county', e.target.value)}
-                                        required
-                                        placeholder="Enter county"
-                                        className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
-                                    />
+                                    <Select value={data.county} onValueChange={(value) => {
+                                        setData('county', value);
+                                        setData('subcounty', '');
+                                        setData('ward', '');
+                                        setSubcounties([]);
+                                        setWards([]);
+                                        const selectedCounty = counties.find(c => c.id.toString() === value);
+                                        if (selectedCounty) {
+                                            fetchSubcounties(selectedCounty.id);
+                                        }
+                                    }} disabled={countiesLoading || !data.country}>
+                                        <SelectTrigger className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none">
+                                            <SelectValue placeholder={countiesLoading ? "Loading..." : `Select ${countyLabel.toLowerCase()}`} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-cyan-300 dark:border-cyan-600/20">
+                                            {counties.map((county) => (
+                                                <SelectItem key={county.id} value={county.id.toString()}>
+                                                    {county.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.county && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.county}</p>
                                     )}
@@ -594,15 +914,26 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <Label htmlFor="subcounty" className="text-sm font-medium mb-2 block">
                                         {subcountyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
-                                    <Input
-                                        id="subcounty"
-                                        type="text"
-                                        value={data.subcounty}
-                                        onChange={(e) => setData('subcounty', e.target.value)}
-                                        required
-                                        placeholder="Enter sub-county"
-                                        className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
-                                    />
+                                    <Select value={data.subcounty} onValueChange={(value) => {
+                                        setData('subcounty', value);
+                                        setData('ward', '');
+                                        setWards([]);
+                                        const selectedSubcounty = subcounties.find(s => s.id.toString() === value);
+                                        if (selectedSubcounty) {
+                                            fetchWards(selectedSubcounty.id);
+                                        }
+                                    }} disabled={subcountiesLoading || !data.county}>
+                                        <SelectTrigger className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none">
+                                            <SelectValue placeholder={subcountiesLoading ? "Loading..." : `Select ${subcountyLabel.toLowerCase()}`} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-cyan-300 dark:border-cyan-600/20">
+                                            {subcounties.map((subcounty) => (
+                                                <SelectItem key={subcounty.id} value={subcounty.id.toString()}>
+                                                    {subcounty.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.subcounty && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.subcounty}</p>
                                     )}
@@ -612,15 +943,18 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <Label htmlFor="ward" className="text-sm font-medium mb-2 block">
                                         Ward <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
-                                    <Input
-                                        id="ward"
-                                        type="text"
-                                        value={data.ward}
-                                        onChange={(e) => setData('ward', e.target.value)}
-                                        required
-                                        placeholder="Enter ward"
-                                        className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
-                                    />
+                                    <Select value={data.ward} onValueChange={(value) => setData('ward', value)} disabled={wardsLoading || !data.subcounty}>
+                                        <SelectTrigger className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none">
+                                            <SelectValue placeholder={wardsLoading ? "Loading..." : "Select ward"} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-cyan-300 dark:border-cyan-600/20">
+                                            {wards.map((ward) => (
+                                                <SelectItem key={ward.id} value={ward.id.toString()}>
+                                                    {ward.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.ward && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ward}</p>
                                     )}
@@ -721,12 +1055,11 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectValue placeholder="Select Range" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600/20">
-                                        <SelectItem value="500-1000">500–1,000</SelectItem>
-                                        <SelectItem value="1000-5000">1,000–5,000</SelectItem>
-                                        <SelectItem value="5000-50000">5,000–50,000</SelectItem>
-                                        <SelectItem value="50000-100000">50,000–100,000</SelectItem>
-                                        <SelectItem value="100000-500000">100,000–500,000</SelectItem>
-                                        <SelectItem value="500000-1000000">500,000–1M+</SelectItem>
+                                        <SelectItem value="less_than_1k">Less than 1K</SelectItem>
+                                        <SelectItem value="1k_10k">1K–10K</SelectItem>
+                                        <SelectItem value="10k_50k">10K–50K</SelectItem>
+                                        <SelectItem value="50k_100k">50K–100K</SelectItem>
+                                        <SelectItem value="100k_plus">100K+</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.followers && (
@@ -744,8 +1077,9 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600/20">
                                         <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                                        <SelectItem value="telegram">Telegram</SelectItem>
                                         <SelectItem value="email">Email</SelectItem>
-                                        <SelectItem value="in-app">In-app Messaging</SelectItem>
+                                        <SelectItem value="phone">Phone</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.communication_channel && (
@@ -1157,6 +1491,18 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                     </div>
                 </div>
             )}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
         </div>
     );
 }
