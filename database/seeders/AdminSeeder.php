@@ -38,6 +38,7 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make('password123'), // You should change this to a secure password
                 'role' => 'admin',
                 'phone' => '+1234567890',
+                'referral_code' => '7a3H4P',
                 'country' => 'Kenya',
                 'email_verified_at' => now(),
                 'wallet_status' => 'activated',
