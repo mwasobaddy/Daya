@@ -14,14 +14,16 @@ class DaWelcome extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
+    public $referrer;
     public $qrCodeUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user)
+    public function __construct($user, $referrer = null)
     {
         $this->user = $user;
+        $this->referrer = $referrer;
         $this->qrCodeUrl = $user->qr_code ? \Storage::disk('public')->url($user->qr_code) : null;
     }
 
@@ -42,7 +44,7 @@ class DaWelcome extends Mailable
     {
         return new Content(
             view: 'emails.da_welcome',
-            with: ['user' => $this->user, 'qrCodeUrl' => $this->qrCodeUrl],
+            with: ['user' => $this->user, 'referrer' => $this->referrer, 'qrCodeUrl' => $this->qrCodeUrl],
         );
     }
 
