@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Country;
 use App\Models\County;
 use App\Models\Subcounty;
+use App\Models\Ward;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,86 +16,1091 @@ class GeographicalDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $geographicalData = [
-            [
-                'code' => 'KE',
-                'name' => 'Kenya',
-                'county_label' => 'County',
-                'subcounty_label' => 'Sub-County',
-                'counties' => [
-                    [
-                        'name' => 'Nairobi',
-                        'subcounties' => ['Westlands', 'CBD', 'Parklands', 'Karen', 'Langata']
-                    ],
-                    [
-                        'name' => 'Mombasa',
-                        'subcounties' => ['Mvita', 'Changamwe', 'Jomvu', 'Likoni', 'Nyali']
-                    ],
-                    [
-                        'name' => 'Kisumu',
-                        'subcounties' => ['Kisumu Central', 'Kisumu East', 'Kisumu West', 'Muhoroni', 'Nyando']
-                    ],
-                    [
-                        'name' => 'Nakuru',
-                        'subcounties' => ['Nakuru Town East', 'Nakuru Town West', 'Njoro', 'Rongai', 'Subukia']
-                    ],
-                    [
-                        'name' => 'Eldoret',
-                        'subcounties' => ['Soy', 'Turbo', 'Moiben', 'Kwanza', 'Endebess']
-                    ]
-                ]
+        // Kenyan geographical data from demo-graphics.js
+        $kenyanData = [
+            'labels' => [
+                'county' => 'County',
+                'subcounty' => 'Sub-county'
             ],
-            [
-                'code' => 'NG',
-                'name' => 'Nigeria',
-                'county_label' => 'State',
-                'subcounty_label' => 'Local Government Area',
-                'counties' => [
-                    [
-                        'name' => 'Lagos',
-                        'subcounties' => ['Ikeja', 'Surulere', 'Lagos Island', 'Eti-Osa', 'Apapa']
-                    ],
-                    [
-                        'name' => 'Abuja',
-                        'subcounties' => ['Abuja Municipal', 'Gwagwalada', 'Kuje', 'Bwari', 'Kwali']
-                    ],
-                    [
-                        'name' => 'Kano',
-                        'subcounties' => ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni']
-                    ],
-                    [
-                        'name' => 'Rivers',
-                        'subcounties' => ['Port Harcourt', 'Obio-Akpor', 'Ikwerre', 'Emohua', 'Etche']
-                    ],
-                    [
-                        'name' => 'Oyo',
-                        'subcounties' => ['Ibadan North', 'Ibadan South-East', 'Ibadan South-West', 'Ibadan North-East', 'Ibadan North-West']
-                    ]
+            'counties' => [
+                'Mombasa' => [
+                    'Changamwe' => ['Port Reitz', 'Chaani', 'Jomvu Kuu', 'Miritini'],
+                    'Jomvu' => ['Jomvu Kuu', 'Mikindani', 'Jomvu Kaskazini'],
+                    'Kisauni' => ['Mtongwe', 'Shika Adabu', 'Bofu', 'Likoni'],
+                    'Likoni' => ['Timbwani', 'Shika Adabu', 'Mtongwe', 'Tsimba Golini'],
+                    'Mvita' => ['Tudor', 'Tononoka', 'Shimanzi', 'Majengo'],
+                    'Nyali' => ['Kongowea', 'Kadzandani', 'Mkomani', 'Mamba']
+                ],
+                'Kwale' => [
+                    'Kinango' => ['Kinango', 'Mackinnon', 'Chengoni', 'Mwavumbo'],
+                    'Lunga Lunga' => ['Lunga Lunga', 'Mkumbo', 'Pongwe', 'Vanga'],
+                    'Matuga' => ['Matuga', 'Bongwe', 'Ukunda', 'Mwaluphanga'],
+                    'Msambweni' => ['Msambweni', 'Gombato', 'Ukunda', 'Waa']
+                ],
+                'Kilifi' => [
+                    'Ganze' => ['Ganze', 'Bamba', 'Jaribuni', 'Sokoke'],
+                    'Kaloleni' => ['Kaloleni', 'Kayafungo', 'Mwanamwinga', 'Mazeras'],
+                    'Kilifi North' => ['Tezo', 'Matsangoni', 'Junju', 'Mwarakaya'],
+                    'Kilifi South' => ['Dabaso', 'Matsangoni', 'Watamu', 'Mnarani'],
+                    'Magarini' => ['Magarini', 'Adu', 'Gongoni', 'Marafa'],
+                    'Malindi' => ['Malindi Town', 'Shella', 'Ganda', 'Madunguni'],
+                    'Rabai' => ['Rabai', 'Kaya', 'Jibana', 'Kambe']
+                ],
+                'Tana River' => [
+                    'Bura' => ['Bura', 'Chewele', 'Bangale', 'Madogo'],
+                    'Galole' => ['Kipini East', 'Garsen South', 'Kipini West', 'Kinakomba'],
+                    'Garsen' => ['Garsen Central', 'Kipini West', 'Garsen North', 'Kipini East']
+                ],
+                'Lamu' => [
+                    'Lamu East' => ['Faza', 'Kiunga', 'Kizingitini', 'Basuba'],
+                    'Lamu West' => ['Lamu West', 'Shella', 'Mkomani', 'Hongwe']
+                ],
+                'Taita-Taveta' => [
+                    'Mwatate' => ['Mwatate', 'Bura', 'Chawia', 'Wusi'],
+                    'Taveta' => ['Taveta', 'Mahoo', 'Kitobo', 'Mata'],
+                    'Voi' => ['Voi', 'Mbololo', 'Kaloleni', 'Marungu'],
+                    'Wundanyi' => ['Wundanyi', 'Werugha', 'Mwanda', 'Bura']
+                ],
+                'Garissa' => [
+                    'Daadab' => ['Dadaab', 'Labasigale', 'Dertu', 'Damajale'],
+                    'Fafi' => ['Fafi', 'Bura', 'Sankuri', 'Jarajara'],
+                    'Garissa Township' => ['Garissa Township', 'Waberi', 'Ijara', 'Masalani'],
+                    'Hulugho' => ['Hulugho', 'Sangailu', 'Ijara', 'Masalani'],
+                    'Ijara' => ['Ijara', 'Sangailu', 'Korisa', 'Kotile'],
+                    'Lagdera' => ['Lagdera', 'Modogashe', 'Benane', 'Sankuri']
+                ],
+                'Wajir' => [
+                    'Eldas' => ['Eldas', 'Della', 'Lakoley', 'Benane'],
+                    'Tarbaj' => ['Tarbaj', 'Wargadud', 'Kutulo', 'Sarman'],
+                    'Wajir East' => ['Wajir East', 'Wagberi', 'Township', 'Barrow'],
+                    'Wajir North' => ['Wajir North', 'Bute', 'Khorof', 'Harhar'],
+                    'Wajir South' => ['Wajir South', 'Griftu', 'Wayama', 'Konso'],
+                    'Wajir West' => ['Wajir West', 'Griftu', 'Lafey', 'Batalu']
+                ],
+                'Mandera' => [
+                    'Banissa' => ['Banissa', 'Guba', 'Malkamari', 'Takaba'],
+                    'Lafey' => ['Lafey', 'Fino', 'Elwak', 'Warankara'],
+                    'Mandera East' => ['Mandera East', 'Khalalio', 'Neboi', 'Township'],
+                    'Mandera North' => ['Mandera North', 'Rhamu', 'Wargadud', 'Kutulo'],
+                    'Mandera South' => ['Mandera South', 'Lagsure', 'Dandu', 'Wargadud'],
+                    'Mandera West' => ['Mandera West', 'Lafey', 'Elwak', 'Warankara']
+                ],
+                'Marsabit' => [
+                    'Laisamis' => ['Laisamis', 'Korr', 'Loglogo', 'Maikona'],
+                    'Moyale' => ['Moyale', 'Uran', 'Goro', 'Sololo'],
+                    'North Horr' => ['North Horr', 'Maikona', 'Turbi', 'Illeret'],
+                    'Saku' => ['Saku', 'Karare', 'Marsabit Central', 'Segel']
+                ],
+                'Isiolo' => [
+                    'Isiolo North' => ['Isiolo North', 'Wabera', 'Bullapesa', 'Burat'],
+                    'Isiolo South' => ['Isiolo South', 'Sericho', 'Merti', 'Garbatulla']
+                ],
+                'Meru' => [
+                    'Buuri' => ['Buuri', 'Kiegoi', 'Athiru', 'Ruiri'],
+                    'Igembe Central' => ['Igembe Central', 'Kangeta', 'Akirang\'ondu', 'Athiru'],
+                    'Igembe North' => ['Igembe North', 'Maua', 'Kangeta', 'Athiru'],
+                    'Igembe South' => ['Igembe South', 'Mariani', 'Kianjai', 'Ntunene'],
+                    'Imenti Central' => ['Imenti Central', 'Abogeta', 'Kianjai', 'Mitunguu'],
+                    'Imenti North' => ['Imenti North', 'Mitunguu', 'Kianjai', 'Ntunene'],
+                    'Imenti South' => ['Imenti South', 'Mitunguu', 'Kianjai', 'Ntunene'],
+                    'Tigania East' => ['Tigania East', 'Mikinduri', 'Kianjai', 'Mitunguu'],
+                    'Tigania West' => ['Tigania West', 'Mikinduri', 'Kianjai', 'Mitunguu']
+                ],
+                'Tharaka-Nithi' => [
+                    'Chuka' => ['Chuka', 'Magumoni', 'Mugwe', 'Muthambi'],
+                    'Igambang\'ombe' => ['Igambang\'ombe', 'Mugwe', 'Muthambi', 'Magumoni'],
+                    'Maara' => ['Maara', 'Mugwe', 'Muthambi', 'Magumoni'],
+                    'Tharaka' => ['Tharaka', 'Mugwe', 'Muthambi', 'Magumoni']
+                ],
+                'Embu' => [
+                    'Manyatta' => ['Manyatta', 'Nthawa', 'Mavuria', 'Kithimu'],
+                    'Mbeere North' => ['Mbeere North', 'Gachoka', 'Siakago', 'Kanyuambora'],
+                    'Mbeere South' => ['Mbeere South', 'Gachoka', 'Siakago', 'Kanyuambora'],
+                    'Runyenjes' => ['Runyenjes', 'Gachoka', 'Siakago', 'Kanyuambora']
+                ],
+                'Kitui' => [
+                    'Kitui Central' => ['Kitui Central', 'Kanyangi', 'Miambani', 'Kyangwithya'],
+                    'Kitui East' => ['Kitui East', 'Voo', 'Kyome', 'Thaana'],
+                    'Kitui Rural' => ['Kitui Rural', 'Kanyangi', 'Miambani', 'Kyangwithya'],
+                    'Kitui South' => ['Kitui South', 'Ikutha', 'Athi', 'Kanziko'],
+                    'Kitui West' => ['Kitui West', 'Mutonguni', 'Kauwi', 'Matinyani'],
+                    'Mwingi Central' => ['Mwingi Central', 'Kyuani', 'Nguni', 'Mui'],
+                    'Mwingi North' => ['Mwingi North', 'Ngomeni', 'Kyuso', 'Tseikuru'],
+                    'Mwingi West' => ['Mwingi West', 'Mui', 'Waita', 'Thagicu']
+                ],
+                'Machakos' => [
+                    'Kathiani' => ['Kathiani', 'Mitaboni', 'Kola', 'Mbiuni'],
+                    'Machakos Town' => ['Machakos Town', 'Muvuti', 'Kola', 'Mbiuni'],
+                    'Masinga' => ['Masinga', 'Kivaa', 'Mutha', 'Kola'],
+                    'Matungulu' => ['Matungulu', 'Tala', 'Kangundo', 'Matungulu'],
+                    'Mavoko' => ['Mavoko', 'Athi River', 'Kinanie', 'Muthwani'],
+                    'Mwala' => ['Mwala', 'Mbiuni', 'Makutano', 'Masii'],
+                    'Yatta' => ['Yatta', 'Kithimani', 'Ikombe', 'Katangi']
+                ],
+                'Makueni' => [
+                    'Kaiti' => ['Kaiti', 'Kithungo', 'Kitise', 'Kikumbulyu'],
+                    'Kibwezi East' => ['Kibwezi East', 'Mavindini', 'Makuuni', 'Kikumbulyu'],
+                    'Kibwezi West' => ['Kibwezi West', 'Mavindini', 'Makuuni', 'Kikumbulyu'],
+                    'Kilome' => ['Kilome', 'Kee', 'Kikumbulyu', 'Kithungo'],
+                    'Makueni' => ['Makueni', 'Kikumbulyu', 'Kithungo', 'Kitise'],
+                    'Mbooni' => ['Mbooni', 'Kithungo', 'Kitise', 'Kikumbulyu']
+                ],
+                'Nairobi' => [
+                    'Dagoretti North' => ['Kilimani', 'Kawangware', 'Gatina', 'Kileleshwa'],
+                    'Dagoretti South' => ['Mutuini', 'Riruta', 'Uthiru', 'Waithaka'],
+                    'Embakasi Central' => ['Kayole North', 'Kayole South', 'Komarock', 'Matopeni'],
+                    'Embakasi East' => ['Upper Savanna', 'Lower Savanna', 'Embakasi', 'Utawala'],
+                    'Embakasi North' => ['Kariobangi North', 'Dandora Area I', 'Dandora Area II', 'Dandora Area III'],
+                    'Embakasi South' => ['Imara Daima', 'Kwa Njenga', 'Kwa Reuben', 'Pipeline'],
+                    'Embakasi West' => ['Umoja I', 'Umoja II', 'Mowlem', 'Kariobangi South'],
+                    'Kamukunji' => ['Pumwani', 'Eastleigh North', 'Eastleigh South', 'Airbase'],
+                    'Kasarani' => ['Clay City', 'Mwiki', 'Kasarani', 'Njiru'],
+                    'Kibra' => ['Laini Saba', 'Lindi', 'Makina', 'Woodley'],
+                    'Lang\'ata' => ['Karen', 'Nairobi West', 'Mugumoini', 'South C'],
+                    'Makadara' => ['Maringo', 'Hamza', 'Viwandani', 'Harambee'],
+                    'Mathare' => ['Hospital', 'Mabatini', 'Huruma', 'Ngei'],
+                    'Roysambu' => ['Githurai', 'Kahawa West', 'Zimmerman', 'Roysambu'],
+                    'Ruaraka' => ['Baba Dogo', 'Utalii', 'Mathare North', 'Lucky Summer'],
+                    'Starehe' => ['Nairobi Central', 'Ngara', 'Pangani', 'Landimawe'],
+                    'Westlands' => ['Kitisuru', 'Parklands', 'Highridge', 'Kangemi']
                 ]
             ]
         ];
 
-        foreach ($geographicalData as $countryData) {
-            $country = Country::create([
-                'code' => $countryData['code'],
-                'name' => $countryData['name'],
-                'county_label' => $countryData['county_label'],
-                'subcounty_label' => $countryData['subcounty_label'],
+        // Create Kenya country
+        $country = Country::firstOrCreate([
+            'code' => 'KE',
+        ], [
+            'name' => 'Kenya',
+            'county_label' => $kenyanData['labels']['county'],
+            'subcounty_label' => $kenyanData['labels']['subcounty'],
+        ]);
+
+        // Create counties, subcounties, and wards
+        foreach ($kenyanData['counties'] as $countyName => $subcounties) {
+            $county = County::firstOrCreate([
+                'country_id' => $country->id,
+                'name' => $countyName,
             ]);
 
-            foreach ($countryData['counties'] as $countyData) {
-                $county = County::create([
-                    'country_id' => $country->id,
-                    'name' => $countyData['name'],
+            foreach ($subcounties as $subcountyName => $wards) {
+                $subcounty = Subcounty::firstOrCreate([
+                    'county_id' => $county->id,
+                    'name' => $subcountyName,
                 ]);
 
-                foreach ($countyData['subcounties'] as $subcountyName) {
-                    Subcounty::create([
-                        'county_id' => $county->id,
-                        'name' => $subcountyName,
+                foreach ($wards as $wardName) {
+                    Ward::firstOrCreate([
+                        'subcounty_id' => $subcounty->id,
+                        'name' => $wardName,
                     ]);
                 }
             }
         }
+
+        $this->command->info('Kenyan geographical data seeded successfully!');
+        $this->command->info('Counties: ' . County::where('country_id', $country->id)->count());
+        $this->command->info('Subcounties: ' . Subcounty::whereHas('county', function($q) use ($country) {
+            $q->where('country_id', $country->id);
+        })->count());
+        $this->command->info('Wards: ' . Ward::whereHas('subcounty.county', function($q) use ($country) {
+            $q->where('country_id', $country->id);
+        })->count());
+
+        // Nigerian geographical data from demo-graphics.js
+        $nigerianData = [
+            'labels' => [
+                'county' => 'State',
+                'subcounty' => 'Local Government'
+            ],
+            'counties' => [
+                'Abia' => [
+                    'Aba North' => ['Ariaria Market', 'Eziama', 'Industrial Area', 'Ogbor I', 'Ogbor II', 'Old Aba Gra', 'Osusu I', 'Osusu II', 'St Eugenes By Okigwe Rd', 'Umuogor', 'Umuola', 'Uratta'],
+                    'Aba South' => ['Aba River', 'Aba Town Hall', 'Asa', 'Ekeoha', 'Enyimba', 'Eziukwu', 'Gloucester', 'Igwebuike', 'Mosque', 'Ngwa', 'Ohazu I', 'Ohazu II'],
+                    'Arochukwu' => ['Arochukwu I', 'Arochukwu II', 'Arochukwu III', 'Eleoha Ihechiowa', 'Ikwun Ihechiowa', 'Isu', 'Ohaeke', 'Ohafor I', 'Ohafor II', 'Ovukwu', 'Ututu'],
+                    'Bende' => ['Amankalu Akoliufu', 'Bende', 'Igbere A', 'Igbere B', 'Item A', 'Item B', 'Item C', 'Itumbauzo', 'Ozuitem', 'Ugwueke Ezeukwu', 'Umu Imenyi', 'Umuhu Ezechi', 'Uzuakoli'],
+                    'Ikwuano' => ['Ariam', 'Ibere I', 'Ibere II', 'Oboro I', 'Oboro II', 'Oboro III', 'Oboro IV', 'Oloko I', 'Oloko II', 'Usaka'],
+                    'Isiala Ngwa North' => ['Amapu Ntigha', 'Amasaa Nsulu', 'Amasaa Ntigha', 'Ihie', 'Isiala Nsulu', 'Mbawsi Umuomainta', 'Ngwa Ukwu I', 'Ngwa Ukwu II', 'Umunna Nsulu', 'Umuoha'],
+                    'Isiala Ngwa South' => ['Akunekpu Eziama Na Obuba', 'Amaise Amaise Anaba', 'Ehina Guru Osokwa', 'Mbutu Ngwa', 'Mbutu Ukwu', 'Ngwaobi', 'Okporo Ahaba', 'Omoba', 'Ovungwu', 'Ovuokwu'],
+                    'Isuikwuato' => ['Achara Mgbugwu', 'Ezere', 'Ikeagha I', 'Ikeagha II', 'Imenyi', 'Isiala Amawu', 'Isu Amawu', 'Ogunduasa', 'Umuanyi Absu', 'Umunnekwu'],
+                    'Obingwa' => ['Abayi I', 'Abayi II', 'Ahiaba', 'Akumaimo', 'Alaukwu Ohanze', 'Ibeme', 'Maboko Amairi', 'Mgboko Itungwa', 'Mgboko Umanunu', 'Ndiarata Amairinabua', 'Ntighauzo Amairi'],
+                    'Ohafia' => ['Agboji Abiriba', 'Amaeke Abiriba', 'Amaogudu Abiriba', 'Ania Ohoafia', 'Ebem Ohafia', 'Isiama Ohafia', 'Ndi Agbo Nkporo', 'Ndi Elu Nkporo', 'Ndi Etiti Nkporo', 'Ohafor Ohoafia', 'Okanu Ohoafia'],
+                    'Osisioma' => ['Ama Asaa', 'Amaitolu Mbutu Umuojima', 'Amasator', 'Amator', 'Amavo', 'Aro Ngwa', 'Okpor Umuobo', 'Oso Okwa', 'Umunneise', 'Urtta'],
+                    'Ugwunagbo' => ['Ward Eight', 'Ward Five', 'Ward Four', 'Ward Nine', 'Ward One', 'Ward Seven', 'Ward Six', 'Ward Ten', 'Ward Three', 'Ward Two'],
+                    'Ukwa West' => ['Asa North', 'Asa South', 'Ipu South', 'Ipu East', 'Ipu West', 'Obokwe', 'Obuzor', 'Ogwe', 'Ozaa West', 'Ozaa Ukwu'],
+                    'Umuahia North' => ['Affa', 'Afugiri', 'Ihie', 'Isingwu', 'Ndume', 'Nkwoachara', 'Nkwoegwu', 'Ohiaocha', 'Umuahia Urban I', 'Umuahia Urban II'],
+                    'Umuahia South' => ['Amaekpu', 'Amaogugu', 'Amuzukwu', 'Eziama Ntigha', 'Ibeku East', 'Ibeku West', 'Nkwoachara', 'Nkwoegwu', 'Ohiaocha', 'Umuahia Urban III'],
+                    'Umu Nneochi' => ['Amaokwe', 'Amuda', 'Eziama', 'Mbala', 'Ntalakwu', 'Obinolu', 'Obiorie', 'Umuaku', 'Umuchieze', 'Umuelem']
+                ],
+                'Adamawa' => [
+                    'Demsa' => ['Borrong', 'Demsa', 'Dilli', 'Dong', 'Dwam', 'Gwamba', 'Kpasham', 'Mbula Kuli', 'Nassarawo'],
+                    'Fufore' => ['Farang', 'Fufore', 'Gurin', 'Karlahi', 'Mayo Ine', 'Pariya', 'Ribadu', 'Uki Tuki', 'Wuro Bokki', 'Yolde Pate'],
+                    'Ganye' => ['Bakun', 'Ganye I', 'Ganye II', 'Gurum', 'Jaggu', 'Sangasumi', 'Sugu', 'Timdore', 'Yadafa'],
+                    'Girei' => ['Dan Arewa', 'Girei I', 'Girei II', 'Girei III', 'Jera Bakun', 'Jera Bonyo', 'Modire Vinikilang', 'Tambo', 'Wuro Dole'],
+                    'Gombi' => ['Boga', 'Dangas', 'Gabun', 'Garkida', 'Gombi North', 'Gombi South', 'Guyuk', 'Tawa', 'Yang'],
+                    'Guyuk' => ['Bobini', 'Bodeno', 'Chikila', 'Guyuk', 'Lokoro', 'Purokayo', 'Sundumi', 'Wuro Ngayandi', 'Zang'],
+                    'Hong' => ['Bangshika', 'Daksiri', 'Garaha', 'Hildi', 'Hong', 'Hushere Bere', 'Hushere Zummo', 'Uba', 'Zummo'],
+                    'Jada' => ['Danaba', 'Jada I', 'Jada II', 'Koma I', 'Koma II', 'Leko', 'Mapo', 'Mayo Lamlam', 'Nyibango', 'Yelli'],
+                    'Lamurde' => ['Dubwangun', 'Gyawana', 'Lamurde', 'Ngbakowo', 'Opalo', 'Rigange', 'Suwa', 'Wada', 'Wuro Ardo'],
+                    'Madagali' => ['Babel', 'Duhu', 'Gulak', 'Hyambula', 'Kirchinga', 'Madagali', 'Pallam', 'Wagga', 'Wula'],
+                    'Maiha' => ['Belel', 'Humbutudi', 'Konkol', 'Maiha Gari', 'Manjekin', 'Mayo Nguli', 'Pakka', 'Sorau A', 'Sorau B'],
+                    'Mayo Belwa' => ['Bajama', 'Gangfada', 'Ganye', 'Gorobi', 'Mayo Belwa', 'Mayo Farang', 'Nasarawo', 'Nassarawo Jereng', 'Tola'],
+                    'Michika' => ['Bazza Margi', 'Futudou', 'Kazaure', 'Michika I', 'Michika II', 'Moda', 'Nkafa', 'Sina', 'Thukudou', 'Vita'],
+                    'Mubi North' => ['Bahuli', 'Betso', 'Digil', 'Kolere', 'Lokuwa', 'Mujara', 'Muchalla', 'Yelwa'],
+                    'Mubi South' => ['Dirbishi', 'Duvu', 'Kwaja', 'Mujara', 'Mumuye I', 'Mumuye II', 'Nassarawo', 'Yadafa'],
+                    'Numan' => ['Bare', 'Gamadio', 'Imburu', 'Kodomti', 'Numan I', 'Numan II', 'Sabon Pegi', 'Vulpi'],
+                    'Shelleng' => ['Bakta', 'Bodwai', 'Gundo', 'Jumbul', 'Ketembere', 'Kiri', 'Libbo', 'Shelleng', 'Tallum'],
+                    'Song' => ['Dirma', 'Dirma II', 'Dumne', 'Gudu Mboi', 'Kilange', 'Song Gari', 'Song Waje', 'Waltandi', 'Zumo'],
+                    'Toungo' => ['Dawo I', 'Dawo II', 'Gumti', 'Kiri I', 'Kiri II', 'Kiri III', 'Longa', 'Toungo I', 'Toungo II'],
+                    'Yola North' => ['Ajiya', 'Alkalawa', 'Girei', 'Jambutu', 'Karena', 'Limawa', 'Luggere', 'Nassarawo', 'Rumde', 'Yelwa'],
+                    'Yola South' => ['Bako', 'Bole Yolde', 'Gwadabawa', 'Makama A', 'Makama B', 'Mbamba', 'Mbamoi', 'Namtari', 'Ngurore', 'Yolde Kohi']
+                ],
+                'Akwa Ibom' => [
+                    'Abak' => ['Abak Urban 1', 'Abak Urban 11', 'Abak Urban 111', 'Abak Urban 1v', 'Afaha Obong 1', 'Afaha Obong 11', 'Midim 1', 'Midim 11', 'Otoro 1', 'Otoro 11', 'Otoro 111'],
+                    'Eastern Obolo' => ['Eastern Obolo 1', 'Eastern Obolo 11', 'Eastern Obolo 111', 'Eastern Obolo 1v', 'Eastern Obolo Ix', 'Eastern Obolo V', 'Eastern Obolo V1', 'Eastern Obolo V11', 'Eastern Obolo V111', 'Eastern Obolo X'],
+                    'Eket' => ['Central 1', 'Central 11', 'Central 111', 'Central 1v', 'Central V', 'Okon 1', 'Okon 11', 'Urban 1', 'Urban 11', 'Urban 111', 'Urban 1v'],
+                    'Esit Eket' => ['Akpautong', 'Ebe Ekpi', 'Ebighi Okpono', 'Edor', 'Ekpene Obo', 'Etebi Akwata', 'Etebi Idung Assan', 'Ikpa', 'Ntak Inyang', 'Uquo'],
+                    'Essien Udim' => ['Adiasim', 'Afaha', 'Ekpeyong 1', 'Ekpeyong 11', 'Ikpe Annang', 'Odoro Ikot 1', 'Odoro Ikot 11', 'Okon', 'Ukana East', 'Ukana West 1', 'Ukana West 11'],
+                    'Etim Ekpo' => ['Etim Ekpo 1', 'Etim Ekpo 11', 'Etim Ekpo 111', 'Etim Ekpo 1v', 'Etim Ekpo Ix', 'Etim Ekpo V', 'Etim Ekpo V1', 'Etim Ekpo V11', 'Etim Ekpo V111', 'Etim Ekpo X'],
+                    'Etinan' => ['Etinan Urban 1', 'Etinan Urban 11', 'Etinan Urban 111', 'Etinan Urban 1v', 'Etinan Urban V', 'Northern Iman 1', 'Northern Iman 11', 'Southern Iman 1', 'Southern Iman 11', 'Southern Iman 111', 'Southern Iman 1v'],
+                    'Ibeno' => ['Ibeno 1', 'Ibeno 11', 'Ibeno 111', 'Ibeno 1v', 'Ibeno Ix', 'Ibeno V', 'Ibeno V11', 'Ibeno V111', 'Ibeno Vi', 'Ibeno X'],
+                    'Ibesikpo Asutan' => ['Asutan 1', 'Asutan 11', 'Asutan 111', 'Asutan 1v', 'Asutan V', 'Ibesikpo 1', 'Ibesikpo 11', 'Ibesikpo 111', 'Ibesikpo 1v', 'Ibesikpo V'],
+                    'Ibiono Ibom' => ['Ibiono Central 1', 'Ibiono Central 11', 'Ibiono Eastern 1', 'Ibiono Eastern 11', 'Ibiono Northern 1', 'Ibiono Northern 11', 'Ibiono Southern 1', 'Ibiono Southern 11', 'Ibiono Western 1', 'Ibiono Western 11', 'Ikpanya'],
+                    'Ika' => ['Achan 11', 'Achan 111', 'Achan Ika', 'Ito 1', 'Ito 11', 'Ito 111', 'Odoro 1', 'Odoro 11', 'Urban 1', 'Urban 11'],
+                    'Ikono' => ['1tak', 'Ediene 1', 'Ediene 11', 'Ikono Middle 1', 'Ikono Middle 11', 'Ikono Middle 111', 'Ikono Middle 1v', 'Ikono South', 'Ndiya Ikot Idana', 'Nkwot 1', 'Nkwot 11'],
+                    'Ikot Abasi' => ['Edemaya 1', 'Edemaya 11', 'Edemaya 111', 'Ikpa Ibekwe 1', 'Ikpa Ibekwe 11', 'Ikpa Nung Asang 1', 'Ikpa Nung Asang 11', 'Ukpum Ete 1', 'Ukpum Ete 11', 'Ukpum Okon'],
+                    'Ikot Ekpene' => ['Ikot Ekpene 1', 'Ikot Ekpene 11', 'Ikot Ekpene 111', 'Ikot Ekpene 1v', 'Ikot Ekpene Ix', 'Ikot Ekpene V', 'Ikot Ekpene V1', 'Ikot Ekpene V11', 'Ikot Ekpene V111', 'Ikot Ekpene X', 'Ikot Ekpene X1'],
+                    'Ini' => ['Ikono North 1', 'Ikono North 11', 'Ikono North 111', 'Ikpe 1', 'Ikpe 11', 'Itu Mbonuso', 'Iwerre', 'Nkari', 'Odoro Ukwok', 'Usuk Ukwok'],
+                    'Itu' => ['East Itam 1', 'East Itam 11', 'East Itam 111', 'East Itam 1v', 'East Itam V', 'Mbiase Ayadehe', 'Oku Iboku', 'West Itam 1', 'West Itam 11', 'West Itam 111'],
+                    'Mbo' => ['Ebughu 1', 'Ebughu 11', 'Efiat 1', 'Efiat 11', 'Enwang 1', 'Enwang 11', 'Ibaka', 'Uda 1', 'Uda 11', 'Udesi'],
+                    'Mkpat Enin' => ['Ibiaku 1', 'Ibiaku 11', 'Ibiaku 111', 'Ikpa Ibom 1', 'Ikpa Ibom 11', 'Ikpa Ibom 111', 'Ikpa Ibom 1v', 'Ikpa Ikono 1', 'Ikpa Ikono 11', 'Ikpa Ikono 111', 'Ukpum Minya 1', 'Ukpum Minya 11', 'Ukpum Minya 111', 'Ukpum Minya 1v'],
+                    'Nsit Atai' => ['Eastern Nsit 1', 'Eastern Nsit 11', 'Eastern Nsit 111', 'Eastern Nsit 1v', 'Eastern Nsit Ix', 'Eastern Nsit V', 'Eastern Nsit V1', 'Eastern Nsit V11', 'Eastern Nsit V111', 'Eastern Nsit X'],
+                    'Nsit Ibom' => ['Asang 1', 'Asang 11', 'Asang 111', 'Asang 1v', 'Asang V', 'Mbaiso 1', 'Mbaiso 11', 'Mbaiso 111', 'Mbaiso 1v', 'Mbaiso V'],
+                    'Nsit Ubium' => ['Ibiakpan Obotim 1', 'Ibiakpan Obotim 11', 'Itreto', 'Ndiya', 'Ubium North 1', 'Ubium North 11', 'Ubium North 111', 'Ubium South 1', 'Ubium South 11', 'Ubium South 111'],
+                    'Obot Akara' => ['Ikot Abia 1', 'Ikot Abia 11', 'Ikot Abia 111', 'Nto Edino 1', 'Nto Edino 11', 'Nto Edino 111', 'Nto Edino 1v', 'Obot Akara 1', 'Obot Akara 11', 'Obot Akara 111'],
+                    'Okobo' => ['Akai Mbukpo Udung', 'Ekeya', 'Eweme 1', 'Eweme 11', 'Nung Atai Ube 1', 'Nung Atai Ube 11', 'Offi 1', 'Offi 11', 'Okopedi 1', 'Okopedi 11'],
+                    'Onna' => ['Awa 1', 'Awa 11', 'Awa 111', 'Awa 1v', 'Nung Idem 1', 'Nung Idem 11', 'Oniong East 1', 'Oniong East 11', 'Oniong East 111', 'Oniong West 1', 'Oniong West 11', 'Oniong West 111'],
+                    'Oron' => ['Oron Urban Ix', 'Oron Urban X', 'Oron Urban 1', 'Oron Urban 11', 'Oron Urban 111', 'Oron Urban 1v', 'Oron Urban V', 'Oron Urban V1', 'Oron Urban V11', 'Oron Urban V111'],
+                    'Oruk Anam' => ['Abak Midim 1', 'Abak Midim 11', 'Abak Midim 111', 'Abak Midim 1v', 'Ekparakwa', 'Ibesit Nung Ikot 1', 'Ibesit Nung Ikot 11', 'Ikot Ibritam 1', 'Ikot Ibritam 11', 'Ndot Ikot Okoro 1', 'Ndot Ikot Okoro 11', 'Ndot Ikot Okoro 111', 'Ndot Ikot Okoro V1'],
+                    'Udung Uko' => ['Udung Uko 1', 'Udung Uko 11', 'Udung Uko 111', 'Udung Uko 1v', 'Udung Uko Ix', 'Udung Uko V', 'Udung Uko V1', 'Udung Uko V11', 'Udung Uko V111', 'Udung Uko X'],
+                    'Ukanafun' => ['Northern Afaha 1', 'Northern Afaha 11', 'Northern Ukanafun 1', 'Northern Ukanafun 11', 'Southern Afaha Adat Ifang 1', 'Southern Afaha Adat Ifang 11', 'Southern Afaha Adat Ifang 111', 'Southern Afaha Adat Ifang 1v', 'Southern Ukanafun 1', 'Southern Ukanafun 11', 'Ukanafun Urban'],
+                    'Uruan' => ['Central Uruan 11', 'Centyral Uruan 1', 'Centyral Uruan 111', 'Northern Uruan 1', 'Northern Uruan 11', 'Southern Uruan 1', 'Southern Uruan 11', 'Southern Uruan 111', 'Southern Uruan Iv', 'Southern Uruan V', 'Southern Uruan V1'],
+                    'Urue Offong Oruko' => ['Oruko 1', 'Oruko 11', 'Oruko 111', 'Oruko 1v', 'Oruko V', 'Urue Offong 1', 'Urue Offong 11', 'Urue Offong 111', 'Urue Offong 1v', 'Urue Offong V'],
+                    'Uyo' => ['Etoi 1', 'Etoi 11', 'Ikono 1', 'Ikono 11', 'Offot 1', 'Offot 11', 'Oku 1', 'Oku 11', 'Uyo Urban 1', 'Uyo Urban 11', 'Uyo Urban 111']
+                ],
+                'Anambra' => [
+                    'Aguata' => ['Achina', 'Aguluezechukwu', 'Akpo', 'Amesi', 'Ekwulobia I', 'Ekwulobia II', 'Ezinifite', 'Igboeze', 'Ikenga', 'Isuofia', 'Nkpologwu', 'Oraeri', 'Uga', 'Umuona'],
+                    'Anambra East' => ['Aguleri', 'Enugu Otu Aguleri', 'Eziagulu Otu', 'Igbariam', 'Mkpunando', 'Nando', 'Nsugbe', 'Umueri', 'Umueze Anam'],
+                    'Anambra West' => ['Ezi Anam', 'Ifite Anam', 'Nzam', 'Odekpe', 'Orometum', 'Owelle', 'Umuem Anam', 'Umuenwelum Anam'],
+                    'Anaocha' => ['Adazi Ani', 'Adazi Enu', 'Adazi Nnukwu', 'Agulu I', 'Agulu II', 'Agulu III', 'Ichida', 'Neni', 'Nri', 'Obeledu'],
+                    'Awka North' => ['Achalla', 'Amansea', 'Amanuke', 'Awba Ofemili', 'Ebene', 'Isu Aniocha', 'Mgbakwu', 'Ugbene', 'Ugbenu', 'Urum'],
+                    'Awka South' => ['Amawbia', 'Awka I', 'Awka II', 'Ezinator', 'Isiagu', 'Nibo', 'Nise', 'Okpuno', 'Umuawulu'],
+                    'Ayamelum' => ['Anaku', 'Ifite Ogwari', 'Igbakwu', 'Nzam', 'Omor', 'Omasi', 'Umueje', 'Umumbo', 'Umerum'],
+                    'Dunukofia' => ['Ifitedunu', 'Nawfia', 'Neni', 'Ukpo', 'Ukwulu', 'Umunnachi'],
+                    'Ekwusigo' => ['Ezinifite', 'Ichi', 'Oraifite I', 'Oraifite II', 'Ozubulu I', 'Ozubulu II'],
+                    'Idemili North' => ['Abacha', 'Abatete', 'Eziowelle', 'Ideani', 'Nkpor', 'Ogidi', 'Oraukwu', 'Uke', 'Umuoji'],
+                    'Idemili South' => ['Akwaeze', 'Alor', 'Awka Etiti', 'Nnokwa', 'Nnobi', 'Oba', 'Ojoto'],
+                    'Ihiala' => ['Amorka', 'Azia', 'Ebonesie', 'Ihiala I', 'Ihiala II', 'Isseke', 'Mbosi', 'Okija I', 'Okija II', 'Okija III', 'Okija IV'],
+                    'Njikoka' => ['Abagana', 'Enugwu Agidi', 'Enugwu Ukwu I', 'Enugwu Ukwu II', 'Enugwu Ukwu III', 'Nawfia', 'Nimo'],
+                    'Nnewi North' => ['Nnewi I', 'Nnewi II', 'Nnewi III', 'Nnewi IV'],
+                    'Nnewi South' => ['Amichi', 'Akwaihedi', 'Ebenator', 'Ezinifite', 'Osumenyi', 'Ukpor', 'Utuh', 'Unubi'],
+                    'Ogbaru' => ['Atani', 'Akili Ogidi', 'Iyiowa Odekpe', 'Odekpe', 'Ogbakuba', 'Ossomala', 'Ohita', 'Okpoko I', 'Okpoko II'],
+                    'Onitsha North' => ['GRA', 'Inland Town', 'Fegge I', 'Fegge II', 'Woliwo', 'Odoakpu'],
+                    'Onitsha South' => ['Bridgehead', 'Odoakpu II', 'Odoakpu III', 'Odoakpu IV', 'Fegge III', 'Harbour Industrial Layout'],
+                    'Orumba North' => ['Ajalli', 'Awa', 'Awgbu', 'Ndikelionwu', 'Ndiokpalaeze', 'Ndiokpaleke', 'Nanka', 'Oko', 'Omogho', 'Ufuma'],
+                    'Orumba South' => ['Akpu', 'Ezira', 'Eziagu', 'Ihite', 'Isulo', 'Nkerehi', 'Nkpologwu', 'Umunze'],
+                    'Oyi' => ['Awkuzu', 'Nteje', 'Nkwelle Ezunaka', 'Ogbunike', 'Umunya']
+                ],
+                'Bauchi' => [
+                    'Alkaleri' => ['Alkaleri', 'Bishi', 'Danbam', 'Gwaram', 'Kundak', 'Lim', 'Maimadi', 'Munki', 'Pali', 'Tsohon Birni', 'Yalo'],
+                    'Bauchi' => ['Bauchi Central', 'Bauchi North', 'Bauchi South', 'Galambi', 'Kangere', 'Liman Katagum', 'Miri', 'Zungur Lame'],
+                    'Bogoro' => ['Boi', 'Bogoro', 'Burar', 'Darmangari', 'Gumai', 'Gumai II', 'Lusa', 'Lusa Tapshin', 'Tulu'],
+                    'Damban' => ['Dagauda', 'Damban', 'Dagauda North', 'Dagauda South', 'Mashema', 'Yame', 'Yanda'],
+                    'Darazo' => ['Darazo', 'Gabarin', 'Gabchiyari', 'Gwaram', 'Lano', 'Lefiya', 'Lerama', 'Papa', 'Tashan Durumi', 'Wahu', 'Zangon Gari'],
+                    'Dass' => ['Bagel', 'Bununu', 'Bundot', 'Lukshi', 'Tafawa Balewa', 'Wandi', 'Zumbang'],
+                    'Gamawa' => ['Gamawa', 'Gadiya', 'Gololo', 'Kafin Madaki', 'Kafin Zaki', 'Raga', 'Uban Daba', 'Uban Daba II', 'Zindi'],
+                    'Ganjuwa' => ['Ganjuwa', 'Gundari', 'Jalam', 'Kafin Magaji', 'Kafin Madaki', 'Miya', 'Miya East', 'Miya West', 'Tirwun'],
+                    'Giade' => ['Giade', 'Sabuwa', 'Zabi', 'Zubukin', 'Uduku'],
+                    'Itas Gadau' => ['Gadau', 'Itas', 'Kwaram', 'Rinjin Gada', 'Zangon Gari'],
+                    'Jama\'are' => ['Dogon Jeji', 'Gargam', 'Guda', 'Hanafari', 'Jama\'are', 'Jurara', 'Kofar Wase'],
+                    'Katagum' => ['Chinade', 'Disina', 'Madachi', 'Madara', 'Sabon Garin', 'Zaki'],
+                    'Kirfi' => ['Kirfi', 'Badara', 'Dindima', 'Shango', 'Tubule', 'Tsohon Gari'],
+                    'Misau' => ['Hardawa', 'Jarkasa', 'Kafin Sule', 'Kukadi', 'Misau Central', 'Sakwa', 'Sarma', 'Zindi'],
+                    'Ningi' => ['Balma', 'Bashe', 'Burra', 'Kafin Madaki', 'Kafin Tafawa', 'Kurmi', 'Ningi Central', 'Tiffi', 'Zango'],
+                    'Shira' => ['Azare', 'Dagu', 'Giade', 'Karma', 'Shira', 'Tunbun', 'Zindi'],
+                    'Tafawa Balewa' => ['Boi', 'Darmangari', 'Lere', 'Magama', 'Mballa', 'Wai', 'Wai II', 'Zwall'],
+                    'Toro' => ['Tilden Fulani', 'Palama', 'Lame', 'Rishi', 'Toro North', 'Toro South', 'Wonu'],
+                    'Warji' => ['Katanga', 'Rinjin Gada', 'Rimin Zayam', 'Tse', 'Warji', 'Zangon Gari'],
+                    'Zaki' => ['Alangawari', 'Bade', 'Bursali', 'Machina', 'Sakawa', 'Tarmasuwa', 'Zaki']
+                ],
+                'Bayelsa' => [
+                    'Brass' => ['Brass I', 'Brass II', 'Brass III', 'Cape Formoso', 'Okpoama', 'Odioma'],
+                    'Ekeremor' => ['Ekeremor I', 'Ekeremor II', 'Ekeremor III', 'Toru Ndoro', 'Ofoni', 'Ogbotobo', 'Ndoro'],
+                    'Kolokuma/Opokuma' => ['Kaiama I', 'Kaiama II', 'Okoloba', 'Opokuma I', 'Opokuma II', 'Sabagreia'],
+                    'Nembe' => ['Bassambiri I', 'Bassambiri II', 'Ogbolomabiri I', 'Ogbolomabiri II', 'Ikensi', 'Oluasiri'],
+                    'Ogbia' => ['Anyama', 'Emeyal I', 'Emeyal II', 'Kolo', 'Oloibiri', 'Opume', 'Otuasega', 'Otuokpoti', 'Otuokpoti II'],
+                    'Sagbama' => ['Agbere', 'Ofoni', 'Osekwenike', 'Sagabama I', 'Sagabama II', 'Toro Oruma'],
+                    'Southern Ijaw' => ['Apoi', 'Apoibiri', 'Amassoma', 'Ogboinbiri', 'Koluama', 'Oporoma', 'Otuan'],
+                    'Yenagoa' => ['Biseni', 'Gbarain', 'Epie I', 'Epie II', 'Ekpetiama', 'Okordia', 'Atissa']
+                ],
+                'Benue' => [
+                    'Ado' => ['Agila', 'Ado Township', 'Apa', 'Icho', 'Ijigban', 'Igumale I', 'Igumale II', 'Ogege', 'Okpokwu', 'Ulayi'],
+                    'Agatu' => ['Agatu Central', 'Egbangede', 'Odugbeho', 'Ogbaulu', 'Olowo', 'Usha', 'Okokolo', 'Obagaji', 'Egba'],
+                    'Apa' => ['Akpete', 'Iga Okpaya', 'Oba', 'Ofoke', 'Oiji', 'Olegokpa', 'Ome', 'Ugbokpo', 'Ugba'],
+                    'Buruku' => ['Binev', 'Mbaade', 'Mbaakura', 'Mbaazagee', 'Mbaya', 'Mbaikyongo', 'Mbaikyaa', 'Mbaityough', 'Mbaityough II', 'Mbaikyaa II'],
+                    'Gboko' => ['Gboko Central', 'Mbakine', 'Mbadim', 'Mbatser', 'Mbadam', 'Mbasombo', 'Mbayion', 'Mbatyu', 'Ukpekpe', 'Yandev'],
+                    'Guma' => ['Abinsi', 'Mbabai', 'Mbadwem', 'Mbawa', 'Mbayer Yandev', 'Nzorov', 'Uvir'],
+                    'Gwer East' => ['Aliade', 'Mbabuande', 'Mbaikyase', 'Mbaiki', 'Mbalom', 'Mbayom', 'Ikpayongo'],
+                    'Gwer West' => ['Agu', 'Aka', 'Apir', 'Gbaange/Tongov', 'Nagi', 'Naka', 'Sengev', 'Tse-Kucha'],
+                    'Katsina-Ala' => ['Katsina-Ala Town', 'Ikurav Tiev I', 'Ikurav Tiev II', 'Mbacher', 'Mbajir', 'Mbayongo', 'Mbatyula', 'Mbur', 'Yooyo'],
+                    'Konshisha' => ['Tse Agberagba', 'Mbagh', 'Mbanor', 'Mbatser', 'Mbatser I', 'Mbatser II', 'Mbawar', 'Mbaikyor', 'Mbagwaza', 'Mbagbam'],
+                    'Kwande' => ['Adikpo', 'Ikyurav Ya', 'Kumakwagh', 'Mbayenge', 'Turankwene', 'Usar', 'Waya', 'Yaav'],
+                    'Logo' => ['Ayilamo', 'Anyiin', 'Gaambe Tiev I', 'Gaambe Tiev II', 'Mbater', 'Mbazun', 'Mbaya', 'Tse-Agberagba', 'Ugondo'],
+                    'Makurdi' => ['Agan', 'Ankpa', 'Bar', 'Fiidi', 'Mbalagh', 'Modern Market', 'North Bank I', 'North Bank II', 'Wadata'],
+                    'Obi' => ['Adiko', 'Itogo', 'Obarike Ito', 'Obarike Ito II', 'Odiapa', 'Okpokwu'],
+                    'Ogbadibo' => ['Ameju', 'Orokam', 'Owukpa Town', 'Otukpa Town', 'Otukpa Central', 'Otukpa South'],
+                    'Ohimini' => ['Agadagba', 'Idekpa', 'Ochobo', 'Onyagede I', 'Onyagede II', 'Ugbokpo'],
+                    'Oju' => ['Ainu', 'Adokpa', 'Ibilla', 'Ihiejwo', 'Oju Urban', 'Okpokpo', 'Owo', 'Ukpa'],
+                    'Okpokwu' => ['Ameju', 'Eke', 'Epeilo', 'Ichama I', 'Ichama II', 'Okpoga', 'Okpoga Central'],
+                    'Otukpo' => ['Adoka', 'Akpa', 'Aondo Ana', 'Ewulo', 'Gabo', 'Okete', 'Okete Central', 'Otobi', 'Otukpo Town', 'Ugboju'],
+                    'Tarka' => ['Wannune', 'Tongov', 'Mbayongo', 'Shitile', 'Mbagbera'],
+                    'Ukum' => ['Ayu', 'Azendeshi', 'Lumbur', 'Mbayenge', 'Zaki Biam', 'Tswarev'],
+                    'Ushongo' => ['Lessel', 'Atirkyese', 'Ikov', 'Mbagwaza', 'Mbayegh', 'Mbatyough', 'Mbaye', 'Tse Kenyi', 'Uwer'],
+                    'Vandeikya' => ['Mbadede', 'Mbagbam', 'Mbagbera', 'Mbagwaza', 'Mbajor', 'Mbakpa', 'Mbaikyase', 'Tsanbe', 'Vandeikya Town']
+                ],
+                'Borno' => [
+                    'Abadam' => ['Arege', 'Barwa', 'Kukawa', 'Mallam Fatori', 'Yauri'],
+                    'Askira/Uba' => ['Askira', 'Huyum', 'Ngohi', 'Ngohi II', 'Uba', 'Wamdeo', 'Wamdeo II', 'Zadawa'],
+                    'Bama' => ['Bama Central', 'Banki', 'Kumshe', 'Gulumba', 'Amchaka', 'Bula', 'Kasugula', 'Sabsabuwa', 'Woloji'],
+                    'Bayo' => ['Balbaya', 'Briyel', 'Hausari', 'Lubu', 'Jara Dali', 'Jara Galtimari'],
+                    'Biu' => ['Buratai', 'Dugja', 'Galtimari', 'Garubula', 'Gunda', 'Miringa', 'Yawi', 'Zarawuyaku'],
+                    'Chibok' => ['Chibok Central', 'Kautikari', 'Korongilim', 'Mbalala', 'Shikarkir', 'Whuntaku'],
+                    'Damboa' => ['Ajigin', 'Azir', 'Gumsiri', 'Kafa', 'Kiyawa', 'Ngulde', 'Yajiwa'],
+                    'Dikwa' => ['Dikwa Central', 'Boboshe', 'Gajibo', 'Gulumba', 'Meleri', 'Melewa'],
+                    'Gubio' => ['Damasak', 'Fuchimiram', 'Gubio Town', 'Kadar', 'Ngetra', 'Zowo'],
+                    'Guzamala' => ['Gudumbali', 'Guzamala Central', 'Kukur', 'Mairari', 'Ngurntim'],
+                    'Gwoza' => ['Gwoza Central', 'Kirawa', 'Pulka', 'Ashigashiya', 'Wala', 'Limankara'],
+                    'Hawul' => ['Azare', 'Marama', 'Pama', 'Shani', 'Sakwa', 'Wadaka'],
+                    'Jere' => ['Khaddamari', 'Mashamari', 'Dusuman', 'Maimusari', 'Gomari', 'Tuba', 'Zajiri'],
+                    'Kaga' => ['Auno', 'Benisheikh', 'Ngamdu', 'Mainok', 'Wajiroko'],
+                    'Kala/Balge' => ['Rann', 'Sigal', 'Kaje', 'Jilbe', 'Wulgo', 'Ginni'],
+                    'Konduga' => ['Auno', 'Dalori', 'Kawuri', 'Konduga', 'Malari', 'Yale'],
+                    'Kukawa' => ['Baga', 'Baga Kawa', 'Cross Kauwa', 'Doro', 'Kukawa Central', 'Kukawa North', 'Kukawa South'],
+                    'Kwaya Kusar' => ['Gondi', 'Kwaya Kusar', 'Kurba', 'Peta', 'Wada'],
+                    'Mafa' => ['Ajiri', 'Mafa Central', 'Mafa North', 'Mafa South', 'Tamsu Ngamdu'],
+                    'Magumeri' => ['Furram', 'Kareram', 'Kuda', 'Magumeri', 'Ngamma', 'Titiwa'],
+                    'Maiduguri' => ['Bolori I', 'Bolori II', 'Fezzan', 'Gwange I', 'Gwange II', 'Gwange III', 'Lamisula', 'Maisandari', 'Shehuri North', 'Shehuri South'],
+                    'Marte' => ['Kirenuwa', 'Krenowa', 'Marte Central', 'Musune', 'Zaga', 'Zango'],
+                    'Mobbar' => ['Damasak', 'Gashigar', 'Kareto', 'Zanna Umoru'],
+                    'Monguno' => ['Monguno Central', 'Kafin', 'Nganzi', 'Wulo', 'Yele', 'Zur', 'Zulum'],
+                    'Ngala' => ['Gamboru', 'Old Gamboru', 'Ngala Central', 'Wulgo', 'Rann'],
+                    'Nganzai' => ['Badu', 'Gajiram', 'Jabullam', 'Nganzai Central', 'Sabsabuwa'],
+                    'Shani' => ['Bargu', 'Buratai', 'Gasi', 'Gwaskara', 'Kubo', 'Shani Central']
+                ],
+                'Cross River' => [
+                    'Abi' => ['Adadama', 'Afafanyi/Igonigoni', 'Ediba', 'Ekureku I', 'Ekureku II', 'Imabana I', 'Imabana II', 'Itigidi', 'Usumutong'],
+                    'Akamkpa' => ['Akamkpa Urban', 'Awi', 'Eku', 'Iko', 'Ikpai', 'Mbarakom', 'Oban', 'Ojuk North', 'Ojuk South'],
+                    'Akpabuyo' => ['Atimbo', 'Eneyo', 'Ikot Nakanda', 'Idundu', 'Ikang', 'Ibia', 'Ikot Eyo', 'Esuk Mbat'],
+                    'Bakassi' => ['Abana', 'Akpankanya', 'Amoto', 'Atabong', 'Ikang Central', 'Ikot Effiom', 'Usung Esuk'],
+                    'Bekwarra' => ['Abuochiche', 'Afrike', 'Akwutie', 'Beten', 'Nyanya', 'Ubegbere', 'Ukpah'],
+                    'Biase' => ['Abayong', 'Adim', 'Akpet Central', 'Anong', 'Ehom', 'Erei North', 'Erei South', 'Ndem', 'Umoh'],
+                    'Boki' => ['Abo', 'Alankwu', 'Buda', 'Bumaji', 'Bunyia', 'Kakwagom', 'Ogep Osokom'],
+                    'Calabar Municipal' => ['Atimbo', 'Ikot Omin', 'Ikot Eyo', 'Ikot Ishie', 'Ikot Ansa', 'Ikot Abasi Obori', 'Ikot Effanga Mkpa', 'Ikot Enebong'],
+                    'Calabar South' => ['Anantigha', 'Efut', 'Henshaw Town', 'Mbukpa', 'Ikot Efanga', 'Ikot Eneobong', 'Ikot Offiong'],
+                    'Etung' => ['Agbokim', 'Awha Imezi', 'Abia', 'Effraya', 'Itaka', 'Nsofang', 'Nsokom'],
+                    'Ikom' => ['Abanyom', 'Akparabong', 'Akamkpa', 'Nde', 'Ikom Urban I', 'Ikom Urban II', 'Ikom Urban III', 'Olulumo', 'Ofutop'],
+                    'Obanliku' => ['Bendi I', 'Bendi II', 'Bisu', 'Busi', 'Gabu', 'Kukwen', 'Ubang'],
+                    'Obubra' => ['Ofumbongha', 'Ofumbongha North', 'Ofumbongha South', 'Ofumbongha West', 'Ofumbongha East', 'Ofumbongha Urban'],
+                    'Obudu' => ['Alegbe', 'Bene', 'Ipong', 'Ukpe', 'Utugwang Central', 'Utugwang South'],
+                    'Odukpani' => ['Adun', 'Ekim', 'Eki', 'Ikonet', 'Ikot Uba', 'Ikot Omin', 'Iyang', 'Odukpani Central', 'Odot'],
+                    'Yakurr' => ['Agoi Ibami', 'Agoi Ekpo', 'Assiga', 'Ikpakapit', 'Mkpani', 'Nko', 'Ugep Urban I', 'Ugep Urban II'],
+                    'Yala' => ['Ebo', 'Echumoga', 'Gabu', 'Itekpa', 'Okpoma', 'Okuku', 'Wanikade', 'Wanihem']
+                ],
+                'Delta' => [
+                    'Aniocha North' => ['Ezi', 'Idumuje Unor', 'Idumuje Ugboko', 'Issele Azagba', 'Issele Mkpitime', 'Issele Uku', 'Obior', 'Obomkpa', 'Onicha Olona', 'Onicha Ugbo', 'Onicha Ukwu'],
+                    'Aniocha South' => ['Ejeme Aniogor', 'Ejeme Unor', 'Isheagu', 'Nsukwa', 'Ogwaile', 'Ubulu Uku', 'Ubulu Unor', 'Ubulu Okiti'],
+                    'Bomadi' => ['Bomadi', 'Ogriagbene', 'Okoloba', 'Kpakiama', 'Akugbene', 'Esanma', 'Ogbeinama', 'Erepa', 'Ogo-Eze'],
+                    'Burutu' => ['Burutu', 'Ayakoromo', 'Forcados', 'Kiagbodo', 'Obotebe', 'Ogbobagbene', 'Okoloba', 'Ogulagha', 'Toru Angiama'],
+                    'Ethiope East' => ['Abraka', 'Agbon', 'Eku', 'Igun', 'Okpara Inland', 'Okpara Waterside'],
+                    'Ethiope West' => ['Jesse', 'Mosogar', 'Ogharaefe', 'Oghareki', 'Otor-Oghara'],
+                    'Ika North East' => ['Akumazi Umuocha', 'Idumuesah', 'Igbodo', 'Mbiri', 'Obior', 'Owa Alidinma', 'Owa Oyibu', 'Owa Alero', 'Umunede'],
+                    'Ika South' => ['Abavo', 'Agbor Alidinma', 'Agbor Obi', 'Agbor Nta', 'Agbor Okowa', 'Ihiui', 'Umunede'],
+                    'Isoko North' => ['Emevor', 'Ofagbe', 'Okpe Isoko', 'Otor Owhe', 'Ozoro', 'Owhelogbo', 'Ellu', 'Iyede'],
+                    'Isoko South' => ['Enwhe', 'Erowha', 'Irri', 'Olomoro', 'Umeh', 'Aviara', 'Aradhe'],
+                    'Ndokwa East' => ['Aboh', 'Akarai', 'Ashaka', 'Igbuku', 'Okpai', 'Onyah', 'Ossissa', 'Utchi'],
+                    'Ndokwa West' => ['Kwale', 'Ossissa', 'Onicha Ukwani', 'Utagba Uno', 'Utagba Ogbe', 'Emu Uno'],
+                    'Okpe' => ['Adagbrasa', 'Jeddo', 'Ogunu', 'Okpe Town', 'Okwidiemo', 'Ughoton'],
+                    'Oshimili North' => ['Akwukwu Igbo', 'Atuma', 'Ibusa', 'Illah', 'Okpanam', 'Ukala Okpunor', 'Ukala Nsukwu'],
+                    'Oshimili South' => ['Okwe', 'Oko', 'Cable Point', 'Umuezei', 'Anwai', 'Asaba'],
+                    'Patani' => ['Patani', 'Aven', 'Torugbene', 'Koloware', 'Odorubu'],
+                    'Sapele' => ['Amukpe', 'Elume', 'Okirighwre', 'Ugbimidaka', 'Ugborhen', 'Jesse Junction'],
+                    'Udu' => ['Aladja', 'Enerhen', 'Ovwian', 'Orhuwhorun', 'Okolor', 'Egini', 'Obubu'],
+                    'Ughelli North' => ['Agbarha', 'Afiesere', 'Eruemukohwarien', 'Ogor', 'Ughelli Urban I', 'Ughelli Urban II', 'Orogun'],
+                    'Ughelli South' => ['Arhavwarien', 'Okwagbe', 'Otu Jeremi', 'Ewu', 'Okpare', 'Ekakpamre'],
+                    'Ukwuani' => ['Amai', 'Ebedei', 'Ezionum', 'Obiaruku', 'Umuebu', 'Utagba Uno'],
+                    'Uvwie' => ['Effurun', 'Enerhen', 'Ugbomro', 'Ugborikoko', 'Ugboroke', 'Ebrumede', 'Ugbomro II', 'Ugbomro III'],
+                    'Warri North' => ['Koko', 'Ebrohimi', 'Ogheye', 'Gbokoda', 'Jakpa', 'Oboro', 'Ogbinbiri'],
+                    'Warri South' => ['Okere', 'Ogunu', 'Ogunu II', 'Pessu', 'Ugbuwangue', 'Ugbuwangue II'],
+                    'Warri South West' => ['Ogbe Ijoh', 'Oporoza', 'Kurutie', 'Benikrukru', 'Escravos', 'Madangho']
+                ],
+                'Ebonyi' => [
+                    'Abakaliki' => ['Abakpa', 'Amechi', 'Amagu', 'Ezza Inyimagu', 'Izzi Unuhu', 'Kpirikpiri', 'Nkaliki', 'Onuebonyi'],
+                    'Afikpo North' => ['Afikpo', 'Amangbala', 'Amuro', 'Itim', 'Ohaisu', 'Ozizza', 'Uwana'],
+                    'Afikpo South' => ['Amangwu', 'Ebiji', 'Eke Market', 'Nguzu', 'Okoro', 'Oso', 'Owutu', 'Uburu'],
+                    'Ebonyi' => ['Echiaba', 'Enyibichiri', 'Okposi', 'Oshiri', 'Ukawu', 'Umunaga', 'Umuogudu Akpu'],
+                    'Ezza North' => ['Ezza', 'Ezza Ezekuna', 'Umuezeoka', 'Umuezeokaoha', 'Umuhuali'],
+                    'Ezza South' => ['Amaezekwe', 'Amagu', 'Ameka', 'Amudo', 'Ezzama', 'Okoffia', 'Onueke'],
+                    'Ikwo' => ['Agalegu', 'Agubia', 'Eka Awoke', 'Eka Awoke II', 'Eka Awoke III', 'Ndufu Alike', 'Ndufu Echara', 'Ndufu Inyimagu'],
+                    'Ishielu' => ['Agba', 'Ezzagu', 'Ezillo', 'Ikwubor', 'Nkalagu', 'Nkalaha', 'Ntezi', 'Umuoghara'],
+                    'Ivo' => ['Amagu', 'Akaeze', 'Ameke', 'Ameka', 'Amaike', 'Okue', 'Umuobuna'],
+                    'Izzi' => ['Amachi', 'Amagu', 'Edda', 'Ezza', 'Igbegu', 'Igbeagu', 'Mgbalukwu', 'Umuhuali'],
+                    'Ohaozara' => ['Okposi', 'Ugwulangwu', 'Uburu', 'Amaezekwe', 'Oso', 'Ede', 'Obiozara'],
+                    'Ohaukwu' => ['Ezzamgbo', 'Effium', 'Ishiagu', 'Ngbo', 'Umuezeoka', 'Umuezeokaoha', 'Okposi'],
+                    'Onicha' => ['Abaomege', 'Amagu', 'Ameka', 'Isu', 'Oshiri', 'Ukawu']
+                ],
+                'Edo' => [
+                    'Akoko Edo' => ['Ibillo', 'Imoga', 'Igarra', 'Lampese', 'Uneme', 'Ugboshi', 'Ojirami', 'Ososo', 'Somorika'],
+                    'Egor' => ['Uselu', 'Use', 'Ugbowo', 'Uselu Shell', 'Uselu Market', 'Ugbowo Market'],
+                    'Esan Central' => ['Ewu', 'Irrua', 'Opoji', 'Ugbegun', 'Uromi'],
+                    'Esan North East' => ['Uromi I', 'Uromi II', 'Uromi III', 'Uromi IV', 'Uromi V'],
+                    'Esan South East' => ['Ewatto', 'Emu', 'Ohordua', 'Ugboha', 'Ewohimi'],
+                    'Esan West' => ['Ekpoma I', 'Ekpoma II', 'Ekpoma III', 'Iruekpen', 'Uhiele', 'Ujoelen'],
+                    'Etsako Central' => ['Fugar I', 'Fugar II', 'Fugar III', 'Iraokhor', 'Ayogwiri'],
+                    'Etsako East' => ['Agenebode', 'Okpella', 'Imiegba', 'Weppa', 'Okpekpe'],
+                    'Etsako West' => ['Auchi I', 'Auchi II', 'Auchi III', 'South Ibie', 'Uzairue'],
+                    'Igueben' => ['Igueben I', 'Igueben II', 'Ekpon', 'Ekpon II', 'Udo'],
+                    'Ikpoba Okha' => ['Ikpoba Hill', 'Ologbo', 'Oka', 'Evboekhae', 'Obazagbon', 'Evboriaria', 'Idogbo'],
+                    'Oredo' => ['Sapele Road', 'New Benin', 'Ugbowo', 'Upper Sakponba', 'Ogida', 'Uselu', 'GRA'],
+                    'Orhionmwon' => ['Abudu', 'Ugu', 'Urhonigbe', 'Urhonigbe II', 'Ugo', 'Ugo II'],
+                    'Ovia North East' => ['Okada', 'Okada II', 'Okada III', 'Ogbese', 'Ohiere', 'Uhiere II', 'Iguobazuwa'],
+                    'Ovia South West' => ['Siluko', 'Ofunama', 'Gbakani', 'Udo', 'Usen', 'Nikoro', 'Okomu'],
+                    'Owan East' => ['Afuze', 'Emai', 'Ihievbe', 'Igue', 'Otuo', 'Otuo II'],
+                    'Owan West' => ['Sabongida Ora', 'Sobe', 'Uhonmora', 'Uzebba', 'Avbiosi'],
+                    'Uhunmwonde' => ['Ehor', 'Igue', 'Irhue', 'Ohuan', 'Uhiere', 'Urhonigbe']
+                ],
+                'Ekiti' => [
+                    'Ado Ekiti' => ['Ado Central', 'Ado East', 'Ado West', 'Oke Ila', 'Okeyinmi', 'Oke Ori Omi', 'Oke Iyin', 'Oke Ila I', 'Oke Ila II', 'Oke Ila III'],
+                    'Efon' => ['Efon Alaaye I', 'Efon Alaaye II', 'Efon Alaaye III', 'Efon Alaaye IV', 'Efon Alaaye V', 'Efon Alaaye VI', 'Efon Alaaye VII', 'Efon Alaaye VIII', 'Efon Alaaye IX', 'Efon Alaaye X'],
+                    'Ekiti East' => ['Araromi', 'Isinbode', 'Omuo', 'Omuo Oke', 'Omuo Oke II', 'Kota', 'Ilasa', 'Oke Oko', 'Omuo Oke III', 'Ikun'],
+                    'Ekiti South West' => ['Ilawe I', 'Ilawe II', 'Ilawe III', 'Ogotun', 'Ogotun II', 'Ogotun III', 'Ilawe IV', 'Ikere Road', 'Erinmope', 'Ikogosi'],
+                    'Ekiti West' => ['Aramoko I', 'Aramoko II', 'Okemesi I', 'Okemesi II', 'Erio', 'Erijiyan', 'Ipole Iloro', 'Ijurin', 'Ikogosi', 'Iropora'],
+                    'Emure' => ['Emure I', 'Emure II', 'Emure III', 'Emure IV', 'Emure V', 'Emure VI', 'Emure VII', 'Emure VIII', 'Emure IX', 'Emure X'],
+                    'Gbonyin' => ['Aisegba I', 'Aisegba II', 'Agbado', 'Imesi', 'Ijan', 'Iluomoba', 'Iro Ayeteju', 'Iro Ekiti', 'Omuo Oke'],
+                    'Ido Osi' => ['Aaye', 'Ayetoro', 'Ido', 'Ifaki I', 'Ifaki II', 'Ilogbo', 'Orin', 'Usi'],
+                    'Ijero' => ['Ekamarun', 'Ijero I', 'Ijero II', 'Ikoro', 'Ipoti I', 'Ipoti II', 'Odo Owa', 'Oke Iro', 'Ijurin'],
+                    'Ikere' => ['Ikere I', 'Ikere II', 'Ikere III', 'Ikere IV', 'Ikere V', 'Ikere VI', 'Ikere VII', 'Ikere VIII', 'Ikere IX', 'Ikere X'],
+                    'Ikole' => ['Asin', 'Ikole I', 'Ikole II', 'Ikole III', 'Ikunri', 'Odo Ayedun', 'Oke Ako', 'Ipao', 'Ara', 'Ijero'],
+                    'Ilejemeje' => ['Eda Oniyo', 'Eda Oniyo II', 'Iye I', 'Iye II', 'Obada', 'Imoji', 'Iludun I', 'Iludun II'],
+                    'Irepodun/Ifelodun' => ['Awo', 'Afao', 'Igede', 'Esure', 'Iropora', 'Are', 'Iworoko', 'Awo Ekiti'],
+                    'Ise/Orun' => ['Ise I', 'Ise II', 'Ise III', 'Orun', 'Aba Oyin', 'Ogotun', 'Omuo', 'Oke Ila'],
+                    'Moba' => ['Ikun', 'Ilupeju', 'Osun', 'Ire', 'Osan', 'Otun', 'Ipoti', 'Ikunri'],
+                    'Oye' => ['Ayegbaju', 'Ilafon', 'Ilupeju', 'Ire I', 'Ire II', 'Oye I', 'Oye II', 'Itapa']
+                ],
+                'Enugu' => [
+                    'Aninri' => ['Ndeaboh', 'Mpu', 'Oduma', 'Okpanku', 'Nenwe'],
+                    'Awgu' => ['Awgu Town', 'Agbogugu', 'Ania', 'Ihe', 'Mgbidi', 'Mmaku', 'Nkwe', 'Owelli', 'Ugbo', 'Ugwueme'],
+                    'Enugu East' => ['Abakpa Nike', 'Amechi Idodo', 'Ibagwa Nike', 'Mbulu Owo', 'Owo', 'Ugwogo Nike', 'Nike', 'Trans Ekulu'],
+                    'Enugu North' => ['Asata', 'G.R.A', 'New Haven', 'Ogui', 'Ugwuaji', 'Coal Camp', 'Independence Layout', 'Old G.R.A'],
+                    'Enugu South' => ['Akwuke', 'Amechi Uwani', 'Ugwuaji', 'Ugbo', 'Ogbete', 'Uwani', 'Maryland', 'Achara Layout'],
+                    'Ezeagu' => ['Aguobu Owa', 'Awha Imezi', 'Ike', 'Isi Uzo', 'Obinagu', 'Udi', 'Umana Ndiuno'],
+                    'Igbo Etiti' => ['Aku', 'Diogbe', 'Ikolo', 'Ochima', 'Ohebe', 'Ohebe Dim', 'Ohebe Owo', 'Ozalla', 'Ukehe'],
+                    'Igbo Eze North' => ['Enugu Ezike', 'Ogbodu Aba', 'Ogurute', 'Unadu', 'Umuitodo', 'Umulokpa'],
+                    'Igbo Eze South' => ['Itchi', 'Iheakpu', 'Iheakpu Awka', 'Ibagwa', 'Iheaka', 'Ovoko'],
+                    'Isi Uzo' => ['Eha Amufu', 'Ikem', 'Neke', 'Umualor', 'Mbu', 'Eha Amufu II', 'Ikem II'],
+                    'Nkanu East' => ['Amagunze', 'Amechi Idodo', 'Ihuokpara', 'Isi Uzo', 'Nara', 'Nkerefi', 'Mburubu', 'Oruku', 'Ubahu'],
+                    'Nkanu West' => ['Agbani', 'Amechi Idodo', 'Amechi Idodo II', 'Obe', 'Ogbodu Aba', 'Umuezeoka', 'Umuogudu Akpu'],
+                    'Nsukka' => ['Aku', 'Alor Uno', 'Eha Alumona', 'Ede Oballa', 'Nsukka Urban', 'Opi', 'Okpuje', 'Okutu'],
+                    'Oji River' => ['Achi Agu', 'Achi Uno', 'Awlaw', 'Inyi', 'Oji River Urban', 'Ugwuoba'],
+                    'Udenu' => ['Obollo Afor', 'Amalla', 'Orba', 'Imilike', 'Obollo Etiti', 'Ezimo', 'Obollo Eke'],
+                    'Udi' => ['Abia', 'Amokwe', 'Ngwo Uno', 'Ngwo Asaa', 'Nsude', 'Udi', 'Ebe', 'Umuaga', 'Eke', 'Abor'],
+                    'Uzo Uwani' => ['Adani', 'Abbi', 'Igga', 'Nrobo', 'Ogurugu', 'Opanda', 'Umulokpa']
+                ],
+                'Gombe' => [
+                    'Akko' => ['Akko', 'Garko', 'Kashere', 'Kumo', 'Tumfure', 'Pindiga', 'Shinga'],
+                    'Balanga' => ['Balanga', 'Gelengu', 'Nyuwar', 'Talasse', 'Bambam', 'Filiya', 'Bangu', 'Kindiyo'],
+                    'Billiri' => ['Billiri', 'Bare', 'Kalmai', 'Todi', 'Tanglang', 'Tanglang II', 'Awak'],
+                    'Dukku' => ['Dukku', 'Gombe Abba', 'Hashidu', 'Jamari', 'Malala', 'Wuro Tale', 'Zange'],
+                    'Funakaye' => ['Ashaka', 'Bage', 'Bajoga', 'Jauro Bano', 'Ribadu', 'Tongo', 'Yelwa'],
+                    'Gombe' => ['Bolari East', 'Bolari West', 'Dawaki', 'Herwagana', 'Jekadafari', 'Pantami', 'Tudun Wada'],
+                    'Kaltungo' => ['Awak', 'Kaltungo', 'Kaltungo East', 'Ture', 'Ture Ashaka', 'Tula'],
+                    'Kwami' => ['Boɗor', 'Doho', 'Gadam', 'Jurara', 'Kwami', 'Komfulata', 'Malala', 'Nasarawa'],
+                    'Nafada' => ['Barwo', 'Birnin Bolewa', 'Jigawa', 'Nafada Central', 'Tongo', 'Wawa', 'Zange'],
+                    'Shongom' => ['Boh', 'Bangunji', 'Banganje', 'Gundale', 'Kulang', 'Lubo', 'Kulang II'],
+                    'Yamaltu/Deba' => ['Deba', 'Dadinkowa', 'Hinna', 'Kuri', 'Kanawa', 'Lano', 'Shinga', 'Yamaltu']
+                ],
+                'Imo' => [
+                    'Aboh Mbaise' => ['Enyiogugu', 'Lorji', 'Mbutu', 'Nwaorieubi', 'Okporo', 'Umuhu', 'Uvuru'],
+                    'Ahiazu Mbaise' => ['Amuzi', 'Ihe', 'Okrika Nweke', 'Opara Nnatu', 'Oru', 'Otulu', 'Umuchieze'],
+                    'Ehime Mbano' => ['Agbaja', 'Agbaja II', 'Nsu', 'Obolo', 'Umuezeala', 'Umuezeala II', 'Umuchieze', 'Umuchieze II', 'Umualumaku'],
+                    'Ezinihitte' => ['Amumara', 'Chokoneze', 'Eziudo', 'Ife', 'Itu', 'Obizi', 'Okpofe', 'Umunama'],
+                    'Ideato North' => ['Akpulu', 'Arondizuogu', 'Isiokpo', 'Ndianiche Uno', 'Obodoukwu', 'Osina', 'Urualla'],
+                    'Ideato South' => ['Amucha', 'Dikenafai', 'Isiekenesi', 'Obiohia', 'Umuchima', 'Ugbelle', 'Umuma Isiaku'],
+                    'Ihitte Uboma' => ['Ehume', 'Ezimba', 'Ihitte', 'Amainyi', 'Uboma', 'Umuezegwu', 'Umuderim', 'Umuka'],
+                    'Ikeduru' => ['Amaimo', 'Atta', 'Iho', 'Ngugo', 'Ubomiri', 'Umualum', 'Uzoagba'],
+                    'Isiala Mbano' => ['Amaraku', 'Anara', 'Osu', 'Umunumo', 'Umuelemai', 'Umunkwo', 'Umunkwo II', 'Umuneke'],
+                    'Isu' => ['Amurie Omanze', 'Ekwe', 'Isu Njaba', 'Nwangele', 'Ogwuma', 'Umundugba', 'Umundugba II'],
+                    'Mbaitoli' => ['Afara', 'Ifakala', 'Ogwa', 'Orodo', 'Ubomiri', 'Umunoha', 'Umueze', 'Umueze II'],
+                    'Mbaitoli North' => ['Amakohia', 'Amakohia II', 'Ubomiri', 'Ubomiri II', 'Ogwa', 'Ogwa II'],
+                    'Ngor Okpala' => ['Alulu', 'Ihitte', 'Ngor', 'Okpala', 'Ntu', 'Umukabia', 'Umukabia II', 'Umuhu'],
+                    'Njaba' => ['Amucha', 'Atta', 'Okwudor', 'Umuneke', 'Umudurueze'],
+                    'Nkwerre' => ['Amaigbo', 'Amaigbo II', 'Nkwerre', 'Nkwerre II', 'Umudi', 'Umudi II'],
+                    'Nwangele' => ['Abajah', 'Amaigbo', 'Amaigbo II', 'Umudurueze', 'Umunoha', 'Umunoha II'],
+                    'Obowo' => ['Achara', 'Alaike', 'Avutu', 'Ehume', 'Obowo Central', 'Obowo North', 'Obowo South'],
+                    'Oguta' => ['Ezi Orsu', 'Izombe', 'Mgbidi', 'Oguta I', 'Oguta II', 'Oguta III', 'Orsu Obodo', 'Umuene'],
+                    'Ohaji Egbema' => ['Assa', 'Awara', 'Egbema', 'Egbema II', 'Ohoba', 'Umuapu', 'Umuapu II'],
+                    'Okigwe' => ['Amuro', 'Ezinachi', 'Ihube', 'Ogii', 'Okigwe Urban I', 'Okigwe Urban II', 'Ubahu', 'Ubahu II'],
+                    'Onuimo' => ['Alaoma', 'Ezelu', 'Okwelle', 'Umuna', 'Umuna II', 'Okwe', 'Okwe II', 'Okwelle II', 'Umuduru'],
+                    'Orlu' => ['Amaifeke', 'Ihitenansa', 'Obor', 'Okporo', 'Orlu Urban I', 'Orlu Urban II', 'Umuna', 'Umuna II'],
+                    'Orsu' => ['Awo Idemili', 'Ebenator', 'Eziawa', 'Ihitenansa', 'Orsu Ihitte Ukwa', 'Orsu Umuohu', 'Umudioka'],
+                    'Oru East' => ['Akatta', 'Akuma', 'Amagu', 'Awo Omamma', 'Omuma', 'Omuma II', 'Umuhu'],
+                    'Oru West' => ['Amiri', 'Eziachi', 'Nembe', 'Ohakpu', 'Okwudor', 'Oru West Central', 'Umuhu', 'Umuhu II'],
+                    'Owerri Municipal' => ['Amaha', 'Amaha II', 'Amaha III', 'Umuodu', 'Umuodu II', 'Umuodu III'],
+                    'Owerri North' => ['Agbala', 'Awaka', 'Emekuku', 'Emii', 'Egbu', 'Ihitte', 'Naze', 'Obibi', 'Orie', 'Uratta'],
+                    'Owerri West' => ['Avu', 'Emeabiam', 'Ihiagwa', 'Nekede', 'Okolochi', 'Obinze', 'Oforola']
+                ],
+                'Jigawa' => [
+                    'Auyo' => ['Auyo', 'Ayama', 'Auyan', 'Gamafoi', 'Gatafa', 'Gatafa II', 'Kofa', 'Tsidir'],
+                    'Babura' => ['Babura', 'Danladi', 'Dundubus', 'Kanya', 'Mazari', 'Unguwar', 'Yanda'],
+                    'Biriniwa' => ['Biriniwa', 'Dangora', 'Dundubus', 'Kachako', 'Kwadage', 'Majiya', 'Zangon'],
+                    'Birnin Kudu' => ['Birnin Kudu', 'Babaldu', 'Beti', 'Miga', 'Sundimina', 'Yelwa'],
+                    'Bunkure' => ['Bunkure', 'Bagwaro', 'Chiranchi', 'Gafan', 'Kawuri', 'Kullu', 'Gwarmai', 'Yada Kwari'],
+                    'Dutse' => ['Abaya', 'Duru', 'Chamo', 'Dutse Central', 'Kachi', 'Limawa', 'Sakwaya', 'Kudai'],
+                    'Gagarawa' => ['Gagarawa', 'Baturiya', 'Dumburum', 'Garkon', 'Zango'],
+                    'Garki' => ['Garki', 'Gujungu', 'Karanka', 'Kwasari', 'Siraha'],
+                    'Gumel' => ['Ba\'ai', 'Gumel Central', 'Hammado', 'Zango'],
+                    'Guri' => ['Adiyani', 'Guri', 'Kadira', 'Musari', 'Zangon'],
+                    'Gwaram' => ['Gwaram', 'Fagam', 'Sara', 'Zangon'],
+                    'Gwiwa' => ['Gwiwa', 'Gagiya', 'Kafin', 'Riba', 'Shafe', 'Tasha'],
+                    'Hadejia' => ['Auyo', 'Atafi', 'Dubantu', 'Kasuwar', 'Kofar', 'Majema', 'Rumfa', 'Sabon Gari', 'Yandutse'],
+                    'Jahun' => ['Harbo', 'Garu', 'Gunka', 'Jahun', 'Kazura', 'Kore', 'Yandutse'],
+                    'Kafin Hausa' => ['Balangu', 'Kafin Hausa', 'Majema', 'Ruba', 'Zangon'],
+                    'Kaugama' => ['Askandu', 'Kaugama', 'Yalo', 'Unguwar', 'Kafin', 'Danzomo'],
+                    'Kazaure' => ['Baure', 'Daba', 'Daura', 'Gada', 'Kanti', 'Maiaduwa', 'Roni', 'Zango'],
+                    'Kiri Kasamma' => ['Batagarawa', 'Gujungu', 'Kirikasamma', 'Majiya', 'Tasha', 'Unguwar'],
+                    'Maigatari' => ['Galadi', 'Maigatari', 'Fulata', 'Madaci', 'Turbus', 'Zangon', 'Kugama'],
+                    'Malam Madori' => ['Arki', 'Dapangi', 'Guri', 'Madori', 'Mado', 'Zango'],
+                    'Miga' => ['Dangora', 'Garki', 'Kafin', 'Miga', 'Sanka', 'Unguwar'],
+                    'Ringim' => ['Chimma', 'Ganuwar', 'Kafin', 'Kanya', 'Ringim', 'Sakwaya', 'Zango'],
+                    'Roni' => ['Amaryawa', 'Danzomo', 'Gora', 'Gumelawa', 'Roni', 'Unguwar'],
+                    'Sule Tankarkar' => ['Dumburum', 'Garma', 'Jeke', 'Tankarkar', 'Zango'],
+                    'Taura' => ['Kunya', 'Majia', 'Taura', 'Unguwar', 'Yandutse'],
+                    'Yankwashi' => ['Karkarna', 'Karkarna II', 'Riga', 'Unguwar', 'Yankwashi']
+                ],
+                'Kaduna' => [
+                    'Birnin Gwari' => ['Dogon Dawa', 'Gayam', 'Kakangi', 'Kuyello', 'Maganda', 'Randagi', 'Tabanni'],
+                    'Chikun' => ['Kujama', 'Sabon Tasha', 'Narayi', 'Kakau', 'Kujama II', 'Gwagwada', 'Rido'],
+                    'Giwa' => ['Dan Mahawayi', 'Fatika', 'Galadimawa', 'Gangara', 'Kadage', 'Kidandan', 'Pan Hauya'],
+                    'Igabi' => ['Afaka', 'Birnin Yero', 'Gadan Gayan', 'Igabi', 'Jaji', 'Kerawa', 'Maraban Jos', 'Sabon Birni', 'Turunku'],
+                    'Ikara' => ['Auchan', 'Ikara', 'Jema\'a', 'Kurmin', 'Pala', 'Rumi', 'Saulawa', 'Saulawa II', 'Saulawa III'],
+                    'Jaba' => ['Bitaro', 'Daddu', 'Fai', 'Jaba Central', 'Nduya', 'Sabzuro', 'Samban Gida', 'Samban Kogi'],
+                    'Jema\'a' => ['Aso', 'Barde', 'Gidan Waya', 'Godogodo', 'Jagindi', 'Kafanchan A', 'Kafanchan B', 'Kagoro', 'Kaninkon'],
+                    'Kachia' => ['Ankwa', 'Awon', 'Bishini', 'Dokwa', 'Gidan Tagwai', 'Katari', 'Kukui', 'Kurmin Musa', 'Sabon Sarki'],
+                    'Kaduna North' => ['Unguwan Dosa', 'Unguwan Rimi', 'Unguwan Shanu', 'Kawo', 'Badiko', 'Malali', 'Unguwan Liman', 'Abakpa'],
+                    'Kaduna South' => ['Barnawa', 'Tudun Wada', 'Television', 'Sabo', 'Kakuri', 'Makera', 'Nassarawa', 'Unguwan Muazu'],
+                    'Kagarko' => ['Katugal', 'Kukui', 'Kachia Road', 'Kukui II', 'Igu', 'Jere', 'Shadalafiya'],
+                    'Kajuru' => ['Afogo', 'Buda', 'Kallah', 'Kasuwan Magani', 'Kutunku', 'Maraban Kajuru', 'Tantatu'],
+                    'Kaura' => ['Agban', 'Bondong', 'Gbandi', 'Kpak', 'Malagum', 'Manchok', 'Zankan'],
+                    'Kauru' => ['Dawaki', 'Geshere', 'Kauru', 'Kwassam', 'Makami', 'Palat', 'Pambegua'],
+                    'Kubau' => ['Anchau', 'Dutsen Wai', 'Haskiya', 'Mah', 'Mazuga', 'Pambegua', 'Zuntu'],
+                    'Kudan' => ['Hunkuyi', 'Kauran Wali', 'Kudan', 'Likoro', 'Sabon Gari Hunkuyi'],
+                    'Lere' => ['Abadawa', 'Dan Alhaji', 'Garun Kurama', 'Kayarda', 'Lere', 'Saminaka'],
+                    'Makarfi' => ['Gazara', 'Gimi', 'Gwanki', 'Mayere', 'Makarfi', 'Tudun Wada'],
+                    'Sabon Gari' => ['Basawa', 'Chikaji', 'Dogarawa', 'Hanwa', 'Muchia', 'Samaru', 'Zabi'],
+                    'Sanga' => ['Bokana', 'Fadan Karshi', 'Fadan Ninzo', 'Gwantu', 'Ninzam', 'Wasa'],
+                    'Soba' => ['Dan Wata', 'Gimba', 'Kwarau', 'Kwassallo', 'Maigana', 'Rahama', 'Soba'],
+                    'Zangon Kataf' => ['Atak Nfang', 'Atak Jankasa', 'Kamantan', 'Madakiya', 'Zonkwa'],
+                    'Zaria' => ['Dutsen Abba', 'Gyallesu', 'Kufena', 'Limancin Kona', 'Tudun Wada', 'Tukur Tukur', 'Unguwan Juma']
+                ],
+                'Kano' => [
+                    'Ajingi' => ['Ajingi', 'Bale', 'Chula', 'Dabin', 'Gurduba', 'Gurduba II', 'Gurduba III', 'Toranke', 'Unguwar Gaya'],
+                    'Albasu' => ['Albasu Central', 'Fanda', 'Gagarame', 'Hungu', 'Lajawa', 'Panisau', 'Sarkin Kudu', 'Tsangaya'],
+                    'Bagwai' => ['Bagwai', 'Dagundunawa', 'Gadanya', 'Kiyawa', 'Kwajale', 'Rimin Dako', 'Romo', 'Wuro Bagga'],
+                    'Bebeji' => ['Bebeji', 'Durmawa', 'Gargai', 'Gargai II', 'Gargai III', 'Kofa', 'Kofa II', 'Wak', 'Wak II', 'Wak III'],
+                    'Bichi' => ['Bichi', 'Badume', 'Dan Musa', 'Fagolo', 'Kiyawa', 'Kwajale', 'Rimin Dako', 'Saye', 'Yandaka'],
+                    'Bunkure' => ['Bunkure', 'Bagwaro', 'Chiranchi', 'Gafan', 'Kawuri', 'Kuka', 'Kullu', 'Gwarmai', 'Yada Kwari'],
+                    'Dala' => ['Dala', 'Dogon Nama', 'Goron Dutse', 'Kofar Mazugal', 'Kofar Ruwa', 'Kofar Wambai', 'Kwanar Disu', 'Madabo', 'Tudun Fulani', 'Yalwa'],
+                    'Dambatta' => ['Dambatta', 'Danbatta', 'Fagge', 'Gwarmai', 'Kanya', 'Koren', 'Shuwaki', 'Zandari', 'Unguwar Iya'],
+                    'Dawakin Kudu' => ['Dawakin Kudu', 'Dawanau', 'Dosan', 'Fajewa', 'Gano', 'Ja\'en', 'Tsakuwa', 'Yankaba', 'Yankaba II'],
+                    'Dawakin Tofa' => ['Dawakin Tofa', 'Dawanau', 'Dantube', 'Ganduje', 'Koguna', 'Lambu', 'Yankaba', 'Yalwa'],
+                    'Doguwa' => ['Doguwa', 'Falgore', 'Gari', 'Gwarmai', 'Maraku', 'Tagwaye', 'Unguwar'],
+                    'Fagge' => ['Fagge A', 'Fagge B', 'Fagge C', 'Fagge D', 'Fagge E', 'Sabon Gari', 'Tudun Wada', 'Wambai'],
+                    'Gabasawa' => ['Gabasawa', 'Daho', 'Gwarmai', 'Joda', 'Karmami', 'Kibiya', 'Tudun Wada', 'Zango'],
+                    'Garko' => ['Garko', 'Dal', 'Garun Babba', 'Kafin Malam', 'Kwanar Dandinshe', 'Rumo Gomo', 'Zango'],
+                    'Garun Mallam' => ['Garun Mallam', 'Garo', 'Kurumawa', 'Madabo', 'Yada Kwari', 'Zango'],
+                    'Gaya' => ['Gaya', 'Doguwa', 'Falgore', 'Kademi', 'Lambo', 'Shagogo', 'Tundun Wada'],
+                    'Gezawa' => ['Gezawa', 'Jogana', 'Kawaji', 'Kwanar Dangora', 'Tsamiya Babba', 'Unguwar', 'Wailari'],
+                    'Gwale' => ['Dandago', 'Dorayi', 'Galadanchi', 'Gogau', 'Gyaranya', 'Kabuga', 'Kofar Na Isa', 'Mandawari', 'Sharada', 'Tudun Wada'],
+                    'Gwarzo' => ['Gwarzo', 'Gwarmai', 'Karu', 'Katanga', 'Kwakwashe', 'Lakwaya', 'Madaka', 'Sabon Gari'],
+                    'Kabo' => ['Kabo', 'Durum', 'Garo', 'Garo II', 'Kurumawa', 'Tarauni', 'Unguwar Gaya'],
+                    'Kano Municipal' => ['Dan Agundi', 'Jakara', 'Kankara', 'Kofar Mata', 'Sharada', 'Sheshe', 'Tudun Wada', 'Waje'],
+                    'Karaye' => ['Karaye', 'Garin Gambo', 'Kariya', 'Kunya', 'Rogo', 'Turawa', 'Unguwar'],
+                    'Kibiya' => ['Kibiya', 'Duguri', 'Falgore', 'Kura', 'Kwanar', 'Unguwar Gari'],
+                    'Kiru' => ['Kiru', 'Ba\'awa', 'Dangora', 'Gidan Makama', 'Kurfa', 'Maraku', 'Yako'],
+                    'Kumbotso' => ['Challawa', 'Danbare', 'Danbare II', 'Guringawa', 'Mariri', 'Panshekara', 'Unguwar Rimi'],
+                    'Kunchi' => ['Gwarmai', 'Kunchi', 'Matigwai', 'Rinjin Gado', 'Sabon Gari', 'Unguwar Gari'],
+                    'Kura' => ['Kura', 'Bunkure', 'Dawakin', 'Kwanar', 'Rimi', 'Unguwar', 'Wailari'],
+                    'Madobi' => ['Madobi', 'Dawakin', 'Gwarmai', 'Kafin', 'Kafin Malam', 'Tudun Wada', 'Yalwa'],
+                    'Makoda' => ['Makoda', 'Dangora', 'Falgore', 'Gwarmai', 'Kankana', 'Zango'],
+                    'Minjibir' => ['Minjibir', 'Auyo', 'Gwarmai', 'Gano', 'Kanya', 'Kofar'],
+                    'Nasarawa' => ['Dakata', 'Fagge', 'Gama', 'Kawaji', 'Kawo', 'Kofar Nasarawa', 'Tudun Murtala'],
+                    'Rano' => ['Rano', 'Doguwa', 'Garko', 'Garko II', 'Kibiya', 'Rano Central'],
+                    'Rimin Gado' => ['Rimin Gado', 'Doguwa', 'Falgore', 'Kafin', 'Unguwar'],
+                    'Rogo' => ['Rogo', 'Dangora', 'Garko', 'Kibiya', 'Tudun Wada'],
+                    'Shanono' => ['Shanono', 'Doguwa', 'Gwarmai', 'Gwarzo', 'Kumbotso'],
+                    'Sumaila' => ['Sumaila', 'Falgore', 'Garko', 'Garko II', 'Unguwar'],
+                    'Takai' => ['Takai', 'Bebaje', 'Doguwa', 'Garko', 'Kibiya'],
+                    'Tarauni' => ['Badawa', 'Dakata', 'Danbare', 'Dorayi', 'Gwagwarwa', 'Hotoro', 'Unguwar Gano'],
+                    'Tofa' => ['Tofa', 'Doguwa', 'Gwarmai', 'Unguwar', 'Wailari'],
+                    'Tsanyawa' => ['Tsanyawa', 'Doguwa', 'Falgore', 'Unguwar'],
+                    'Tudun Wada' => ['Tudun Wada', 'Burji', 'Doguwa', 'Falgore', 'Garko'],
+                    'Ungogo' => ['Ungogo', 'Dakatsalle', 'Dorayi', 'Kumbotso', 'Rimin Gado', 'Zango'],
+                    'Warawa' => ['Warawa', 'Danlasan', 'Gama', 'Gwarmai', 'Yan Dalla'],
+                    'Wudil' => ['Wudil', 'Dagumawa', 'Doguwa', 'Garko', 'Gwarmai']
+                ],
+                'Katsina' => [
+                    'Bakori' => ['Bakori', 'Barde', 'Daba', 'Dawan', 'Jargaba', 'Kurami', 'Tsiga', 'Yari Bori'],
+                    'Batagarawa' => ['Batagarawa', 'Ajaye', 'Bakiyawa', 'Jino', 'Tsanni', 'Tsauri'],
+                    'Batsari' => ['Batsari', 'Abada', 'Dangusau', 'Kadawa', 'Ruma', 'Wagini'],
+                    'Baure' => ['Baure', 'Agala', 'Dantankari', 'Kadawa', 'Maibakko', 'Yanduna'],
+                    'Bindawa' => ['Bindawa', 'Baure', 'Doro', 'Giremawa', 'Jibia', 'Kuru', 'Tsauri'],
+                    'Charanchi' => ['Charanchi', 'Koda', 'Kuraye', 'Maje', 'Radda', 'Sabuwa'],
+                    'Dandume' => ['Dandume', 'Daba', 'Kadandani', 'Mahuta', 'Ruwan Godiya', 'Tumburkai'],
+                    'Danja' => ['Danja', 'Dabai', 'Dandire', 'Maitsidau', 'Tandama', 'Tsangamawa'],
+                    'Dan Musa' => ['Dan Musa', 'Banzawa', 'Dandire', 'Maitsani', 'Matsari', 'Yantumaki'],
+                    'Daura' => ['Daura', 'Mai\'adua', 'Sarkin Yara', 'Kusada', 'Mai Aduwa'],
+                    'Dutsi' => ['Dutsi', 'Daba', 'Kadawa', 'Rima', 'Yandaka'],
+                    'Dutsin Ma' => ['Dutsin Ma', 'Bagarawa', 'Doro', 'Karofi', 'Makera', 'Tsauri'],
+                    'Faskari' => ['Faskari', 'Maigora', 'Maigora II', 'Ruwan Godiya', 'Shemankar', 'Yarmalamai'],
+                    'Funtua' => ['Funtua', 'Dandume', 'Makera', 'Sabuwa', 'Unguwar Rabiu'],
+                    'Ingawa' => ['Ingawa', 'Agga', 'Arawa', 'Bumbum', 'Kukawa', 'Maraban Danja'],
+                    'Jibia' => ['Jibia', 'Bugaje', 'Garkida', 'Katsayal', 'Mazanya', 'Ruma'],
+                    'Kafur' => ['Kafur', 'Gozaki', 'Kauru', 'Mahuta', 'Sabuwar'],
+                    'Kaita' => ['Kaita', 'Baure', 'Doro', 'Gafiya', 'Yandaka'],
+                    'Kankara' => ['Kankara', 'Bagega', 'Dan Maidaki', 'Dantutture', 'Mahuta'],
+                    'Kankia' => ['Kankia', 'Gachi', 'Gachi II', 'Kuka', 'Rimaye', 'Tafoki'],
+                    'Katsina' => ['Katsina Central', 'Katsina East', 'Katsina West', 'Kofar Kaura', 'Kofar Marusa', 'Sabon Gari', 'Shinkafi'],
+                    'Kurfi' => ['Kurfi', 'Batsari', 'Birnin Kudu', 'Gozaki', 'Tsauri'],
+                    'Kusada' => ['Kusada', 'Baure', 'Dandume', 'Yandaka'],
+                    'Mai\'Adua' => ['Mai\'Adua', 'Baure', 'Dantankari', 'Maitsani', 'Yanduna'],
+                    'Malumfashi' => ['Malumfashi', 'Dayi', 'Dogon Hawa', 'Galadimawa', 'Kachako'],
+                    'Mani' => ['Mani', 'Bumbum', 'Dutsi', 'Muduru', 'Tsauri'],
+                    'Mashi' => ['Mashi', 'Daba', 'Gozaki', 'Jani', 'Karau', 'Kuki'],
+                    'Matazu' => ['Matazu', 'Dandire', 'Dandire II', 'Karofi', 'Kadawa'],
+                    'Musawa' => ['Musawa', 'Dandire', 'Kadawa', 'Tafoki', 'Tsauri'],
+                    'Rimi' => ['Rimi', 'Charanchi', 'Kadawa', 'Koda', 'Maje'],
+                    'Sabuwa' => ['Sabuwa', 'Dandume', 'Faskari', 'Mararaba', 'Ruwan Godiya'],
+                    'Safana' => ['Safana', 'Baure', 'Dan Maidaki', 'Dandire', 'Yandaka'],
+                    'Sandamu' => ['Sandamu', 'Doro', 'Fago', 'Radda', 'Yanduna'],
+                    'Zango' => ['Zango', 'Dandume', 'Dandire', 'Kadawa', 'Ruwan Godiya']
+                ],
+                'Kebbi' => [
+                    'Aleiro' => ['Aleiro', 'Dangu', 'Danwarai', 'Jiga', 'Kasuwar Gari', 'Kwasara', 'Singi'],
+                    'Arewa Dandi' => ['Arewa', 'Chibike', 'Feske', 'Kangiwa', 'Kwani', 'Rafin Kada', 'Tsamiya'],
+                    'Argungu' => ['Argungu', 'Alwasa', 'Dandi', 'Galadima', 'Gwandu', 'Lailaba', 'Tunga'],
+                    'Augie' => ['Augie', 'Bagudo', 'Birnin Tudu', 'Kukah', 'Magajin Rafi', 'Yau', 'Zagga'],
+                    'Bagudo' => ['Bagudo', 'Illo', 'Kaoje', 'Kamba', 'Lolo', 'Maihula', 'Sabon Gari'],
+                    'Birnin Kebbi' => ['Birnin Kebbi', 'Ambursa', 'Gwadangaji', 'Kalgo', 'Makera', 'Mera', 'Nassarawa I', 'Nassarawa II'],
+                    'Bunza' => ['Bunza', 'Birnin Tudu', 'Kukah', 'Magajin Rafi', 'Zagga'],
+                    'Dandi' => ['Dandi', 'Arewa', 'Kamba', 'Lailaba', 'Tsamiya'],
+                    'Fakai' => ['Fakai', 'Birnin Tudu', 'Gwanfi', 'Kukah', 'Rafin Kada'],
+                    'Gwandu' => ['Gwandu', 'Marafa', 'Rafin Kada', 'Samba', 'Yauri'],
+                    'Jega' => ['Jega', 'Birnin Tudu', 'Danguru', 'Kukah', 'Sabon Gari', 'Tsamiya'],
+                    'Kalgo' => ['Kalgo', 'Birnin Tudu', 'Kukah', 'Magajin Rafi', 'Rafin Kada'],
+                    'Koko/Besse' => ['Koko', 'Besse', 'Dandi', 'Kamba', 'Rafin Kada'],
+                    'Maiyama' => ['Maiyama', 'Arewa', 'Bagudo', 'Jandutsi', 'Tsamiya'],
+                    'Ngaski' => ['Ngaski', 'Birnin Tudu', 'Kukah', 'Yauri', 'Zagga'],
+                    'Sakaba' => ['Sakaba', 'Doka', 'Kanya', 'Tudun Wada', 'Wasagu'],
+                    'Shanga' => ['Shanga', 'Dugu', 'Maimasu', 'Sambo', 'Takai', 'Yauri'],
+                    'Suru' => ['Suru', 'Alwasa', 'Dandi', 'Dandi II', 'Gwandu'],
+                    'Wasagu/Danko' => ['Wasagu', 'Bena', 'Dandi', 'Kanya', 'Ribah', 'Tudun Wada'],
+                    'Yauri' => ['Yauri', 'Birnin Yauri', 'Kukah', 'Tudun Wada', 'Zagga'],
+                    'Zuru' => ['Zuru', 'Bedi', 'Dago', 'Isgogo', 'Rikoto', 'Senchi', 'Tadurga']
+                ],
+                'Kogi' => [
+                    'Adavi' => ['Adavi Eba', 'Adavi Obehira', 'Iruvucheba', 'Nagazi', 'Ogaminana', 'Ohueta', 'Osisi', 'Uhuodo'],
+                    'Ajaokuta' => ['Abodu', 'Ajaokuta Urban', 'Ajaokuta Rural', 'Badoko', 'Ebiya', 'Eganyi', 'Geregu', 'Odonu', 'Old Ajaokuta'],
+                    'Ankpa' => ['Ankpa Central', 'Ankpa North', 'Enjema', 'Ojoku', 'Otte', 'Abache', 'Efofe', 'Okanu', 'Ubele'],
+                    'Bassa' => ['Akakana', 'Efu', 'Gboloko', 'Kpata', 'Mozum', 'Ozugbe'],
+                    'Dekina' => ['Anyigba', 'Dekina Town', 'Egume', 'Iyale', 'Odu Ofomu', 'Ogbabede', 'Oganenigu', 'Okura', 'Olowa', 'Oyigbo'],
+                    'Ibaji' => ['Ayah', 'Analo', 'Echane', 'Ejule', 'Ifakwu', 'Onyedega', 'Ujeh', 'Unale'],
+                    'Idah' => ['Ega', 'Ichala', 'Igalogba', 'Igalamela', 'Igala Mela', 'Igah', 'Ojoma', 'Ogegele', 'Onda'],
+                    'Igalamela/Odolu' => ['Ajaka', 'Odolu', 'Ekwuloko', 'Ega', 'Ubele', 'Ogbogbo'],
+                    'Ijumu' => ['Aiyetoro', 'Aiyetoro II', 'Ekinrin Adde', 'Iffe', 'Iffe II', 'Ogidi', 'Omuo', 'Omuo II', 'Omuo III'],
+                    'Kabba/Bunu' => ['Aiyetoro', 'Egunbe', 'Kabba Town', 'Odo Ape', 'Odo Ere', 'Odo Owa', 'Okedayo', 'Oke Ofin'],
+                    'Kogi' => ['Achigili', 'Gboloko', 'Koton Karfe', 'Lokoja Rural', 'Ukwo Karfe'],
+                    'Lokoja' => ['Cantonment', 'Kabawa', 'Lokogoma', 'Oworo', 'Sarkin Noma', 'Ward A', 'Ward B', 'Ward C'],
+                    'Mopa Muro' => ['Mopa Town', 'Okedayo', 'Okeagi', 'Oreke', 'Takete', 'Takete II'],
+                    'Ofu' => ['Ajaka', 'Aloji', 'Aloji II', 'Ekeluma', 'Ejule', 'Ofodo', 'Ogbonicha'],
+                    'Ogori/Magongo' => ['Magongo', 'Ogori', 'Okehi', 'Okehi II', 'Okehi III'],
+                    'Okehi' => ['Eika', 'Eika II', 'Eika III', 'Eika IV', 'Obangede', 'Obangede II', 'Ohuepe'],
+                    'Okene' => ['Bariki', 'Iruvucheba', 'Obehira', 'Otutu', 'Ozuwaya', 'Upogoro', 'Upogoro II'],
+                    'Olamaboro' => ['Imane', 'Okpo', 'Ogugu', 'Olamaboro Central', 'Olamaboro East', 'Olamaboro West'],
+                    'Omala' => ['Abejukolo', 'Bagana', 'Ogodu', 'Okpachala', 'Opoda', 'Patanyi', 'Sabongari'],
+                    'Yagba East' => ['Isanlu', 'Ejiba', 'Oke Eda', 'Ponyan', 'Itedo', 'Alu', 'Ogbom'],
+                    'Yagba West' => ['Egbe', 'Ejiba', 'Ilafin', 'Odo Ere', 'Oke Eda', 'Oke Eda II', 'Okunran']
+                ],
+                'Kwara' => [
+                    'Asa' => ['Afon', 'Ballah', 'Efue', 'Onire', 'Otteh', 'Otteh II', 'Otteh III', 'Owode'],
+                    'Baruten' => ['Ilesha Baruba', 'Gwanara', 'Okuta', 'Yashikira', 'Kenu', 'Gwanzuru', 'Gure'],
+                    'Edu' => ['Lafiagi', 'Tsaragi', 'Bacita', 'Kpada', 'Rabbo', 'Shonga', 'Shonga II'],
+                    'Ekiti' => ['Araromi Opin', 'Eruku', 'Igbede', 'Osi', 'Osi II', 'Obbo Aiyegunle', 'Obbo Ile'],
+                    'Ifelodun' => ['Share', 'Idofian', 'Omupo', 'Oke Oyi', 'Igbaja', 'Oke Oyi II', 'Oke Oyi III'],
+                    'Ilorin East' => ['Apado', 'Iponrin', 'Ibagun', 'Oke Oyi', 'Oke Oyi II', 'Oke Oyi III', 'Zango'],
+                    'Ilorin South' => ['Fufu', 'Ganmo', 'Oke Ose', 'Oke Oyi', 'Oke Oyi II', 'Oke Oyi III'],
+                    'Ilorin West' => ['Adewole', 'Ajikobi', 'Alanamu', 'Badari', 'Magaji Ngeri', 'Oko Erin', 'Oloje', 'Warrah'],
+                    'Irepodun' => ['Ajase Ipo', 'Omu Aran', 'Oro', 'Oro Ago', 'Oke Onigbin', 'Rore', 'Ajase II'],
+                    'Isin' => ['Owu Isin', 'Oke Onigbin', 'Oke Onigbin II', 'Oke Onigbin III', 'Oke Onigbin IV'],
+                    'Kaiama' => ['Kaiama', 'Gwanzuru', 'Bani', 'Kemanji', 'Oloje', 'Woro'],
+                    'Moro' => ['Ajanaku', 'Bode Saadu', 'Lanwa', 'Lamba', 'Okemi', 'Oloru', 'Shao'],
+                    'Offa' => ['Balogun', 'Essa', 'Igbo', 'Olofa', 'Olofa II', 'Olofa III', 'Shawo'],
+                    'Oke Ero' => ['Ekan Nla', 'Egosi', 'Ilale', 'Imoji', 'Odo Owa', 'Omu Aran', 'Osi'],
+                    'Oyun' => ['Erin Ile', 'Ilemona', 'Igbona', 'Oke Ogun', 'Oke Ogun II', 'Oke Ogun III', 'Oke Ogun IV'],
+                    'Patigi' => ['Kpada', 'Patigi Town', 'Rabbo', 'Shonga', 'Sanchita', 'Yelwa']
+                ],
+                'Lagos' => [
+                    'Agege' => ['Dopemu', 'Iloro', 'Isale Oja', 'Onipetesi', 'Orile Agege', 'Papa Ashafa'],
+                    'Ajeromi/Ifelodun' => ['Ajeromi', 'Amukoko', 'Awodi Ora', 'Layeni', 'Wilmer', 'Tolu'],
+                    'Alimosho' => ['Akowonjo', 'Egbeda', 'Idimu', 'Ipaja', 'Ikotun', 'Igando', 'Shasha'],
+                    'Amuwo Odofin' => ['Amuwo', 'Festac', 'Igbologun', 'Kirirkiri', 'Satellite Town', 'Abule Ado'],
+                    'Apapa' => ['Apapa', 'GRA', 'Marine Beach', 'Ajegunle', 'Ijora Oloye', 'Creek Road'],
+                    'Badagry' => ['Ajara', 'Ajido', 'Gberefu', 'Ibereko', 'Posukoh', 'Topo', 'Whispering Palms'],
+                    'Epe' => ['Agbowa', 'Eredo', 'Ibonwon', 'Noforija', 'Odomola', 'Poka'],
+                    'Eti Osa' => ['Ikoyi', 'Victoria Island', 'Lekki', 'Obalende', 'Sangotedo', 'Jakande'],
+                    'Ibeju Lekki' => ['Akodo', 'Ibeju', 'Lekki', 'Onosa', 'Orimedu', 'Solu Alade'],
+                    'Ifako Ijaiye' => ['Ijaiye', 'Iju', 'Ojodu', 'Ojokoro', 'Oke Ira', 'Old Ifako'],
+                    'Ikeja' => ['Alausa', 'Anifowose', 'GRA', 'Obafemi Awolowo', 'Opebi', 'Oregun'],
+                    'Ikorodu' => ['Agbala', 'Ijede', 'Imota', 'Isawo', 'Igbogbo', 'Ipakodo', 'Owode'],
+                    'Kosofe' => ['Agboyi', 'Anthony', 'Ikosi', 'Isheri', 'Ketu', 'Ojota', 'Oworonshoki'],
+                    'Lagos Island' => ['Ajele', 'Elegbata', 'Olowogbowo', 'Olushi', 'Onikan', 'Oko Awo'],
+                    'Lagos Mainland' => ['Adekunle', 'Alagomeji', 'Apapa Road', 'Ebute Metta', 'Iwaya', 'Makoko'],
+                    'Mushin' => ['Idi Araba', 'Ilasamaja', 'Itire', 'Odi Olowo', 'Papa Ajao', 'Palm Avenue'],
+                    'Ojo' => ['Abule', 'Ajangbadi', 'Alaba', 'Iba', 'Isashi', 'Okokomaiko', 'Ojo Town'],
+                    'Oshodi/Isolo' => ['Ajao Estate', 'Ejigbo', 'Isolo', 'Ilasamaja', 'Oke Afa', 'Oshodi'],
+                    'Shomolu' => ['Akoka', 'Bajulaiye', 'Bariga', 'Fadeyi', 'Onipanu', 'Palmgrove'],
+                    'Surulere' => ['Aguda', 'Ijesha', 'Iponri', 'Itire', 'Orile', 'Ojuelegba']
+                ],
+                'Nasarawa' => [
+                    'Akwanga' => ['Akwanga', 'Andaha', 'Ancho', 'Gudi', 'Gwanje', 'Nunku', 'Nunkui', 'Wamba'],
+                    'Awe' => ['Awe', 'Azara', 'Kanje', 'Madaki', 'Ribi', 'Tunga', 'Wuse'],
+                    'Doma' => ['Agbashi', 'Agyaragu', 'Alago', 'Doma', 'Rukubi', 'Sabongida', 'Ungwan Madaki'],
+                    'Karu' => ['Ado', 'Karu', 'New Karu', 'Nyanya Gwandara', 'Mararaba', 'Tattara', 'Uke', 'Gitata'],
+                    'Keana' => ['Aloshi', 'Giza', 'Amiri', 'Keana', 'Obene', 'Oki', 'Amiri II'],
+                    'Keffi' => ['Angwan Iya', 'Keffi Town', 'Sabon Gari', 'Tudun Wada', 'Wambai', 'Yara'],
+                    'Kokona' => ['Agwada', 'Kokona', 'Keffi Road', 'Hadari', 'Bassa', 'Keffi East', 'Garaku'],
+                    'Lafia' => ['Adogi', 'Assakio', 'Akurba', 'Chiroma', 'Kwandere', 'Lafia Central', 'Shabu', 'Wakwa'],
+                    'Nasarawa' => ['Agwada', 'Loko', 'Nasarawa Town', 'Tunga', 'Tunga II', 'Udege'],
+                    'Nasarawa Eggon' => ['Ubbe', 'Lambaga', 'Nasarawa Eggon Central', 'Alogani', 'Ikka Waje', 'Ende', 'Ubbe II'],
+                    'Obi' => ['Adudu', 'Agwatashi', 'Duduguru', 'Obi', 'Tudun Adabu', 'Tudun Adabu II'],
+                    'Toto' => ['Gadabuke', 'Toto', 'Umaisha', 'Ugya', 'Shafa Abakpa', 'Kanyanbasa'],
+                    'Wamba' => ['Arum', 'Keffi Road', 'Mangar', 'Mada Station', 'Keffi East', 'Wamba Central']
+                ],
+                'Niger' => [
+                    'Agaie' => ['Agaie', 'Baro', 'Daza', 'Ekossa', 'Etsugaie', 'Kutiriko', 'Tagagi'],
+                    'Agwara' => ['Agwara', 'Borgu', 'Borgu II', 'Pissa', 'Sokugi', 'Usawa'],
+                    'Bida' => ['Bariki', 'Cikin Gari', 'Landzun', 'Masaba I', 'Masaba II', 'Umaru Majigi'],
+                    'Borgu' => ['Borgu', 'Borgu II', 'New Bussa', 'Wawa', 'Shagunu', 'River Niger'],
+                    'Bosso' => ['Beji', 'Chanchaga', 'Gbaiko', 'Garatu', 'Maikunkele', 'Maikunkele II', 'Bosso Town'],
+                    'Chanchaga' => ['Minna Central', 'Tudun Wada South', 'Tudun Wada North', 'Limawa', 'Sabon Gari', 'Kpakungu'],
+                    'Edati' => ['Enagi', 'Enagi II', 'Etsu Tasha', 'Gbangban', 'Gbangban II', 'Rokota'],
+                    'Gbako' => ['Batako', 'Batafa', 'Edozhigi', 'Edogi', 'Lemu', 'Ndaloke', 'Sokogi'],
+                    'Gurara' => ['Bobo', 'Bonu', 'Dikko', 'Gawu Babangida', 'Izom', 'Lambata', 'Tufa'],
+                    'Katcha' => ['Baddeggi', 'Bakeko', 'Edotsu', 'Katcha', 'Katcha II', 'Essa'],
+                    'Kontagora' => ['Auna', 'Bangi', 'Kontagora Central', 'Masuga', 'Tunga Kawo', 'Usalle'],
+                    'Lapai' => ['Arewa', 'Birnin Maza', 'Gupa', 'Lapai Central', 'Muye', 'Tashibo', 'Tunga Waya'],
+                    'Lavun' => ['Batati', 'Bussu', 'Doko', 'Gaba', 'Kutigi', 'Kutigi II', 'Muregi'],
+                    'Magama' => ['Ibeto', 'Nasko', 'Auna', 'Auna II', 'Sakaba', 'Kwagwara'],
+                    'Mariga' => ['Bangi', 'Bangi II', 'Igwama', 'Kumbashi', 'Kumbashi II', 'Zungeru'],
+                    'Mashegu' => ['Bashar', 'Dapangi', 'Khotugi', 'Kuta', 'Mokwa', 'Yelwa'],
+                    'Mokwa' => ['Bokani', 'Budan', 'Kudu', 'Kudu II', 'Lata', 'Muregi', 'Mokwa Town'],
+                    'Muya' => ['Daza', 'Etsu Audu', 'Kawugi', 'Kawugi II', 'Muya Central'],
+                    'Paikoro' => ['Adunu', 'Chanchaga', 'Kafin Koro', 'Kwankwasa', 'Paiko Central', 'Tutungo'],
+                    'Rafi' => ['Guna', 'Kagara', 'Kusherki', 'Sallau', 'Tegina', 'Tegina II'],
+                    'Rijau' => ['Danku', 'Genu', 'Kokoli', 'Rijau Central', 'Tungar Kanya', 'Warari'],
+                    'Shiroro' => ['Bangajiya', 'Erena', 'Galkogo', 'Kato', 'Kuta', 'Kuta II', 'Pina'],
+                    'Suleja' => ['Magajiya', 'Hashimi', 'Wambai', 'Kurmin Sarki', 'Old Market', 'Iku South', 'Iku North'],
+                    'Tafa' => ['Dikko', 'Ija', 'Iku', 'Lamba', 'Tafa Central', 'Tafa North'],
+                    'Wushishi' => ['Akare', 'Baro', 'Bokani', 'Kodo', 'Kudu', 'Sabon Gari', 'Zungeru']
+                ],
+                'Ogun' => [
+                    'Abeokuta North' => ['Ago Oko', 'Idi Aba', 'Iberekodo', 'Imala', 'Ita Iyalode', 'Lafenwa', 'Totoro', 'Sabo'],
+                    'Abeokuta South' => ['Ake', 'Elega', 'Ijemo', 'Ijeja', 'Ita Eko', 'Ita Iyalode', 'Sapon', 'Sokori'],
+                    'Ado Odo/Ota' => ['Agbara', 'Ado Odo', 'Atan', 'Idiroko', 'Iju', 'Ota', 'Sango'],
+                    'Egbado North' => ['Ayetoro', 'Ibese', 'Imasayi', 'Igbogila', 'Iboro', 'Ohunbe', 'Tata'],
+                    'Egbado South' => ['Ilaro', 'Idogo', 'Ilobi', 'Erinjin', 'Owode', 'Oke Odan', 'Ajilete'],
+                    'Ewekoro' => ['Arigbajo', 'Itori', 'Obada Oko', 'Papalanto', 'Wasinmi'],
+                    'Ifo' => ['Agbado', 'Ifo', 'Isheri', 'Ojodu', 'Oke Aro'],
+                    'Ijebu East' => ['Itele', 'Ogbere', 'Imusin', 'Osu', 'Ojowo', 'Awa', 'Ifelewa'],
+                    'Ijebu North' => ['Ago Iwoye', 'Awa', 'Ifelewa', 'Ijebu Igbo', 'Oru', 'Osun'],
+                    'Ijebu North East' => ['Atan', 'Erunwon', 'Ijebu Imusin', 'Ilese', 'Odosenbora'],
+                    'Ijebu Ode' => ['Isoku', 'Itantebo', 'Itorin', 'Porogun', 'Odo Egbo', 'Ijasi'],
+                    'Ikenne' => ['Iperu', 'Ilisan', 'Ode', 'Irolu', 'Ogere', 'Ogere II'],
+                    'Imeko Afon' => ['Imeko', 'Ilara', 'Afon', 'Idofa', 'Obada', 'Oke Agbede'],
+                    'Ipokia' => ['Idi Iroko', 'Ifonyintedo', 'Agosasa', 'Ijofin', 'Ilashe', 'Tongeji'],
+                    'Obafemi Owode' => ['Ajebo', 'Mokoloki', 'Ofada', 'Owode', 'Mowe', 'Ibafo', 'Kobape'],
+                    'Odeda' => ['Alabata', 'Batoro', 'Ilugun', 'Obantoko', 'Obete', 'Opeji'],
+                    'Odogbolu' => ['Idowa', 'Imodi', 'Okun Owa', 'Omu', 'Ososa', 'Odogbolu Town'],
+                    'Ogun Waterside' => ['Abigi', 'Irokun', 'Igbile', 'Makun Omi', 'Oloja'],
+                    'Remo North' => ['Isara', 'Ode', 'Akaka', 'Ode II', 'Ogere', 'Ogere II'],
+                    'Sagamu' => ['Makun', 'Ode Lemo', 'Oko', 'Sabo', 'Simawa', 'Surulere']
+                ],
+                'Ondo' => [
+                    'Akoko North East' => ['Ikare I', 'Ikare II', 'Ikare III', 'Irun Akoko', 'Oke Agbe', 'Oyin Akoko', 'Ugbe Akoko'],
+                    'Akoko North West' => ['Arigidi', 'Oke Agbe', 'Ajowa', 'Ese', 'Ogbagi', 'Ikare'],
+                    'Akoko South East' => ['Isua', 'Epinmi', 'Ipe', 'Sosan', 'Irun', 'Ipe II'],
+                    'Akoko South West' => ['Ikare', 'Oka Akoko', 'Supare', 'Oba Akoko', 'Akungba', 'Oka II', 'Ikun'],
+                    'Akure North' => ['Ayetoro', 'Igoba', 'Isinigbo', 'Ita Ogbolu', 'Oba Ile', 'Ogbese', 'Osi'],
+                    'Akure South' => ['Akure Central', 'Ijoka', 'Oda', 'Owode', 'Arakale', 'Fanibi'],
+                    'Ese Odo' => ['Arogbo', 'Arogbo II', 'Igbekebo', 'Igbobini', 'Ukparama', 'Sabomi'],
+                    'Idanre' => ['Atosin', 'Ofosu', 'Owena', 'Oke Idanre', 'Idale', 'Alade', 'Isalu'],
+                    'Ifedore' => ['Igbara Oke', 'Ijare', 'Ilara Mokin', 'Ipogun', 'Isarun', 'Oba Ile', 'Oyemekun'],
+                    'Ilaje' => ['Ayetoro', 'Igbokoda', 'Mahin', 'Ugbo', 'Ugbonla', 'Zion Pepper'],
+                    'Ile Oluji/Okeigbo' => ['Ile Oluji', 'Oke Igbo', 'Agunla', 'Bamikemo', 'Oluji II', 'Okeigbo II'],
+                    'Odigbo' => ['Ore', 'Odigbo', 'Agbabu', 'Oniparaga', 'Oluwa'],
+                    'Okitipupa' => ['Ikoya', 'Ilutitun', 'Igbodigo', 'Okitipupa', 'Erinje', 'Ode Aye'],
+                    'Ondo East' => ['Bolorunduro', 'Owena', 'Epe', 'Oboto', 'Oke Agunla'],
+                    'Ondo West' => ['Enuowa', 'Laje', 'Oka', 'Okeluse', 'Yaba'],
+                    'Ose' => ['Ifon', 'Ihuje', 'Imoru', 'Okeluse', 'Idoani', 'Ute', 'Ose Town'],
+                    'Owo' => ['Emure', 'Ijebu Owo', 'Isaipen', 'Uso', 'Upenmen', 'Ute']
+                ],
+                'Osun' => [
+                    'Atakunmosa East' => ['Iperindo', 'Ijesa Isu', 'Iwara', 'Iragbiji', 'Esa Oke'],
+                    'Atakunmosa West' => ['Osu', 'Ibodi', 'Ifewara', 'Muroko', 'Oke Bode'],
+                    'Aiyedaade' => ['Gbongan', 'Ode Omu', 'Araromi Owu', 'Ikire', 'Apomu'],
+                    'Aiyedire' => ['Iwo', 'Oluponna', 'Kuta', 'Ile Ogbo', 'Asamu'],
+                    'Boluwaduro' => ['Otan Ayegbaju', 'Eripa', 'Iresi', 'Obaagun', 'Ilare'],
+                    'Boripe' => ['Iree', 'Iragbiji', 'Otan Ayegbaju', 'Ada', 'Ikirun'],
+                    'Ede North' => ['Ede', 'Agbongbe', 'Oloki', 'Sabo', 'Oke Gada'],
+                    'Ede South' => ['Oloba', 'Oke Gada', 'Isibo', 'Abere', 'Agbongbe'],
+                    'Egbedore' => ['Awo', 'Ara', 'Iragberi', 'Ido Osun', 'Ekuro'],
+                    'Ejigbo' => ['Ejigbo', 'Ilawo', 'Aato', 'Isoko', 'Olla'],
+                    'Ife Central' => ['Enuwa', 'Moore', 'Iremo', 'Igboya', 'Ilare'],
+                    'Ife East' => ['Yekemi', 'Oluorogbo', 'Ifetedo', 'Moro', 'Modakeke'],
+                    'Ife North' => ['Ipetumodu', 'Edunabon', 'Yakooyo', 'Moro', 'Asipa'],
+                    'Ife South' => ['Ifetedo', 'Ado Oko', 'Oluorogbo', 'Moro', 'Oke Oye'],
+                    'Ifedayo' => ['Oke Ila', 'Ayetoro', 'Ladokun', 'Oke Ila II', 'Oke Ila III'],
+                    'Ifelodun' => ['Ikirun', 'Iba', 'Eko Ende', 'Eko Ajala', 'Obaagun'],
+                    'Ila' => ['Ila Orangun', 'Aba Oke', 'Isedo', 'Oke Ila', 'Ejigbo Road'],
+                    'Ilesa East' => ['Ilesa', 'Okesa', 'Omofe', 'Imo', 'Isare'],
+                    'Ilesa West' => ['Ilesa', 'Ayeso', 'Itakogun', 'Ijofi'],
+                    'Irepodun' => ['Ilobu', 'Erin Osun', 'Ifon', 'Orolu', 'Aguodo'],
+                    'Irewole' => ['Ikire', 'Apomu', 'Odeyinka', 'Wasinmi', 'Ayetoro'],
+                    'Isokan' => ['Ikoyi', 'Apomu', 'Odeyinka', 'Moro', 'Wasinmi'],
+                    'Iwo' => ['Iwo', 'Oke Odo', 'Isale Oba', 'Oke Bale', 'Araromi'],
+                    'Obokun' => ['Ibokun', 'Imesi Ile', 'Ilare', 'Esa Oke', 'Osu'],
+                    'Odo Otin' => ['Okuku', 'Inisha', 'Eko Ende', 'Oyan', 'Igbaye'],
+                    'Ola Oluwa' => ['Telemu', 'Bode Osi', 'Asamu', 'Ile Ogbo'],
+                    'Olorunda' => ['Osogbo', 'Oke Baale', 'Ita Olookan', 'Olonkoro', 'Agunbelewo'],
+                    'Oriade' => ['Ijebu Ijesa', 'Esa Odo', 'Iragbiji', 'Ijeda', 'Ileki'],
+                    'Orolu' => ['Ifon', 'Ilobu', 'Olobu', 'Erin Osun', 'Aguodo'],
+                    'Osogbo' => ['Oke Baale', 'Ataoja', 'Odi Olowo', 'Olonkoro', 'Sabo']
+                ],
+                'Oyo' => [
+                    'Afijio' => ['Jobele', 'Ilora', 'Awe', 'Akinmoorin', 'Imini', 'Fiditi', 'Oluwatedo'],
+                    'Akinyele' => ['Akinyele', 'Ijaye', 'Arulogun', 'Iyana Offa', 'Ikereku', 'Olanla', 'Ajibade'],
+                    'Atiba' => ['Oyo East', 'Oyo West', 'Agunpopo', 'Apinni', 'Ajagba'],
+                    'Atisbo' => ['Ago Are', 'Ofiki', 'Alaga', 'Owode', 'Tede', 'Sepeteri', 'Sabe'],
+                    'Egbeda' => ['Egbeda', 'Olodo', 'Adegbayi', 'Aba', 'Erunmu', 'Alakia'],
+                    'Ibadan North' => ['Agbowo', 'Bodija', 'Orita Mefa', 'University', 'Sango', 'Oritamefa'],
+                    'Ibadan North East' => ['Oke Adu', 'Oke Are', 'Oke Ofa', 'Oghere', 'Mapo', 'Beere'],
+                    'Ibadan North West' => ['Onireke', 'Ologuneru', 'Idi Ape', 'Dugbe', 'Inalende'],
+                    'Ibadan South East' => ['Mapo', 'Orita Aperin', 'Beere', 'Labo', 'Oke Ado'],
+                    'Ibadan South West' => ['Ring Road', 'Challenge', 'Oke Ado', 'Molete', 'Felele'],
+                    'Ibarapa Central' => ['Igbo Ora', 'Ayete', 'Igbodudu', 'Pako'],
+                    'Ibarapa East' => ['Eruwa', 'Lanlate', 'Igbo Ora', 'Ayete'],
+                    'Ibarapa North' => ['Ayete', 'Tapa', 'Idere', 'Lanlate', 'Eruwa'],
+                    'Ido' => ['Erinwusi', 'Akinware', 'Apete', 'Eleyele', 'Omi Adio'],
+                    'Irepo' => ['Kisi', 'Igbeti', 'Igboho', 'Ilorin Road', 'Ogbomoso'],
+                    'Iseyin' => ['Iseyin', 'Okeho', 'Komu', 'Ado Awaye', 'Otu'],
+                    'Itesiwaju' => ['Otu', 'Igbojaye', 'Ipapo', 'Okaka', 'Ado Awaye'],
+                    'Iwajowa' => ['Iwere Ile', 'Awe', 'Ayetoro', 'Iganna', 'Idiko Ile'],
+                    'Kajola' => ['Okeho', 'Ilero', 'Ilua', 'Imia', 'Ayetoro Oke'],
+                    'Lagelu' => ['Ejioku', 'Lagelu', 'Lalupon', 'Monatan', 'Sagbe'],
+                    'Ogbomoso North' => ['Isale Afon', 'Sabo', 'Arowomole', 'Owode', 'Oke Anu'],
+                    'Ogbomoso South' => ['Arowomole', 'Masifa', 'Ijoku', 'Oke Ola', 'Oke Agbede'],
+                    'Ogo Oluwa' => ['Ajaawa', 'Iwofin', 'Jobele', 'Akinmoorin'],
+                    'Olorunsogo' => ['Igbeti', 'Igboho', 'Oko', 'Ago Amodu', 'Fiditi'],
+                    'Oluyole' => ['Idi Ayunre', 'Odo Ona', 'Olorunsogo', 'Araromi', 'Challenge'],
+                    'Ona Ara' => ['Ogbere', 'Odo Ona', 'Araromi', 'Ire Akari', 'Olorunsogo'],
+                    'Orelope' => ['Igboho', 'Okerete', 'Ago Amodu', 'Olorunsogo', 'Kisi'],
+                    'Ori Ire' => ['Ikoyi', 'Ogbomoso Road', 'Oko', 'Olukotun', 'Ajaba'],
+                    'Oyo East' => ['Agboye', 'Ajagba', 'Apinni', 'Modeke', 'Pakoyi'],
+                    'Oyo West' => ['Iseke', 'Owode', 'Ajagba', 'Pakoyi', 'Irepodun'],
+                    'Saki East' => ['Ago Amodu', 'Ogbooro', 'Agbonle', 'Sepeteri', 'Saki Town'],
+                    'Saki West' => ['Saki', 'Ogbooro', 'Sepeteri', 'Agbonle', 'Aba Paanu'],
+                    'Surulere' => ['Iresa Adu', 'Iwofin', 'Oko', 'Igbon', 'Oke Odo']
+                ],
+                'Plateau' => [
+                    'Barkin Ladi' => ['Barkin Ladi', 'Fan', 'Gassa', 'Heipang', 'Marit', 'Ropp', 'Zabot'],
+                    'Bassa' => ['Bassa Town', 'Binchin', 'Jengre', 'Miango', 'Kwall', 'Rukuba', 'Gero'],
+                    'Bokkos' => ['Bokkos', 'Daffo', 'Manguna', 'Mbar', 'Ropp', 'Tangur', 'Wang'],
+                    'Jos East' => ['Federe', 'Fobur', 'Fursum', 'Maijuju', 'Shere'],
+                    'Jos North' => ['Ali Kazaure', 'Gangare', 'Garba Daho', 'Jenta Adamu', 'Jenta Apata', 'Jos Jarawa', 'Tudun Wada'],
+                    'Jos South' => ['Bukuru', 'Du', 'Gyel', 'Kuru', 'Turu', 'Zawan'],
+                    'Kanam' => ['Dengi', 'Gagdi', 'Garga', 'Jarmai', 'Kanam Town'],
+                    'Kanke' => ['Ampang', 'Amper', 'Garram', 'Kabwir', 'Langshi'],
+                    'Langtang North' => ['Langtang', 'Gazum', 'Kumbur', 'Lipan', 'Zambang'],
+                    'Langtang South' => ['Mabudi', 'Sabon Gida', 'Fikyu', 'Telfair', 'Telfair II'],
+                    'Mangu' => ['Ampang', 'Mangu', 'Kerang', 'Langai', 'Panyam'],
+                    'Mikang' => ['Garkawa', 'Jibit', 'Piapung', 'Tunkus'],
+                    'Pankshin' => ['Chip', 'Lere', 'Langtang', 'Mangu', 'Pankshin Central'],
+                    'Qua\'an Pan' => ['Doemak', 'Kurgwi', 'Kwalla', 'Kwalla II', 'Namu'],
+                    'Riyom' => ['Bum', 'Jol', 'Riyom', 'Riyom North', 'Riyom South'],
+                    'Shendam' => ['Kalong', 'Kwalla', 'Namu', 'Shendam Town', 'Yelwa'],
+                    'Wase' => ['Bashar', 'Kadarko', 'Lamba', 'Wase Town', 'Yola']
+                ],
+                'Rivers' => [
+                    'Abua/Odual' => ['Abua Central', 'Abua East', 'Emago', 'Odual Central', 'Otapha', 'Otari'],
+                    'Ahoada East' => ['Ahoada Town', 'Ahoada Central', 'Ahoada East', 'Ahoada West', 'Odiokwu'],
+                    'Ahoada West' => ['Akinima', 'Mbiama', 'Okogbe', 'Ubio', 'Ubie'],
+                    'Akuku Toru' => ['Abonnema', 'Abissa', 'Kula', 'Obonoma'],
+                    'Andoni' => ['Agwut Obolo', 'Asarama', 'Ngo', 'Unyeada', 'Ikuru'],
+                    'Asari Toru' => ['Buguma', 'Bukuma', 'Ifoko', 'Sama', 'Tema'],
+                    'Bonny' => ['Bonny', 'Finima', 'Kuruma', 'Peter Side', 'Sandfield'],
+                    'Degema' => ['Bille', 'Cawthorne Channel', 'Degema Town', 'Degema North', 'Degema South'],
+                    'Eleme' => ['Alesa', 'Aleto', 'Alode', 'Ogale', 'Onne'],
+                    'Emohua' => ['Emohua', 'Ibaa', 'Isiodu', 'Ogbakiri', 'Rumuji'],
+                    'Etche' => ['Afara', 'Chokota', 'Igbo', 'Mba', 'Okehi', 'Ulakwo'],
+                    'Gokana' => ['Bodo', 'Bomu', 'Kpor', 'Mogho', 'Nweol'],
+                    'Ikwerre' => ['Elele', 'Isiokpo', 'Omerelu', 'Omademe', 'Ubima'],
+                    'Khana' => ['Bane', 'Bori', 'Kpean', 'Sii', 'Taabaa'],
+                    'Obio/Akpor' => ['Choba', 'Rumueme', 'Rumuigbo', 'Rumuola', 'Rumuokoro', 'Rumuokwuta'],
+                    'Ogba/Egbema/Ndoni' => ['Egi', 'Egbema', 'Omoku', 'Obrikom', 'Okwuzi'],
+                    'Ogu/Bolo' => ['Bolo', 'Ele', 'Ogu', 'Wakama'],
+                    'Okrika' => ['Ibaka', 'Isaka', 'Ogan', 'Okrika Town', 'Wakirikiri'],
+                    'Omuma' => ['Eberi', 'Ofeh', 'Ohimogho', 'Okoloma', 'Okehi'],
+                    'Opobo/Nkoro' => ['Nkoro', 'Opobo Town', 'Queens Town', 'Kalaibiama'],
+                    'Oyigbo' => ['Afam', 'Kom Kom', 'Obeakpu', 'Okoloma', 'Oyigbo Town'],
+                    'Port Harcourt' => ['Diobu', 'Old G.R.A', 'Township', 'Borokiri', 'Oroworukwo', 'Rebisi'],
+                    'Tai' => ['Ban Ogoi', 'Bunu Tai', 'Kira Tai', 'Nonwa', 'Kpite']
+                ],
+                'Sokoto' => [
+                    'Binji' => ['Binji', 'Inname', 'Jammali', 'Maikujera', 'Samama'],
+                    'Bodinga' => ['Bagarawa', 'Danchadi', 'Kwacciyar Lalle', 'Mazanya', 'Sifawa'],
+                    'Dange Shuni' => ['Dange', 'Rudu', 'Tsafanade', 'Tuntube', 'Wababe'],
+                    'Gada' => ['Gada', 'Illela', 'Kaddi', 'Kwarare', 'Tsitse'],
+                    'Goronyo' => ['Goronyo', 'Boyekei', 'Kwargaba', 'Rimawa', 'Sifawa'],
+                    'Gudu' => ['Awulkiti', 'Boto', 'Gyalange', 'Kurdula', 'Maraken'],
+                    'Gwadabawa' => ['Asara', 'Chimmola', 'Gwadabawa', 'Gidan Kaya', 'Mammande'],
+                    'Illela' => ['Damari', 'Damba', 'Denge Shuni', 'Illela Town', 'Kalmalo'],
+                    'Isa' => ['Isa', 'Gidan Kaura', 'Gidan Katta', 'Sabon Birni', 'Tureta'],
+                    'Kebbe' => ['Kebbe', 'Margai', 'Nasagudu', 'Unguwar Lalle', 'Zango'],
+                    'Kware' => ['Bankanu', 'Kware', 'Hamma Ali', 'Tunga', 'Tunga II'],
+                    'Rabah' => ['Gwandi', 'Gidan Kaya', 'Kurya', 'Rabah Town', 'Tureta'],
+                    'Sabon Birni' => ['Gangara', 'Gatawa', 'Kalgo', 'Sabon Birni', 'Tsamaye'],
+                    'Shagari' => ['Dandin Mahe', 'Horo Birni', 'Kambaza', 'Lambar Tureta', 'Sanyinna'],
+                    'Silame' => ['Bauni', 'Katami', 'Kololi', 'Labani', 'Marafa'],
+                    'Sokoto North' => ['Magajin Gari', 'Sabon Birni', 'Sarkin Zamfara', 'Shagari Lowcost', 'Unguwar Rogo'],
+                    'Sokoto South' => ['Gagi', 'Rijiya', 'Runjin Sambo', 'Sabon Birni', 'Tudun Wada'],
+                    'Tambuwal' => ['Bagida', 'Dogon Daji', 'Faga', 'Sanyinna', 'Tambuwal Town'],
+                    'Tangaza' => ['Gidan Madi', 'Gidan Kaya', 'Kalkalawa', 'Sakkwai', 'Tangaza Town'],
+                    'Tureta' => ['Barayar Zaki', 'Damba', 'Lambar', 'Sarki', 'Tureta Town'],
+                    'Wamakko' => ['Arkilla', 'Dundaye', 'Gumbi', 'Kware', 'Wamakko Town'],
+                    'Wurno' => ['Dankemu', 'Dutsi', 'Magarya', 'Marafa', 'Wurno Town'],
+                    'Yabo' => ['Bakale', 'Binji', 'Danchadi', 'Dole', 'Yabo Town']
+                ],
+                'Taraba' => [
+                    'Ardo Kola' => ['Ardo Kola', 'Iware', 'Jauro Yinu', 'Lamido Bornu', 'Mallum', 'Sunkani', 'Zongon Kombi'],
+                    'Bali' => ['Bali', 'Gang Dole', 'Garin Dogo', 'Maihula', 'Suntai', 'Tikari'],
+                    'Donga' => ['Akyura', 'Donga Town', 'Mararaba', 'Suntai', 'Asibiti', 'Gyata', 'Nyitan'],
+                    'Gashaka' => ['Gashaka', 'Gembu', 'Gayam', 'Jamtari', 'Mayogwoi', 'Njawai'],
+                    'Gassol' => ['Gassol', 'Mutum Biyu', 'Nam', 'Sabon Gida', 'Sansani', 'Wuro Jam'],
+                    'Ibi' => ['Dampar', 'Ibi', 'Karmen', 'Sarkin Kudu', 'Sarkin Kasuwa'],
+                    'Jalingo' => ['Abbare Yelwa', 'Kona', 'Majidadi', 'Sintali', 'Turaki', 'Sabon Gari'],
+                    'Karim Lamido' => ['Andamin', 'Jen Ardido', 'Karim', 'Kwanchi', 'Mayo Kam', 'Pantisawa'],
+                    'Kumi' => ['Daba', 'Garu', 'Jauro Bashin', 'Kumi Town', 'Mayo Lope', 'Nassarawo'],
+                    'Lau' => ['Abbare', 'Donada', 'Garba Chede', 'Jimlari', 'Lau Town', 'Mayo Lope'],
+                    'Sardauna' => ['Gembu', 'Kaka', 'Kabaru', 'Maisamari', 'Nguroje', 'Warwar'],
+                    'Takum' => ['Bikashibu', 'Chanchanji', 'Manya', 'Rogo', 'Tikari', 'Ussa'],
+                    'Ussa' => ['Bikashibu', 'Fikyu', 'Kpambo', 'Lissam', 'Kwambai', 'Rufu'],
+                    'Wukari' => ['Akwana', 'Avyi', 'Chonku', 'Hospital', 'Jibu', 'Puje', 'Wapan Nune', 'Wukari Town'],
+                    'Yorro' => ['Bikashibu', 'Kona', 'Luka', 'Pantisawa', 'Pantisawa II', 'Yorro Central'],
+                    'Zing' => ['Bali', 'Bitako', 'Dinding', 'Lamma', 'Monkin', 'Yakoko']
+                ],
+                'Yobe' => [
+                    'Bade' => ['Dogon', 'Gashua', 'Katuzu', 'Lawanti', 'Sarkin Hausawa', 'Sugum'],
+                    'Bursari' => ['Baimari', 'Bayamari', 'Dapchi', 'Garin Alkali', 'Guba', 'Jawi'],
+                    'Damaturu' => ['Damaturu Central', 'Maisandari', 'Murfa', 'Nayinawa', 'Ngalda', 'Sasawa'],
+                    'Fika' => ['Fika', 'Fika Central', 'Gudi', 'Janga', 'Shoye', 'Turmi'],
+                    'Fune' => ['Damagum', 'Dogon Kuka', 'Kayeri', 'Kumaganam', 'Ngazargamu', 'Togostein'],
+                    'Geidam' => ['Ashekri', 'Balle', 'Bukarti', 'Futchimiram', 'Geidam Town', 'Ngamdu'],
+                    'Gujba' => ['Buni Gari', 'Buni Yadi', 'Gotumba', 'Mutai', 'Wagir', 'Yaba'],
+                    'Gulani' => ['Bularafa', 'Gulani', 'Gulani Central', 'Ngurbuwa', 'Njibulwa', 'Bumsa'],
+                    'Jakusko' => ['Buduwa', 'Gadaka', 'Jakusko', 'Jaba', 'Lafiya Loi Loi', 'Zabudum'],
+                    'Karasuwa' => ['Bukarti', 'Dazigau', 'Karasuwa Galu', 'Waro', 'Zirgi'],
+                    'Machina' => ['Baidiri', 'Dole', 'Futchimiram', 'Machina Town', 'Yanda'],
+                    'Nangere' => ['Chilariye', 'Dadiso', 'Darazo', 'Dazigau', 'Nangere Town', 'Tanshi'],
+                    'Nguru' => ['Bulabulin', 'Garbi', 'Hausari', 'Kachallari', 'Nasarawa', 'Nguru Town'],
+                    'Potiskum' => ['Bare Bari', 'Bolewa A', 'Bolewa B', 'Danchuwa', 'Hausawa', 'Mamudo'],
+                    'Tarmuwa' => ['Bularafa', 'Jajere', 'Koriyel', 'Lantewa', 'Shekau', 'Yumbule'],
+                    'Yunusari' => ['Dekwa', 'Dumbulwa', 'Kaigi', 'Waziri', 'Yunusari Town'],
+                    'Yusufari' => ['Gumsa', 'Gurjibo', 'Maimalari', 'Yusufari Central', 'Zalum', 'Zangon']
+                ],
+                'Zamfara' => [
+                    'Anka' => ['Bagega', 'Barayar Zaki', 'Dan Galadima', 'Sabon Gari', 'Waramu'],
+                    'Bakura' => ['Bakura', 'Birnin Tudu', 'Damri', 'Dumai', 'Yarkofoji'],
+                    'Birnin Magaji' => ['Birnin Magaji', 'Gora', 'Kasanga', 'Kasanga II', 'Nasara'],
+                    'Bukkuyum' => ['Adabka', 'Bukkuyum', 'Gwashi', 'Ittas', 'Masama', 'Yashi'],
+                    'Bungudu' => ['Bungudu', 'Furfuri', 'Gada Biyu', 'Kwaren Ganuwa', 'Rawaya'],
+                    'Gummi' => ['Birnin Magaji', 'Birnin Tudu', 'Falamau', 'Gummi Town', 'Ubandawaki'],
+                    'Gusau' => ['Damba', 'Galadima', 'Madawaki', 'Mayana', 'Tudun Wada', 'Wanke'],
+                    'Kaura Namoda' => ['Birnin Magaji', 'Dan Sadau', 'Gada', 'Kaura Namoda Town', 'Sarkin Fawa'],
+                    'Maradun' => ['Birnin Magaji', 'Gora', 'Jargaba', 'Magami', 'Sarkin Kaya'],
+                    'Maru' => ['Bindin', 'Dangulbi', 'Kuyambana', 'Maru Town', 'Ruwan Doruwa'],
+                    'Shinkafi' => ['Badarawa', 'Birnin Yero', 'Faru', 'Galadi', 'Katuru', 'Shinkafi Town'],
+                    'Talata Mafara' => ['Galadima', 'Gwaram', 'Makera', 'Ruwan Bore', 'Sokoto Road', 'Tsamiyar'],
+                    'Tsafe' => ['Bilbis', 'Danjibga', 'Kunchin Kalgo', 'Tsafe Town', 'Yankuzo'],
+                    'Zurmi' => ['Birnin Magaji', 'Boko', 'Bukkuyum', 'Kadamutsa', 'Rukudawa', 'Yanbuki']
+                ],
+                'Fct Abuja' => [
+                    'Abaji' => ['Abaji Central', 'Agyana', 'Alu Mamagi', 'Gurdi', 'Kpanya', 'Nuku'],
+                    'Bwari' => ['Bwari Central', 'Byazhin', 'Dutse Alhaji', 'Igu', 'Kawu', 'Kuduru'],
+                    'Gwagwalada' => ['Dobi', 'Gwagwalada Central', 'Gwako', 'Ikwa', 'Kutunku', 'Paiko Kore', 'Zuba'],
+                    'Kuje' => ['Chibiri', 'Gaube', 'Gauta', 'Kuje Central', 'Kwaku', 'Rubochi'],
+                    'Kwali' => ['Ashara', 'Dabi', 'Kilankwa', 'Kundu', 'Pai', 'Yangoji'],
+                    'Municipal Area Council' => ['City Centre', 'Garki', 'Garki Village', 'Gudu', 'Jabi', 'Wuse', 'Utako', 'Asokoro', 'Maitama']
+                ]
+            ]
+        ];
+
+        // Create Nigeria country
+        $nigeria = Country::firstOrCreate([
+            'code' => 'NG',
+        ], [
+            'name' => 'Nigeria',
+            'county_label' => $nigerianData['labels']['county'],
+            'subcounty_label' => $nigerianData['labels']['subcounty'],
+        ]);
+
+        // Create states, LGAs, and wards
+        foreach ($nigerianData['counties'] as $stateName => $lgas) {
+            $state = County::firstOrCreate([
+                'country_id' => $nigeria->id,
+                'name' => $stateName,
+            ]);
+
+            foreach ($lgas as $lgaName => $wards) {
+                $lga = Subcounty::firstOrCreate([
+                    'county_id' => $state->id,
+                    'name' => $lgaName,
+                ]);
+
+                foreach ($wards as $wardName) {
+                    Ward::firstOrCreate([
+                        'subcounty_id' => $lga->id,
+                        'name' => $wardName,
+                    ]);
+                }
+            }
+        }
+
+        $this->command->info('Nigerian geographical data seeded successfully!');
+        $this->command->info('States: ' . County::where('country_id', $nigeria->id)->count());
+        $this->command->info('LGAs: ' . Subcounty::whereHas('county', function($q) use ($nigeria) {
+            $q->where('country_id', $nigeria->id);
+        })->count());
+        $this->command->info('Wards: ' . Ward::whereHas('subcounty.county', function($q) use ($nigeria) {
+            $q->where('country_id', $nigeria->id);
+        })->count());
     }
 }
+
