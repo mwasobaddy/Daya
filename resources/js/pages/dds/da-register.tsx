@@ -678,7 +678,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         });
     };
 
-    const submit = (e: React.FormEvent) => {
+    const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (currentStep === 'account') {
             if (!validateStep('account')) {
@@ -691,21 +691,39 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             }
             console.log('Submitting form with data:', data);
             setProcessing(true);
-            post('/api/da/create', {
-                onSuccess: (response) => {
-                    console.log('Success response:', response);
+
+            try {
+                const response = await fetch('/api/da/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log('Success response:', result);
                     setProcessing(false);
                     reset();
                     toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral code and QR code.', {
                         autoClose: 6000
                     });
-                },
-                onError: (errors) => {
-                    console.log('Error response:', errors);
+                } else {
+                    console.log('Error response:', result);
                     setProcessing(false);
-                    handleRegistrationError(errors);
-                },
-            });
+                    handleRegistrationError(result);
+                }
+            } catch (error) {
+                console.log('Network error:', error);
+                setProcessing(false);
+                toast.error('Network error. Please check your internet connection and try again.', {
+                    autoClose: 5000
+                });
+            }
         } else {
             nextStep();
         }
