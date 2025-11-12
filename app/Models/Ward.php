@@ -17,4 +17,9 @@ class Ward extends Model
     {
         return $this->belongsTo(Subcounty::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

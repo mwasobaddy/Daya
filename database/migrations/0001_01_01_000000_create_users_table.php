@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('wallet_pin')->nullable();
             $table->enum('wallet_type', ['personal', 'business', 'both'])->nullable();
             $table->json('profile')->nullable(); // for additional data
-            $table->unsignedBigInteger('ward_id')->nullable();
+            $table->unsignedBigInteger('ward_id')->constrained('wards')->onDelete('cascade');
             $table->string('business_name')->nullable();
             $table->enum('account_type', ['startup', 'artist', 'label', 'ngo', 'agency', 'business'])->nullable();
             $table->timestamp('email_verified_at')->nullable();

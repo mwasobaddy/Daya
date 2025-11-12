@@ -31,7 +31,7 @@ class User extends Authenticatable
         'profile',
         'phone',
         'national_id',
-        'country',
+        'ward_id',
         'business_name',
         'account_type',
     ];
@@ -92,5 +92,10 @@ class User extends Authenticatable
     public function ventureShares()
     {
         return $this->hasMany(VentureShare::class);
+    }
+
+    public function ward()
+    {
+        return $this->belongsTo(Ward::class);
     }
 }
