@@ -129,6 +129,9 @@ class DaController extends Controller
             // Send welcome email
             Mail::to($user->email)->send(new \App\Mail\DaWelcome($user, $referrer));
 
+            // Send admin notification email
+            Mail::to('admin@daya.com')->send(new \App\Mail\AdminDaRegistration($user, $referrer));
+
             return response()->json([
                 'message' => 'DA registered successfully',
                 'qr_code' => $qrCodeUrl,
