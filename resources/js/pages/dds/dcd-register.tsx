@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, Tv } from 'lucide-react';
+import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 declare global {
@@ -15,6 +15,32 @@ declare global {
             remove: (element: string | HTMLElement) => void;
         };
     }
+}
+
+interface Country {
+    id: number;
+    name: string;
+    code: string;
+    county_label: string;
+    subcounty_label: string;
+}
+
+interface County {
+    id: number;
+    name: string;
+    country_id: number;
+}
+
+interface Subcounty {
+    id: number;
+    name: string;
+    county_id: number;
+}
+
+interface Ward {
+    id: number;
+    name: string;
+    subcounty_id: number;
 }
 
 type Step = 'personal' | 'business' | 'preferences' | 'account';
@@ -35,6 +61,18 @@ export default function DcdRegister() {
     const [currentStep, setCurrentStep] = useState<Step>('personal');
     const [processing, setProcessing] = useState(false);
     const [showForm, setShowForm] = useState(getInitialShowForm);
+    const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
+    const [countries, setCountries] = useState<Country[]>([]);
+    const [countriesLoading, setCountriesLoading] = useState(true);
+    const [counties, setCounties] = useState<County[]>([]);
+    const [countiesLoading, setCountiesLoading] = useState(false);
+    const [subcounties, setSubcounties] = useState<Subcounty[]>([]);
+    const [subcountiesLoading, setSubcountiesLoading] = useState(false);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [wardsLoading, setWardsLoading] = useState(false);
+    const [countyLabel, setCountyLabel] = useState('County');
+    const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
     const turnstileRef = useRef(null);
 
     const [data, setData] = useState({
@@ -47,6 +85,7 @@ export default function DcdRegister() {
         country: '',
         county: '',
         subcounty: '',
+        ward: '',
         business_address: '',
         phone: '',
         latitude: '',
@@ -107,6 +146,102 @@ export default function DcdRegister() {
         };
     }, []);
 
+    // Fetch countries on component mount
+    useEffect(() => {
+        const fetchCountries = async () => {
+            setCountriesLoading(true);
+            try {
+                const response = await fetch('/api/countries');
+                const data = await response.json();
+                setCountries(data);
+            } catch (error) {
+                console.error('Failed to fetch countries:', error);
+            } finally {
+                setCountriesLoading(false);
+            }
+        };
+
+        fetchCountries();
+    }, []);
+
+    // Check location permission when URL has started=true parameter
+    useEffect(() => {
+        const checkLocationPermission = async () => {
+            if (typeof window !== 'undefined') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasStartedParam = urlParams.get('started') === 'true';
+
+                if (hasStartedParam && !locationPermissionGranted) {
+                    try {
+                        await requestLocationPermission();
+                        // If location permission is granted, show the form
+                        setShowForm(true);
+                    } catch {
+                        // If location permission is denied or fails, redirect to base URL
+                        const baseUrl = window.location.origin + window.location.pathname;
+                        window.location.href = baseUrl;
+                    }
+                }
+            }
+        };
+
+        checkLocationPermission();
+    }, [locationPermissionGranted]);
+
+    // Update labels based on selected country
+    const updateLabels = (countryValue: string) => {
+        const selectedCountry = countries.find(country => country.name.toLowerCase() === countryValue);
+        if (selectedCountry) {
+            setCountyLabel(selectedCountry.county_label);
+            setSubcountyLabel(selectedCountry.subcounty_label);
+        } else {
+            setCountyLabel('County');
+            setSubcountyLabel('Sub-county');
+        }
+    };
+
+    const fetchCounties = async (countryId: number) => {
+        setCountiesLoading(true);
+        try {
+            const response = await fetch(`/api/counties?country_id=${countryId}`);
+            const data = await response.json();
+            setCounties(data);
+        } catch (error) {
+            console.error('Failed to fetch counties:', error);
+            setCounties([]);
+        } finally {
+            setCountiesLoading(false);
+        }
+    };
+
+    const fetchSubcounties = async (countyId: number) => {
+        setSubcountiesLoading(true);
+        try {
+            const response = await fetch(`/api/subcounties?county_id=${countyId}`);
+            const data = await response.json();
+            setSubcounties(data);
+        } catch (error) {
+            console.error('Failed to fetch subcounties:', error);
+            setSubcounties([]);
+        } finally {
+            setSubcountiesLoading(false);
+        }
+    };
+
+    const fetchWards = async (subcountyId: number) => {
+        setWardsLoading(true);
+        try {
+            const response = await fetch(`/api/wards?subcounty_id=${subcountyId}`);
+            const data = await response.json();
+            setWards(data);
+        } catch (error) {
+            console.error('Failed to fetch wards:', error);
+            setWards([]);
+        } finally {
+            setWardsLoading(false);
+        }
+    };
+
     const handleBusinessTypeChange = (type: string, checked: boolean | "indeterminate") => {
         const isChecked = checked === true;
         if (isChecked) {
@@ -138,6 +273,191 @@ export default function DcdRegister() {
         } else {
             setData(prev => ({ ...prev, operating_days: prev.operating_days.filter((d: string) => d !== day) }));
         }
+    };
+
+    const requestLocationPermission = () => {
+        return new Promise<void>((resolve, reject) => {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+
+            setLocationLoading(true);
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+
+                    // Store coordinates
+                    setData(prev => ({
+                        ...prev,
+                        latitude: latitude.toString(),
+                        longitude: longitude.toString(),
+                    }));
+
+                    // Try to get location details using reverse geocoding
+                    try {
+                        const response = await fetch(
+                            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                        );
+                        const locationData = await response.json();
+
+                        // Map country name to dropdown value
+                        let detectedCountry = '';
+                        const countryName = locationData.countryName || '';
+                        if (countryName.toLowerCase().includes('kenya')) {
+                            detectedCountry = 'kenya';
+                        } else if (countryName.toLowerCase().includes('nigeria')) {
+                            detectedCountry = 'nigeria';
+                        }
+
+                        // If country is detected and exists in our dropdown, set it and fetch counties
+                        if (detectedCountry && countries.some(c => c.name.toLowerCase() === detectedCountry)) {
+                            setData(prev => ({
+                                ...prev,
+                                country: detectedCountry,
+                            }));
+
+                            // Update labels for the detected country
+                            updateLabels(detectedCountry);
+
+                            // Fetch counties for the detected country
+                            const selectedCountry = countries.find(c => c.name.toLowerCase() === detectedCountry);
+                            if (selectedCountry) {
+                                try {
+                                    const countiesResponse = await fetch(`/api/counties?country_id=${selectedCountry.id}`);
+                                    const countiesData = await countiesResponse.json();
+                                    setCounties(countiesData);
+
+                                    // Check if the detected county exists in our data
+                                    const detectedCounty = locationData.principalSubdivision || '';
+                                    const matchingCounty = countiesData.find((county: any) =>
+                                        county.name.toLowerCase().includes(detectedCounty.toLowerCase()) ||
+                                        detectedCounty.toLowerCase().includes(county.name.toLowerCase())
+                                    );
+
+                                    if (matchingCounty) {
+                                        // Fetch subcounties for the matched county
+                                        try {
+                                            const subcountiesResponse = await fetch(`/api/subcounties?county_id=${matchingCounty.id}`);
+                                            const subcountiesData = await subcountiesResponse.json();
+
+                                            // Try to match subcounty/locality
+                                            const detectedLocality = locationData.locality || '';
+                                            const matchingSubcounty = subcountiesData.find((subcounty: any) =>
+                                                subcounty.name.toLowerCase().includes(detectedLocality.toLowerCase()) ||
+                                                detectedLocality.toLowerCase().includes(subcounty.name.toLowerCase())
+                                            );
+
+                                            setData(prev => ({
+                                                ...prev,
+                                                county: matchingCounty.id.toString(),
+                                                subcounty: matchingSubcounty ? matchingSubcounty.id.toString() : '',
+                                                ward: '',
+                                            }));
+
+                                            // If we have a matching subcounty, fetch its wards
+                                            if (matchingSubcounty) {
+                                                try {
+                                                    const wardsResponse = await fetch(`/api/wards?subcounty_id=${matchingSubcounty.id}`);
+                                                    const wardsData = await wardsResponse.json();
+                                                    setWards(wardsData);
+                                                } catch (wardsError) {
+                                                    console.warn('Could not fetch wards:', wardsError);
+                                                }
+                                            }
+                                        } catch (subcountiesError) {
+                                            console.warn('Could not fetch subcounties:', subcountiesError);
+                                            setData(prev => ({
+                                                ...prev,
+                                                county: matchingCounty.id.toString(),
+                                                subcounty: '',
+                                                ward: '',
+                                            }));
+                                        }
+                                    } else {
+                                        setData(prev => ({
+                                            ...prev,
+                                            county: '',
+                                            subcounty: '',
+                                            ward: '',
+                                        }));
+                                    }
+                                } catch (countiesError) {
+                                    console.warn('Could not fetch counties:', countiesError);
+                                    setData(prev => ({
+                                        ...prev,
+                                        county: '',
+                                        subcounty: locationData.locality || '',
+                                        ward: locationData.localityInfo?.administrative?.[2]?.name || '',
+                                    }));
+                                }
+                            }
+                        } else {
+                            // Country not detected or not in our list, set defaults
+                            setData(prev => ({
+                                ...prev,
+                                country: 'kenya', // Default to Kenya
+                                county: '',
+                                subcounty: '',
+                                ward: '',
+                            }));
+                            updateLabels('kenya');
+                            // Fetch counties for Kenya as default
+                            const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
+                            if (kenyaCountry) {
+                                fetchCounties(kenyaCountry.id);
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('Could not fetch location details:', error);
+                        // Set default values if geocoding fails
+                        setData(prev => ({
+                            ...prev,
+                            country: 'kenya', // Default to Kenya
+                        }));
+                        updateLabels('kenya');
+                        // Fetch counties for Kenya as default
+                        const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
+                        if (kenyaCountry) {
+                            fetchCounties(kenyaCountry.id);
+                        }
+                    }
+
+                    setLocationPermissionGranted(true);
+                    setLocationLoading(false);
+                    resolve();
+                },
+                (error) => {
+                    setLocationLoading(false);
+                    let errorMessage = 'Unable to retrieve your location. ';
+
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Location access denied. Please enable location permissions to continue.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += 'An unknown error occurred.';
+                            break;
+                    }
+
+                    alert(errorMessage);
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000, // 5 minutes
+                }
+            );
+        });
     };
 
     // Validation functions
@@ -174,6 +494,18 @@ export default function DcdRegister() {
                 isValid = false;
             }
             if (!data.business_address.trim()) {
+                isValid = false;
+            }
+            if (!data.country.trim()) {
+                isValid = false;
+            }
+            if (!data.county.trim()) {
+                isValid = false;
+            }
+            if (!data.subcounty.trim()) {
+                isValid = false;
+            }
+            if (!data.ward.trim()) {
                 isValid = false;
             }
         } else if (step === 'business') {
@@ -461,6 +793,117 @@ export default function DcdRegister() {
                                     placeholder="Physical location for verification"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                            </div>
+
+                            {/* Location Information */}
+                            <div className="bg-blue-50 dark:bg-slate-700 p-4 rounded-lg border border-blue-200 dark:border-blue-600">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Location Information</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="country" className="text-sm font-medium mb-2 block">
+                                            Country <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Select value={data.country} onValueChange={(value) => {
+                                            setData(prev => ({ ...prev, country: value, county: '', subcounty: '', ward: '' }));
+                                            updateLabels(value);
+                                            setCounties([]);
+                                            setSubcounties([]);
+                                            setWards([]);
+                                            const selectedCountry = countries.find(c => c.name.toLowerCase() === value);
+                                            if (selectedCountry) {
+                                                fetchCounties(selectedCountry.id);
+                                            }
+                                        }} disabled={countriesLoading || countries.length === 0}>
+                                            <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
+                                                <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select Country"} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                {countries.map((country) => (
+                                                    <SelectItem key={country.id} value={country.name.toLowerCase()}>
+                                                        {country.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="county" className="text-sm font-medium mb-2 block">
+                                            {countyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Select value={data.county} onValueChange={(value) => {
+                                            setData(prev => ({ ...prev, county: value, subcounty: '', ward: '' }));
+                                            setSubcounties([]);
+                                            setWards([]);
+                                            const selectedCounty = counties.find(c => c.id.toString() === value);
+                                            if (selectedCounty) {
+                                                fetchSubcounties(selectedCounty.id);
+                                            }
+                                        }}>
+                                            <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
+                                                <SelectValue placeholder={countiesLoading ? "Loading..." : `Select ${countyLabel.toLowerCase()}`} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                {counties.map((county) => (
+                                                    <SelectItem key={county.id} value={county.id.toString()}>
+                                                        {county.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="subcounty" className="text-sm font-medium mb-2 block">
+                                            {subcountyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Select value={data.subcounty} onValueChange={(value) => {
+                                            setData(prev => ({ ...prev, subcounty: value, ward: '' }));
+                                            setWards([]);
+                                            const selectedSubcounty = subcounties.find(s => s.id.toString() === value);
+                                            if (selectedSubcounty) {
+                                                fetchWards(selectedSubcounty.id);
+                                            }
+                                        }} disabled={subcountiesLoading || !data.county}>
+                                            <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
+                                                <SelectValue placeholder={subcountiesLoading ? "Loading..." : `Select ${subcountyLabel.toLowerCase()}`} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                {subcounties.map((subcounty) => (
+                                                    <SelectItem key={subcounty.id} value={subcounty.id.toString()}>
+                                                        {subcounty.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="ward" className="text-sm font-medium mb-2 block">
+                                            Ward <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Select value={data.ward} onValueChange={(value) => setData(prev => ({ ...prev, ward: value }))} disabled={wardsLoading || !data.subcounty}>
+                                            <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
+                                                <SelectValue placeholder={wardsLoading ? "Loading..." : "Select ward"} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                                {wards.map((ward) => (
+                                                    <SelectItem key={ward.id} value={ward.id.toString()}>
+                                                        {ward.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                {data.latitude && data.longitude && (
+                                    <div className="mt-3 text-xs text-blue-700 dark:text-blue-400">
+                                        📍 Location detected: {data.latitude}, {data.longitude}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -802,102 +1245,111 @@ export default function DcdRegister() {
     };
 
     return (
-        <div className="h-screen bg-background text-foreground overflow-y-auto bg-gradient-to-r from-blue-600 via-green-600 to-purple-600 text-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="h-screen bg-background text-foreground overflow-y-auto bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-300 text-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700">
             {/* Appearance Toggle */}
             <div className="absolute top-4 right-4 z-50">
                 <AppearanceToggleDropdown />
             </div>
+
             <div className="absolute inset-0 bg-black opacity-10"></div>
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div>
+            
             {!showForm ? (
                 /* Landing Page */
                 <>
                     {/* Hero Section with Gradient */}
-                    <div className="relative h-screen flex items-start 2xl:items-center justify-center overflow-y-auto">
-                        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-                            <div className="text-center">
-                                <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-                                    <Sparkles className="w-5 h-5 mr-2" />
-                                    <span className="text-sm font-medium">Join Africa's Leading Digital Network</span>
-                                </div>
+                    <div className="max-w-5xl mx-auto px-2 md:px-4 py-8 mt-8 relative z-10 h-screen flex items-start 2xl:items-center justify-center">
+                        <div className="text-center">
+                            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+                                <Sparkles className="w-5 h-5 mr-2" />
+                                <span className="text-sm font-medium">Join Africa's Leading Digital Network</span>
+                            </div>
 
-                                <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                                    Become a Digital Content
-                                    <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                                        Distributor
-                                    </span>
-                                </h1>
+                            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                                Become a Digital Content
+                                <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                                    Distributor
+                                </span>
+                            </h1>
 
 
-                                {/* Video Section with Modern Card */}
-                                <Card className="shadow-2xl border-0 overflow-hidden mb-8 bg-gray-800/50 backdrop-blur-sm py-0">
-                                    <CardContent className="p-0 !h-full">
-                                        <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden relative">
-                                            <iframe
-                                                className="w-full h-full"
-                                                src="https://www.youtube.com/embed/GDtO2TdRP80"
-                                                title="Digital Content Distributor Program Explained"
-                                                frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                    
-                                <div className="bg-gradient-to-r from-green-50 to-purple-50 dark:from-slate-700 dark:to-slate-800 p-6 rounded-xl border-2 border-green-100 dark:border-green-600 mb-8">
-                                    <p className="text-center text-sm text-gray-700 font-medium dark:text-slate-200">
-                                        {/* tv Icon */}
-                                        <Tv className="w-4 h-4 inline-block mr-2 mb-1 text-gray-500 dark:text-slate-400" />
-                                        Watch this explainer to learn how you can earn by sharing digital content at your business
-                                    </p>
-                                </div>
-
-                                <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-12 dark:text-slate-300">
-                                    Share content, earn rewards, and grow with Africa's premier digital distribution network
+                            {/* Video Section with Modern Card */}
+                            <Card className="shadow-2xl border-0 overflow-hidden mb-8 bg-gray-800/50 backdrop-blur-sm py-0">
+                                <CardContent className="p-0 !h-full">
+                                    <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden relative">
+                                        <iframe
+                                            className="w-full h-full"
+                                            src="https://www.youtube.com/embed/GDtO2TdRP80"
+                                            title="Digital Content Distributor Program Explained"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                
+                            <div className="bg-gradient-to-r from-green-50 to-purple-50 dark:from-slate-700 dark:to-slate-800 p-6 rounded-xl border-2 border-green-100 dark:border-green-600 mb-8">
+                                <p className="text-center text-sm text-gray-700 font-medium dark:text-slate-200">
+                                    {/* tv Icon */}
+                                    <Tv className="w-4 h-4 inline-block mr-2 mb-1 text-gray-500 dark:text-slate-400" />
+                                    Watch this explainer to learn how you can earn by sharing digital content at your business
                                 </p>
+                            </div>
 
-                                {/* Start Button */}
-                                <div className="mb-12">
-                                    <Button
-                                        onClick={() => {
-                                            setShowForm(true);
-                                            // Update URL to make it shareable
-                                            const url = new URL(window.location.href);
-                                            url.searchParams.set('started', 'true');
-                                            window.history.pushState({}, '', url.toString());
-                                        }}
-                                        className="!px-8 !py-8 text-lg font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl shadow-2xl hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105"
-                                    >
-                                        <Sparkles className="w-6 h-6 mr-3" />
+                            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-12 dark:text-slate-300">
+                                Share content, earn rewards, and grow with Africa's premier digital distribution network
+                            </p>
+
+                            {/* Start Button */}
+                            <div className="mb-12">
+                                <Button
+                                    onClick={() => {
+                                        // Update URL to make it shareable and trigger location permission check
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set('started', 'true');
+                                        window.location.href = url.toString();
+                                    }}
+                                    disabled={locationLoading}
+                                    className="!px-8 !py-8 text-lg font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl shadow-2xl hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {locationLoading ? (
+                                        <>
+                                            <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+                                            Getting Location...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-6 h-6 mr-3" />
                                             Start Registration
-                                        <ArrowRight className="w-6 h-6 ml-3" />
-                                    </Button>
-                                </div>
+                                            <ArrowRight className="w-6 h-6 ml-3" />
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
 
-                                {/* Stats Bar */}
-                                <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
-                                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
-                                        <div className="flex items-center justify-center mb-2">
-                                            <Users className="w-6 h-6 mr-2" />
-                                            <div className="text-3xl font-bold">5K+</div>
-                                        </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Active Distributors</div>
+                            {/* Stats Bar */}
+                            <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
+                                    <div className="flex items-center justify-center mb-2">
+                                        <Users className="w-6 h-6 mr-2" />
+                                        <div className="text-3xl font-bold">5K+</div>
                                     </div>
-                                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
-                                        <div className="flex items-center justify-center mb-2">
-                                            <TrendingUp className="w-6 h-6 mr-2" />
-                                            <div className="text-3xl font-bold">$2M+</div>
-                                        </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Distributed</div>
+                                    <div className="text-sm text-blue-100 dark:text-slate-300">Active Distributors</div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
+                                    <div className="flex items-center justify-center mb-2">
+                                        <TrendingUp className="w-6 h-6 mr-2" />
+                                        <div className="text-3xl font-bold">$2M+</div>
                                     </div>
-                                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
-                                        <div className="flex items-center justify-center mb-2">
-                                            <Award className="w-6 h-6 mr-2" />
-                                            <div className="text-3xl font-bold">98%</div>
-                                        </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Success Rate</div>
+                                    <div className="text-sm text-blue-100 dark:text-slate-300">Distributed</div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
+                                    <div className="flex items-center justify-center mb-2">
+                                        <Award className="w-6 h-6 mr-2" />
+                                        <div className="text-3xl font-bold">98%</div>
                                     </div>
+                                    <div className="text-sm text-blue-100 dark:text-slate-300">Success Rate</div>
                                 </div>
                             </div>
                         </div>
@@ -905,7 +1357,7 @@ export default function DcdRegister() {
                 </>
             ) : (
                 /* Form Section */
-                <div className="max-w-4xl mx-auto px-2 md:px-4 py-8 mt-8 relative z-10">
+                <div className="max-w-5xl mx-auto px-2 md:px-4 py-8 mt-8 relative z-10">
                     <div className="mb-8 text-center animate-in slide-in-from-top-5 duration-700 flex items-center justify-center flex-col">
                         <h1 className="text-3xl md:text-6xl font-bold leading-tight">
                             Digital 
@@ -943,7 +1395,7 @@ export default function DcdRegister() {
                                             </div>
                                             <div className="mt-3 text-center hidden sm:block">
                                                 <p className={`text-xs font-semibold transition-colors duration-300 ${
-                                                    isActive ? 'text-gray-900 dark:text-slate-100' : isCompleted ? 'text-green-600 dark:text-green-400' : 'text-gray-300 dark:text-slate-400'
+                                                    isActive ? 'text-orange-400 dark:text-orange-400' : isCompleted ? 'text-green-600 dark:text-green-400' : 'text-yellow-300 dark:text-yellow-400'
                                                 }`}>
                                                     {step.title}
                                                 </p>
