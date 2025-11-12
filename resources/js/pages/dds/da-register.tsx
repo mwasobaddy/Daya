@@ -609,9 +609,13 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             console.log('Success response received through error handler:', errors);
             setProcessing(false);
             reset();
-            toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral code and QR code.', {
-                autoClose: 6000
+            toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
+                autoClose: 3000
             });
+            // Redirect to the registration page with started=true after a short delay
+            setTimeout(() => {
+                window.location.href = 'http://127.0.0.1:8000/da/register?started=true';
+            }, 3000);
             return;
         }
 
@@ -709,9 +713,13 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                     console.log('Success response:', result);
                     setProcessing(false);
                     reset();
-                    toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral code and QR code.', {
-                        autoClose: 6000
+                    toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
+                        autoClose: 3000
                     });
+                    // Redirect to the registration page with started=true after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'http://127.0.0.1:8000/da/register?started=true';
+                    }, 3000);
                 } else {
                     console.log('Error response:', result);
                     setProcessing(false);
