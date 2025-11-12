@@ -601,13 +601,81 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }
     };
 
+    const handleRegistrationError = (errors: any) => {
+        console.log('Registration error details:', errors);
+
+        // Check if errors is an object with field-specific errors
+        if (typeof errors === 'object' && errors !== null) {
+            // Get the first error message from validation errors
+            const errorKeys = Object.keys(errors);
+            if (errorKeys.length > 0) {
+                const firstErrorKey = errorKeys[0];
+                const firstError = errors[firstErrorKey];
+
+                // Handle array of errors or single error
+                const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+
+                // Show specific field error
+                toast.error(`Error: ${errorMessage}\nPlease check the ${firstErrorKey.replace('_', ' ')} field`, {
+                    autoClose: 6000
+                });
+                return;
+            }
+        }
+
+        // Check for specific error messages from the server
+        if (typeof errors === 'string') {
+            if (errors.includes('email') && errors.includes('unique')) {
+                toast.error('This email address is already registered. Please use a different email or try logging in.', {
+                    autoClose: 7000
+                });
+                return;
+            }
+            if (errors.includes('national_id') && errors.includes('unique')) {
+                toast.error('This National ID is already registered in our system.', {
+                    autoClose: 6000
+                });
+                return;
+            }
+            if (errors.includes('referral_code')) {
+                toast.error('Invalid referral code. Please check and try again.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+        }
+
+        // Check for network/server errors
+        if (errors?.message) {
+            if (errors.message.includes('network') || errors.message.includes('fetch')) {
+                toast.error('Network error. Please check your internet connection and try again.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+            if (errors.message.includes('500') || errors.message.includes('server')) {
+                toast.error('Server error. Please try again in a few moments.', {
+                    autoClose: 5000
+                });
+                return;
+            }
+        }
+
+        // Default fallback error
+        toast.error('Registration failed. Please check your information and try again.\nIf the problem persists, contact support.', {
+            autoClose: 5000
+        });
+    };
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         if (currentStep === 'account') {
             if (!validateStep('account')) {
                 console.log('Validation failed for account step');
                 console.log('Form data:', data);
-                toast.error('Please fill all required fields correctly before submitting.');
+                toast.error('Please fill all required fields correctly before submitting.\nCheck the form for any highlighted errors.', {
+                    autoClose: 4000
+                });
                 return;
             }
             console.log('Submitting form with data:', data);
@@ -617,12 +685,14 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                     console.log('Success response:', response);
                     setProcessing(false);
                     reset();
-                    toast.success('Registration successful! (Demo mode)');
+                    toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral code and QR code.', {
+                        autoClose: 6000
+                    });
                 },
                 onError: (errors) => {
                     console.log('Error response:', errors);
                     setProcessing(false);
-                    toast.error('Registration failed. Please check the console for details.');
+                    handleRegistrationError(errors);
                 },
             });
         } else {
