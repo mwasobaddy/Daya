@@ -39,7 +39,7 @@ class AdminSeeder extends Seeder
                 'role' => 'admin',
                 'phone' => '+1234567890',
                 'referral_code' => '7a3H4P',
-                'country' => 'Kenya',
+                'ward_id' => 1, // Default to first ward
                 'email_verified_at' => now(),
                 'wallet_status' => 'activated',
                 'profile' => [

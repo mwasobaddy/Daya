@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             GeographicalDataSeeder::class,
             AdminSeeder::class,
+            DaSeeder::class,
         ]);
     }
 }
