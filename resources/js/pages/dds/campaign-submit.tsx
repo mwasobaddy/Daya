@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, Shield } from 'lucide-react';
+import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, Shield, XCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useEffect, useRef } from 'react';
@@ -61,6 +61,9 @@ export default function CampaignSubmit({ flash }: Props) {
     const [subcountiesLoading, setSubcountiesLoading] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState<string>('');
     const turnstileRef = useRef<HTMLDivElement>(null);
+    const [referralValidating, setReferralValidating] = useState(false);
+    const [referralValid, setReferralValid] = useState<boolean | null>(null);
+    const [referralMessage, setReferralMessage] = useState('');
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -113,6 +116,22 @@ export default function CampaignSubmit({ flash }: Props) {
         };
     }, []);
 
+    // Extract referral code from URL parameters
+    useEffect(() => {
+        const extractReferralCode = () => {
+            if (typeof window !== 'undefined') {
+                const urlParams = new URLSearchParams(window.location.search);
+                // Extract referral code from URL parameters (ref, referral, or code)
+                const referralCode = urlParams.get('ref') || urlParams.get('referral') || urlParams.get('code');
+                if (referralCode && referralCode.length === 6 && /^[A-Za-z0-9]{6}$/.test(referralCode)) {
+                    setData('referral_code', referralCode.toUpperCase());
+                }
+            }
+        };
+
+        extractReferralCode();
+    }, []);
+
     const fetchCountys = async (countryId: number) => {
         setCountysLoading(true);
         try {
@@ -153,6 +172,41 @@ export default function CampaignSubmit({ flash }: Props) {
         }
     };
 
+    const validateReferralCode = async (code: string) => {
+        if (!code || code.length !== 6) {
+            setReferralValid(null);
+            setReferralMessage('');
+            return;
+        }
+
+        setReferralValidating(true);
+        try {
+            const response = await fetch('/api/validate-referral', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ referral_code: code.toUpperCase() }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setReferralValid(true);
+                setReferralMessage(`Valid referral code from ${result.referrer.name}`);
+            } else {
+                setReferralValid(false);
+                setReferralMessage(result.message || 'Invalid referral code');
+            }
+        } catch (error) {
+            setReferralValid(false);
+            setReferralMessage('Failed to validate referral code');
+        } finally {
+            setReferralValidating(false);
+        }
+    };
+
     const { data, setData, processing, errors, reset } = useForm({
         account_type: '',
         business_name: '',
@@ -186,6 +240,15 @@ export default function CampaignSubmit({ flash }: Props) {
     ];
 
     const currentStepIndex = steps.findIndex(step => step.id === currentStep);
+
+    // Validate referral code when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateReferralCode(data.referral_code);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.referral_code]);
 
     // Validation functions
     const validateEmail = (email: string): boolean => {
@@ -536,6 +599,26 @@ export default function CampaignSubmit({ flash }: Props) {
                                     <p className="mt-1.5 text-xs text-gray-500">
                                         If you were referred by a Digital Ambassador
                                     </p>
+                                    {data.referral_code && (
+                                        <div className="mt-2 flex items-center space-x-2">
+                                            {referralValidating ? (
+                                                <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                                    <span className="text-sm">Validating...</span>
+                                                </div>
+                                            ) : referralValid === true ? (
+                                                <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                                    <CheckCircle className="h-4 w-4" />
+                                                    <span className="text-sm">{referralMessage}</span>
+                                                </div>
+                                            ) : referralValid === false ? (
+                                                <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                                    <XCircle className="h-4 w-4" />
+                                                    <span className="text-sm">{referralMessage}</span>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
