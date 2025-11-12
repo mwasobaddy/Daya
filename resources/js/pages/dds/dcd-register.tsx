@@ -177,9 +177,22 @@ export default function DcdRegister() {
                         // If location permission is granted, show the form
                         setShowForm(true);
                     } catch {
-                        // If location permission is denied or fails, redirect to base URL
-                        const baseUrl = window.location.origin + window.location.pathname;
-                        window.location.href = baseUrl;
+                        // If location permission is denied or fails, still show the form
+                        // but set default country without location coordinates
+                        setData(prev => ({
+                            ...prev,
+                            country: '', // Default to Kenya
+                            county: '',
+                            subcounty: '',
+                            ward: '',
+                        }));
+                        updateLabels('kenya');
+                        // Fetch counties for Kenya as default
+                        const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
+                        if (kenyaCountry) {
+                            fetchCounties(kenyaCountry.id);
+                        }
+                        setShowForm(true);
                     }
                 }
             }
@@ -296,133 +309,38 @@ export default function DcdRegister() {
                         longitude: longitude.toString(),
                     }));
 
-                    // Try to get location details using reverse geocoding
+                    // Try to get location details using reverse geocoding (for logging/debugging only)
                     try {
                         const response = await fetch(
                             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
                         );
                         const locationData = await response.json();
 
-                        // Map country name to dropdown value
-                        let detectedCountry = '';
-                        const countryName = locationData.countryName || '';
-                        if (countryName.toLowerCase().includes('kenya')) {
-                            detectedCountry = 'kenya';
-                        } else if (countryName.toLowerCase().includes('nigeria')) {
-                            detectedCountry = 'nigeria';
-                        }
+                        // Log detected location for debugging (optional)
+                        console.log('Detected location:', {
+                            country: locationData.countryName,
+                            region: locationData.principalSubdivision,
+                            locality: locationData.locality
+                        });
 
-                        // If country is detected and exists in our dropdown, set it and fetch counties
-                        if (detectedCountry && countries.some(c => c.name.toLowerCase() === detectedCountry)) {
-                            setData(prev => ({
-                                ...prev,
-                                country: detectedCountry,
-                            }));
-
-                            // Update labels for the detected country
-                            updateLabels(detectedCountry);
-
-                            // Fetch counties for the detected country
-                            const selectedCountry = countries.find(c => c.name.toLowerCase() === detectedCountry);
-                            if (selectedCountry) {
-                                try {
-                                    const countiesResponse = await fetch(`/api/counties?country_id=${selectedCountry.id}`);
-                                    const countiesData = await countiesResponse.json();
-                                    setCounties(countiesData);
-
-                                    // Check if the detected county exists in our data
-                                    const detectedCounty = locationData.principalSubdivision || '';
-                                    const matchingCounty = countiesData.find((county: any) =>
-                                        county.name.toLowerCase().includes(detectedCounty.toLowerCase()) ||
-                                        detectedCounty.toLowerCase().includes(county.name.toLowerCase())
-                                    );
-
-                                    if (matchingCounty) {
-                                        // Fetch subcounties for the matched county
-                                        try {
-                                            const subcountiesResponse = await fetch(`/api/subcounties?county_id=${matchingCounty.id}`);
-                                            const subcountiesData = await subcountiesResponse.json();
-
-                                            // Try to match subcounty/locality
-                                            const detectedLocality = locationData.locality || '';
-                                            const matchingSubcounty = subcountiesData.find((subcounty: any) =>
-                                                subcounty.name.toLowerCase().includes(detectedLocality.toLowerCase()) ||
-                                                detectedLocality.toLowerCase().includes(subcounty.name.toLowerCase())
-                                            );
-
-                                            setData(prev => ({
-                                                ...prev,
-                                                county: matchingCounty.id.toString(),
-                                                subcounty: matchingSubcounty ? matchingSubcounty.id.toString() : '',
-                                                ward: '',
-                                            }));
-
-                                            // If we have a matching subcounty, fetch its wards
-                                            if (matchingSubcounty) {
-                                                try {
-                                                    const wardsResponse = await fetch(`/api/wards?subcounty_id=${matchingSubcounty.id}`);
-                                                    const wardsData = await wardsResponse.json();
-                                                    setWards(wardsData);
-                                                } catch (wardsError) {
-                                                    console.warn('Could not fetch wards:', wardsError);
-                                                }
-                                            }
-                                        } catch (subcountiesError) {
-                                            console.warn('Could not fetch subcounties:', subcountiesError);
-                                            setData(prev => ({
-                                                ...prev,
-                                                county: matchingCounty.id.toString(),
-                                                subcounty: '',
-                                                ward: '',
-                                            }));
-                                        }
-                                    } else {
-                                        setData(prev => ({
-                                            ...prev,
-                                            county: '',
-                                            subcounty: '',
-                                            ward: '',
-                                        }));
-                                    }
-                                } catch (countiesError) {
-                                    console.warn('Could not fetch counties:', countiesError);
-                                    setData(prev => ({
-                                        ...prev,
-                                        county: '',
-                                        subcounty: locationData.locality || '',
-                                        ward: locationData.localityInfo?.administrative?.[2]?.name || '',
-                                    }));
-                                }
-                            }
-                        } else {
-                            // Country not detected or not in our list, set defaults
-                            setData(prev => ({
-                                ...prev,
-                                country: 'kenya', // Default to Kenya
-                                county: '',
-                                subcounty: '',
-                                ward: '',
-                            }));
-                            updateLabels('kenya');
-                            // Fetch counties for Kenya as default
-                            const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
-                            if (kenyaCountry) {
-                                fetchCounties(kenyaCountry.id);
-                            }
-                        }
                     } catch (error) {
                         console.warn('Could not fetch location details:', error);
-                        // Set default values if geocoding fails
-                        setData(prev => ({
-                            ...prev,
-                            country: 'kenya', // Default to Kenya
-                        }));
-                        updateLabels('kenya');
-                        // Fetch counties for Kenya as default
-                        const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
-                        if (kenyaCountry) {
-                            fetchCounties(kenyaCountry.id);
-                        }
+                    }
+
+                    // Set default country (Kenya) instead of trying to detect location
+                    setData(prev => ({
+                        ...prev,
+                        country: 'kenya', // Default to Kenya
+                        county: '',
+                        subcounty: '',
+                        ward: '',
+                    }));
+                    updateLabels('kenya');
+
+                    // Fetch counties for Kenya as default
+                    const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
+                    if (kenyaCountry) {
+                        fetchCounties(kenyaCountry.id);
                     }
 
                     setLocationPermissionGranted(true);
@@ -435,21 +353,38 @@ export default function DcdRegister() {
 
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
-                            errorMessage += 'Location access denied. Please enable location permissions to continue.';
+                            errorMessage += 'Location access denied. You can still continue with manual location entry.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            errorMessage += 'Location information is unavailable.';
+                            errorMessage += 'Location information is unavailable. You can still continue with manual location entry.';
                             break;
                         case error.TIMEOUT:
-                            errorMessage += 'Location request timed out.';
+                            errorMessage += 'Location request timed out. You can still continue with manual location entry.';
                             break;
                         default:
-                            errorMessage += 'An unknown error occurred.';
+                            errorMessage += 'An unknown error occurred. You can still continue with manual location entry.';
                             break;
                     }
 
                     alert(errorMessage);
-                    reject(error);
+
+                    // Don't reject - allow the form to continue without location coordinates
+                    // Set default country
+                    setData(prev => ({
+                        ...prev,
+                        country: 'kenya', // Default to Kenya
+                        county: '',
+                        subcounty: '',
+                        ward: '',
+                    }));
+                    updateLabels('kenya');
+                    // Fetch counties for Kenya as default
+                    const kenyaCountry = countries.find(c => c.name.toLowerCase() === 'kenya');
+                    if (kenyaCountry) {
+                        fetchCounties(kenyaCountry.id);
+                    }
+
+                    resolve();
                 },
                 {
                     enableHighAccuracy: true,
@@ -901,7 +836,7 @@ export default function DcdRegister() {
                                 </div>
                                 {data.latitude && data.longitude && (
                                     <div className="mt-3 text-xs text-blue-700 dark:text-blue-400">
-                                        📍 Location detected: {data.latitude}, {data.longitude}
+                                        📍 Business location verified: {data.latitude}, {data.longitude}
                                     </div>
                                 )}
                             </div>
