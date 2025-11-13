@@ -899,6 +899,12 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             setProcessing(true);
 
             try {
+                // Transform data to match backend expectations
+                const submitData = {
+                    ...data,
+                    ward_id: data.ward, // Map ward to ward_id for backend
+                };
+
                 const response = await fetch('/api/da/create', {
                     method: 'POST',
                     headers: {
@@ -906,7 +912,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(submitData),
                 });
 
                 const result = await response.json();
@@ -1509,17 +1515,6 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         </Label>
                                     </div>
                                     <InputError message={errors.terms} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-slate-700 dark:to-slate-600 p-6 rounded-xl border-2 border-red-400">
-                            <div className="flex items-center justify-center py-4">
-                                <div className="text-center">
-                                    <Shield className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                                    <h4 className="font-medium text-red-900 dark:text-red-300 mb-2">Security Verification</h4>
-                                    <p className="text-sm text-red-700 dark:text-red-400 mb-4">Complete the security check to finalize your registration</p>
-                                    <div ref={turnstileRef} className="flex justify-center"></div>
                                 </div>
                             </div>
                         </div>
