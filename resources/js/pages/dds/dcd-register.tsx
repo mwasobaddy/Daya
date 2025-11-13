@@ -535,6 +535,11 @@ export default function DcdRegister() {
         return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
+    const validateNationalId = (nationalId: string): boolean => {
+        const nationalIdRegex = /^\d+$/;
+        return nationalIdRegex.test(nationalId.trim());
+    };
+
     const clearFieldError = (field: string) => {
         if (errors[field]) {
             setErrors(prev => {
@@ -559,6 +564,8 @@ export default function DcdRegister() {
             }
             if (!data.national_id.trim()) {
                 newErrors.national_id = 'National ID is required';
+            } else if (!validateNationalId(data.national_id)) {
+                newErrors.national_id = 'National ID must contain only numbers';
             }
             if (!data.dob) {
                 newErrors.dob = 'Date of birth is required';
@@ -922,7 +929,6 @@ export default function DcdRegister() {
                                         type="text"
                                         value={data.full_name}
                                         onChange={(e) => updateData('full_name', e.target.value)}
-                                        required
                                         placeholder="Enter your full name"
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
@@ -938,7 +944,6 @@ export default function DcdRegister() {
                                         type="text"
                                         value={data.national_id}
                                         onChange={(e) => updateData('national_id', e.target.value)}
-                                        required
                                         placeholder="Enter your national ID"
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
@@ -957,7 +962,6 @@ export default function DcdRegister() {
                                         value={data.dob}
                                         onChange={(e) => updateData('dob', e.target.value)}
                                         max={MAX_DATE}
-                                        required
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
                                     <InputError message={errors.dob} />
@@ -990,7 +994,6 @@ export default function DcdRegister() {
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => updateData('email', e.target.value)}
-                                    required
                                     placeholder="preferred@email.com"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1006,7 +1009,6 @@ export default function DcdRegister() {
                                     type="tel"
                                     value={data.phone}
                                     onChange={(e) => updateData('phone', e.target.value)}
-                                    required
                                     placeholder="e.g., 0712 345678"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1022,7 +1024,6 @@ export default function DcdRegister() {
                                     type="text"
                                     value={data.business_address}
                                     onChange={(e) => updateData('business_address', e.target.value)}
-                                    required
                                     placeholder="Physical location for verification"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1286,7 +1287,6 @@ export default function DcdRegister() {
                                         type="time"
                                         value={data.operating_hours_start}
                                         onChange={(e) => setData(prev => ({ ...prev, operating_hours_start: e.target.value }))}
-                                        required
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
                                 </div>
@@ -1300,7 +1300,6 @@ export default function DcdRegister() {
                                         type="time"
                                         value={data.operating_hours_end}
                                         onChange={(e) => setData(prev => ({ ...prev, operating_hours_end: e.target.value }))}
-                                        required
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
                                 </div>
@@ -1460,7 +1459,6 @@ export default function DcdRegister() {
                                         type="password"
                                         value={data.wallet_pin}
                                         onChange={(e) => setData(prev => ({ ...prev, wallet_pin: e.target.value }))}
-                                        required
                                         placeholder="Enter 4-6 digit PIN"
                                         maxLength={6}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
@@ -1476,7 +1474,6 @@ export default function DcdRegister() {
                                         type="password"
                                         value={data.confirm_pin}
                                         onChange={(e) => setData(prev => ({ ...prev, confirm_pin: e.target.value }))}
-                                        required
                                         placeholder="Confirm your PIN"
                                         maxLength={6}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
