@@ -78,6 +78,15 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const [referralValidating, setReferralValidating] = useState(false);
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
+    const [emailValidating, setEmailValidating] = useState(false);
+    const [emailValid, setEmailValid] = useState<boolean | null>(null);
+    const [emailMessage, setEmailMessage] = useState('');
+    const [nationalIdValidating, setNationalIdValidating] = useState(false);
+    const [nationalIdValid, setNationalIdValid] = useState<boolean | null>(null);
+    const [nationalIdMessage, setNationalIdMessage] = useState('');
+    const [phoneValidating, setPhoneValidating] = useState(false);
+    const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
+    const [phoneMessage, setPhoneMessage] = useState('');
 
     const { data, setData, post, errors, reset } = useForm({
         referral_code: '',
@@ -218,6 +227,33 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         return () => clearTimeout(timeoutId);
     }, [data.referral_code]);
 
+    // Validate email uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateEmailUniqueness(data.email);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.email]);
+
+    // Validate national ID uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateNationalIdUniqueness(data.national_id);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.national_id]);
+
+    // Validate phone uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validatePhoneUniqueness(data.phone);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.phone]);
+
     const handlePlatformChange = (platform: string, checked: boolean | "indeterminate") => {
         const isChecked = checked === true;
         if (isChecked) {
@@ -312,6 +348,111 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             setReferralMessage('Failed to validate referral code');
         } finally {
             setReferralValidating(false);
+        }
+    };
+
+    const validateEmailUniqueness = async (email: string) => {
+        if (!email || !validateEmail(email)) {
+            setEmailValid(null);
+            setEmailMessage('');
+            return;
+        }
+
+        setEmailValidating(true);
+        try {
+            const response = await fetch('/api/validate-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ email: email.toLowerCase() }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setEmailValid(true);
+                setEmailMessage('Email address is available');
+            } else {
+                setEmailValid(false);
+                setEmailMessage(result.message || 'This email address is already registered');
+            }
+        } catch (error) {
+            setEmailValid(false);
+            setEmailMessage('Failed to validate email address');
+        } finally {
+            setEmailValidating(false);
+        }
+    };
+
+    const validateNationalIdUniqueness = async (nationalId: string) => {
+        if (!nationalId || !validateNationalId(nationalId)) {
+            setNationalIdValid(null);
+            setNationalIdMessage('');
+            return;
+        }
+
+        setNationalIdValidating(true);
+        try {
+            const response = await fetch('/api/validate-national-id', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ national_id: nationalId }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setNationalIdValid(true);
+                setNationalIdMessage('National ID is available');
+            } else {
+                setNationalIdValid(false);
+                setNationalIdMessage(result.message || 'This National ID is already registered');
+            }
+        } catch (error) {
+            setNationalIdValid(false);
+            setNationalIdMessage('Failed to validate National ID');
+        } finally {
+            setNationalIdValidating(false);
+        }
+    };
+
+    const validatePhoneUniqueness = async (phone: string) => {
+        if (!phone || !validatePhone(phone)) {
+            setPhoneValid(null);
+            setPhoneMessage('');
+            return;
+        }
+
+        setPhoneValidating(true);
+        try {
+            const response = await fetch('/api/validate-phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ phone: phone }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setPhoneValid(true);
+                setPhoneMessage('Phone number is available');
+            } else {
+                setPhoneValid(false);
+                setPhoneMessage(result.message || 'This phone number is already registered');
+            }
+        } catch (error) {
+            setPhoneValid(false);
+            setPhoneMessage('Failed to validate phone number');
+        } finally {
+            setPhoneValidating(false);
         }
     };
 
@@ -516,6 +657,11 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
+    const validateNationalId = (nationalId: string): boolean => {
+        const nationalIdRegex = /^\d+$/;
+        return nationalIdRegex.test(nationalId.trim());
+    };
+
     const validateStep = (step: Step): boolean => {
         let isValid = true;
 
@@ -525,6 +671,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             }
             if (!data.national_id.trim()) {
                 isValid = false;
+            } else if (!validateNationalId(data.national_id)) {
+                isValid = false;
+            } else if (nationalIdValid === false) {
+                isValid = false;
             }
             if (!data.dob) {
                 isValid = false;
@@ -533,6 +683,8 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 isValid = false;
             }
             if (!data.email.trim() || !validateEmail(data.email)) {
+                isValid = false;
+            } else if (emailValid === false) {
                 isValid = false;
             }
             if (!data.country.trim()) {
@@ -551,6 +703,8 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 isValid = false;
             }
             if (!data.phone.trim() || !validatePhone(data.phone)) {
+                isValid = false;
+            } else if (phoneValid === false) {
                 isValid = false;
             }
         } else if (step === 'social') {
@@ -835,6 +989,24 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 {errors.national_id && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.national_id}</p>
                                 )}
+                                <div className="mt-2 flex items-center space-x-2">
+                                    {nationalIdValidating ? (
+                                        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                            <span className="text-sm">Checking availability...</span>
+                                        </div>
+                                    ) : nationalIdValid === true ? (
+                                        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="text-sm">{nationalIdMessage}</span>
+                                        </div>
+                                    ) : nationalIdValid === false ? (
+                                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                            <XCircle className="h-4 w-4" />
+                                            <span className="text-sm">{nationalIdMessage}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
 
                             <div>
@@ -892,6 +1064,24 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 {errors.email && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                                 )}
+                                <div className="mt-2 flex items-center space-x-2">
+                                    {emailValidating ? (
+                                        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                            <span className="text-sm">Checking availability...</span>
+                                        </div>
+                                    ) : emailValid === true ? (
+                                        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="text-sm">{emailMessage}</span>
+                                        </div>
+                                    ) : emailValid === false ? (
+                                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                            <XCircle className="h-4 w-4" />
+                                            <span className="text-sm">{emailMessage}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
 
@@ -1102,6 +1292,24 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 {errors.phone && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
                                 )}
+                                <div className="mt-2 flex items-center space-x-2">
+                                    {phoneValidating ? (
+                                        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                            <span className="text-sm">Checking availability...</span>
+                                        </div>
+                                    ) : phoneValid === true ? (
+                                        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="text-sm">{phoneMessage}</span>
+                                        </div>
+                                    ) : phoneValid === false ? (
+                                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                            <XCircle className="h-4 w-4" />
+                                            <span className="text-sm">{phoneMessage}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
                     </div>
