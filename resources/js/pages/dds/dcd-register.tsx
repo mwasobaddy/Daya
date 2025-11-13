@@ -80,6 +80,9 @@ export default function DcdRegister() {
     const [referralValidating, setReferralValidating] = useState(false);
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
+    const [emailValidating, setEmailValidating] = useState(false);
+    const [emailValid, setEmailValid] = useState<boolean | null>(null);
+    const [emailMessage, setEmailMessage] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [data, setData] = useState({
@@ -202,6 +205,15 @@ export default function DcdRegister() {
         return () => clearTimeout(timeoutId);
     }, [data.referral_code]);
 
+    // Validate email uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateEmailUniqueness(data.email);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.email]);
+
     // Update labels based on selected country
     const updateLabels = (countryValue: string) => {
         const selectedCountry = countries.find(country => country.name.toLowerCase() === countryValue);
@@ -321,6 +333,41 @@ export default function DcdRegister() {
             setReferralMessage('Failed to validate referral code');
         } finally {
             setReferralValidating(false);
+        }
+    };
+
+    const validateEmailUniqueness = async (email: string) => {
+        if (!email || !validateEmail(email)) {
+            setEmailValid(null);
+            setEmailMessage('');
+            return;
+        }
+
+        setEmailValidating(true);
+        try {
+            const response = await fetch('/api/validate-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ email: email.toLowerCase() }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setEmailValid(true);
+                setEmailMessage('Email address is available');
+            } else {
+                setEmailValid(false);
+                setEmailMessage(result.message || 'This email address is already registered');
+            }
+        } catch (error) {
+            setEmailValid(false);
+            setEmailMessage('Failed to validate email address');
+        } finally {
+            setEmailValidating(false);
         }
     };
 
@@ -577,6 +624,8 @@ export default function DcdRegister() {
                 newErrors.email = 'Email address is required';
             } else if (!validateEmail(data.email)) {
                 newErrors.email = 'Please enter a valid email address';
+            } else if (emailValid === false) {
+                newErrors.email = emailMessage || 'This email address is already registered';
             }
             if (!data.phone.trim()) {
                 newErrors.phone = 'Phone number is required';
@@ -998,6 +1047,24 @@ export default function DcdRegister() {
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
                                 <InputError message={errors.email} />
+                                <div className="mt-2 flex items-center space-x-2">
+                                    {emailValidating ? (
+                                        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                            <span className="text-sm">Checking availability...</span>
+                                        </div>
+                                    ) : emailValid === true ? (
+                                        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="text-sm">{emailMessage}</span>
+                                        </div>
+                                    ) : emailValid === false ? (
+                                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                            <XCircle className="h-4 w-4" />
+                                            <span className="text-sm">{emailMessage}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
 
                             <div>
