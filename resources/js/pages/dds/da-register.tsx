@@ -87,8 +87,9 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const [phoneValidating, setPhoneValidating] = useState(false);
     const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
     const [phoneMessage, setPhoneMessage] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const { data, setData, post, errors, reset } = useForm({
+    const { data, setData, post, errors: inertiaErrors, reset } = useForm({
         referral_code: '',
         full_name: '',
         national_id: '',
@@ -662,81 +663,101 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         return nationalIdRegex.test(nationalId.trim());
     };
 
+    const clearFieldError = (field: string) => {
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const updateData = (field: string, value: any) => {
+        setData(field as any, value);
+        clearFieldError(field);
+    };
+
     const validateStep = (step: Step): boolean => {
-        let isValid = true;
+        const newErrors: Record<string, string> = {};
 
         if (step === 'personal') {
             if (!data.full_name.trim()) {
-                isValid = false;
+                newErrors.full_name = 'Full name is required';
             }
             if (!data.national_id.trim()) {
-                isValid = false;
+                newErrors.national_id = 'National ID is required';
             } else if (!validateNationalId(data.national_id)) {
-                isValid = false;
+                newErrors.national_id = 'National ID must contain only numbers';
             } else if (nationalIdValid === false) {
-                isValid = false;
+                newErrors.national_id = nationalIdMessage || 'This National ID is already registered';
             }
             if (!data.dob) {
-                isValid = false;
+                newErrors.dob = 'Date of birth is required';
             }
             if (!data.gender) {
-                isValid = false;
+                newErrors.gender = 'Gender is required';
             }
-            if (!data.email.trim() || !validateEmail(data.email)) {
-                isValid = false;
+            if (!data.email.trim()) {
+                newErrors.email = 'Email address is required';
+            } else if (!validateEmail(data.email)) {
+                newErrors.email = 'Please enter a valid email address';
             } else if (emailValid === false) {
-                isValid = false;
+                newErrors.email = emailMessage || 'This email address is already registered';
             }
             if (!data.country.trim()) {
-                isValid = false;
+                newErrors.country = 'Country is required';
             }
             if (!data.county.trim()) {
-                isValid = false;
+                newErrors.county = 'County is required';
             }
             if (!data.subcounty.trim()) {
-                isValid = false;
+                newErrors.subcounty = 'Sub-county is required';
             }
             if (!data.ward.trim()) {
-                isValid = false;
+                newErrors.ward = 'Ward is required';
             }
             if (!data.address.trim()) {
-                isValid = false;
+                newErrors.address = 'Address is required';
             }
-            if (!data.phone.trim() || !validatePhone(data.phone)) {
-                isValid = false;
+            if (!data.phone.trim()) {
+                newErrors.phone = 'Phone number is required';
+            } else if (!validatePhone(data.phone)) {
+                newErrors.phone = 'Please enter a valid phone number';
             } else if (phoneValid === false) {
-                isValid = false;
+                newErrors.phone = phoneMessage || 'This phone number is already registered';
             }
         } else if (step === 'social') {
             if (data.platforms.length === 0) {
-                isValid = false;
+                newErrors.platforms = 'Please select at least one social media platform';
             }
             if (!data.followers) {
-                isValid = false;
+                newErrors.followers = 'Follower count range is required';
             }
             if (!data.communication_channel) {
-                isValid = false;
+                newErrors.communication_channel = 'Preferred communication channel is required';
             }
         } else if (step === 'account') {
             if (!data.wallet_type) {
-                isValid = false;
+                newErrors.wallet_type = 'Wallet type is required';
             }
             if (!data.wallet_pin || data.wallet_pin.length < 4) {
-                isValid = false;
+                newErrors.wallet_pin = 'PIN must be at least 4 digits';
             }
             if (data.wallet_pin !== data.confirm_pin) {
-                isValid = false;
+                newErrors.confirm_pin = 'PINs do not match';
             }
             if (!data.terms) {
-                isValid = false;
+                newErrors.terms = 'You must accept the terms and conditions';
             }
             // Turnstile token is now optional for development/demo
             // if (!data.turnstile_token) {
-            //     isValid = false;
+            //     newErrors.turnstile_token = 'Please complete the security verification';
             // }
         }
 
-        return isValid;
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const nextStep = () => {
@@ -745,6 +766,11 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             if (nextIndex < steps.length) {
                 setCurrentStep(steps[nextIndex].id as Step);
             }
+        } else {
+            // Show toast error for validation failures
+            toast.error('Please fill in all required fields correctly before continuing.', {
+                autoClose: 3000
+            });
         }
     };
 
@@ -1505,6 +1531,9 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             I agree to the terms and conditions <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                     </div>
+                                    {errors.terms && (
+                                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.terms}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
