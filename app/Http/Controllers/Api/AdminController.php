@@ -218,4 +218,58 @@ class AdminController extends Controller
             'message' => 'Email address is available'
         ]);
     }
+
+    /**
+     * Validate a national ID for uniqueness
+     */
+    public function validateNationalId(Request $request)
+    {
+        $request->validate([
+            'national_id' => 'required|string|max:255|regex:/^\d+$/',
+        ]);
+
+        $nationalId = $request->national_id;
+
+        // Check if national ID already exists in users table
+        $user = User::where('national_id', $nationalId)->first();
+
+        if ($user) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'This National ID is already registered'
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'National ID is available'
+        ]);
+    }
+
+    /**
+     * Validate a phone number for uniqueness
+     */
+    public function validatePhone(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|max:20|regex:/^\+?[\d\s\-()]{10,}$/',
+        ]);
+
+        $phone = $request->phone;
+
+        // Check if phone number already exists in users table
+        $user = User::where('phone', $phone)->first();
+
+        if ($user) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'This phone number is already registered'
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Phone number is available'
+        ]);
+    }
 }

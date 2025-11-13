@@ -83,6 +83,12 @@ export default function DcdRegister() {
     const [emailValidating, setEmailValidating] = useState(false);
     const [emailValid, setEmailValid] = useState<boolean | null>(null);
     const [emailMessage, setEmailMessage] = useState('');
+    const [nationalIdValidating, setNationalIdValidating] = useState(false);
+    const [nationalIdValid, setNationalIdValid] = useState<boolean | null>(null);
+    const [nationalIdMessage, setNationalIdMessage] = useState('');
+    const [phoneValidating, setPhoneValidating] = useState(false);
+    const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
+    const [phoneMessage, setPhoneMessage] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [data, setData] = useState({
@@ -213,6 +219,24 @@ export default function DcdRegister() {
 
         return () => clearTimeout(timeoutId);
     }, [data.email]);
+
+    // Validate national ID uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validateNationalIdUniqueness(data.national_id);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.national_id]);
+
+    // Validate phone uniqueness when it changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            validatePhoneUniqueness(data.phone);
+        }, 500); // Debounce validation
+
+        return () => clearTimeout(timeoutId);
+    }, [data.phone]);
 
     // Update labels based on selected country
     const updateLabels = (countryValue: string) => {
@@ -368,6 +392,76 @@ export default function DcdRegister() {
             setEmailMessage('Failed to validate email address');
         } finally {
             setEmailValidating(false);
+        }
+    };
+
+    const validateNationalIdUniqueness = async (nationalId: string) => {
+        if (!nationalId || !validateNationalId(nationalId)) {
+            setNationalIdValid(null);
+            setNationalIdMessage('');
+            return;
+        }
+
+        setNationalIdValidating(true);
+        try {
+            const response = await fetch('/api/validate-national-id', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ national_id: nationalId }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setNationalIdValid(true);
+                setNationalIdMessage('National ID is available');
+            } else {
+                setNationalIdValid(false);
+                setNationalIdMessage(result.message || 'This National ID is already registered');
+            }
+        } catch (error) {
+            setNationalIdValid(false);
+            setNationalIdMessage('Failed to validate National ID');
+        } finally {
+            setNationalIdValidating(false);
+        }
+    };
+
+    const validatePhoneUniqueness = async (phone: string) => {
+        if (!phone || !validatePhone(phone)) {
+            setPhoneValid(null);
+            setPhoneMessage('');
+            return;
+        }
+
+        setPhoneValidating(true);
+        try {
+            const response = await fetch('/api/validate-phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({ phone: phone }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setPhoneValid(true);
+                setPhoneMessage('Phone number is available');
+            } else {
+                setPhoneValid(false);
+                setPhoneMessage(result.message || 'This phone number is already registered');
+            }
+        } catch (error) {
+            setPhoneValid(false);
+            setPhoneMessage('Failed to validate phone number');
+        } finally {
+            setPhoneValidating(false);
         }
     };
 
@@ -613,6 +707,8 @@ export default function DcdRegister() {
                 newErrors.national_id = 'National ID is required';
             } else if (!validateNationalId(data.national_id)) {
                 newErrors.national_id = 'National ID must contain only numbers';
+            } else if (nationalIdValid === false) {
+                newErrors.national_id = nationalIdMessage || 'This National ID is already registered';
             }
             if (!data.dob) {
                 newErrors.dob = 'Date of birth is required';
@@ -631,6 +727,8 @@ export default function DcdRegister() {
                 newErrors.phone = 'Phone number is required';
             } else if (!validatePhone(data.phone)) {
                 newErrors.phone = 'Please enter a valid phone number';
+            } else if (phoneValid === false) {
+                newErrors.phone = phoneMessage || 'This phone number is already registered';
             }
             if (!data.business_address.trim()) {
                 newErrors.business_address = 'Business address is required';
@@ -997,6 +1095,24 @@ export default function DcdRegister() {
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
                                     <InputError message={errors.national_id} />
+                                    <div className="mt-2 flex items-center space-x-2">
+                                        {nationalIdValidating ? (
+                                            <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                                <span className="text-sm">Checking availability...</span>
+                                            </div>
+                                        ) : nationalIdValid === true ? (
+                                            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                                <CheckCircle className="h-4 w-4" />
+                                                <span className="text-sm">{nationalIdMessage}</span>
+                                            </div>
+                                        ) : nationalIdValid === false ? (
+                                            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                                <XCircle className="h-4 w-4" />
+                                                <span className="text-sm">{nationalIdMessage}</span>
+                                            </div>
+                                        ) : null}
+                                    </div>
                                 </div>
                             </div>
 
@@ -1080,6 +1196,24 @@ export default function DcdRegister() {
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
                                 <InputError message={errors.phone} />
+                                <div className="mt-2 flex items-center space-x-2">
+                                    {phoneValidating ? (
+                                        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                            <span className="text-sm">Checking availability...</span>
+                                        </div>
+                                    ) : phoneValid === true ? (
+                                        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="text-sm">{phoneMessage}</span>
+                                        </div>
+                                    ) : phoneValid === false ? (
+                                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                                            <XCircle className="h-4 w-4" />
+                                            <span className="text-sm">{phoneMessage}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
 
                             <div>

@@ -52,6 +52,12 @@ Route::get('/admin-referral-code', [AdminController::class, 'getAdminReferralCod
 // Email validation
 Route::post('/validate-email', [AdminController::class, 'validateEmail']);
 
+// National ID validation
+Route::post('/validate-national-id', [AdminController::class, 'validateNationalId']);
+
+// Phone number validation
+Route::post('/validate-phone', [AdminController::class, 'validatePhone']);
+
 Route::prefix('admin')->group(function () {
     Route::post('/campaigns/{campaignId}/approve', [AdminController::class, 'approveCampaign']);
     Route::post('/campaigns/{campaignId}/complete', [AdminController::class, 'completeCampaign']);
