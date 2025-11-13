@@ -83,6 +83,14 @@
                     <span class="value">{{ $user->profile['county_id'] ? \App\Models\County::find($user->profile['county_id'])->name : 'N/A' }}</span>
                 </div>
                 <div class="detail-row">
+                    <span class="label">Sub-county:</span>
+                    <span class="value">{{ $user->profile['subcounty_id'] ? \App\Models\Subcounty::find($user->profile['subcounty_id'])->name : 'N/A' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Ward:</span>
+                    <span class="value">{{ $user->profile['ward_id'] ? \App\Models\Ward::find($user->profile['ward_id'])->name : 'N/A' }}</span>
+                </div>
+                <div class="detail-row">
                     <span class="label">Address:</span>
                     <span class="value">{{ $user->profile['address'] ?? 'N/A' }}</span>
                 </div>
