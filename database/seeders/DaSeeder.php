@@ -114,7 +114,7 @@ class DaSeeder extends Seeder
             // Generate QR code for the DA
             try {
                 $qrCodeService = app(QRCodeService::class);
-                $qrCodeFilename = $qrCodeService->generateDAQRCode($da);
+                $qrCodeFilename = $qrCodeService->generateDAReferralQRCode($da);
                 $qrCodeUrl = $qrCodeService->getQRCodeUrl($qrCodeFilename);
                 
                 $da->update(['qr_code' => $qrCodeUrl]);

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import InputError from '@/components/input-error';
 import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv, XCircle } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { toast, ToastContainer } from 'react-toastify';
@@ -79,6 +80,7 @@ export default function DcdRegister() {
     const [referralValidating, setReferralValidating] = useState(false);
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [data, setData] = useState({
         referral_code: '',
@@ -533,85 +535,112 @@ export default function DcdRegister() {
         return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
+    const clearFieldError = (field: string) => {
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const updateData = (field: string, value: any) => {
+        setData(prev => ({ ...prev, [field]: value }));
+        clearFieldError(field);
+    };
+
     const validateStep = (step: Step): boolean => {
-        let isValid = true;
+        const newErrors: Record<string, string> = {};
 
         if (step === 'personal') {
             if (!data.full_name.trim()) {
-                isValid = false;
+                newErrors.full_name = 'Full name is required';
             }
             if (!data.national_id.trim()) {
-                isValid = false;
+                newErrors.national_id = 'National ID is required';
             }
             if (!data.dob) {
-                isValid = false;
+                newErrors.dob = 'Date of birth is required';
             }
             if (!data.gender) {
-                isValid = false;
+                newErrors.gender = 'Gender is required';
             }
-            if (!data.email.trim() || !validateEmail(data.email)) {
-                isValid = false;
+            if (!data.email.trim()) {
+                newErrors.email = 'Email address is required';
+            } else if (!validateEmail(data.email)) {
+                newErrors.email = 'Please enter a valid email address';
             }
-            if (!data.phone.trim() || !validatePhone(data.phone)) {
-                isValid = false;
+            if (!data.phone.trim()) {
+                newErrors.phone = 'Phone number is required';
+            } else if (!validatePhone(data.phone)) {
+                newErrors.phone = 'Please enter a valid phone number';
             }
             if (!data.business_address.trim()) {
-                isValid = false;
+                newErrors.business_address = 'Business address is required';
             }
             if (!data.country.trim()) {
-                isValid = false;
+                newErrors.country = 'Country is required';
             }
             if (!data.county.trim()) {
-                isValid = false;
+                newErrors.county = 'County is required';
             }
             if (!data.subcounty.trim()) {
-                isValid = false;
+                newErrors.subcounty = 'Sub-county is required';
             }
             if (!data.ward.trim()) {
-                isValid = false;
+                newErrors.ward = 'Ward is required';
             }
         } else if (step === 'business') {
             if (!data.business_name.trim()) {
-                isValid = false;
+                newErrors.business_name = 'Business name is required';
             }
             if (data.business_types.length === 0) {
-                isValid = false;
+                newErrors.business_types = 'Please select at least one business type';
             }
             if (!data.daily_foot_traffic) {
-                isValid = false;
+                newErrors.daily_foot_traffic = 'Daily foot traffic is required';
             }
-            if (!data.operating_hours_start || !data.operating_hours_end) {
-                isValid = false;
+            if (!data.operating_hours_start) {
+                newErrors.operating_hours_start = 'Opening time is required';
+            }
+            if (!data.operating_hours_end) {
+                newErrors.operating_hours_end = 'Closing time is required';
             }
             if (data.operating_days.length === 0) {
-                isValid = false;
+                newErrors.operating_days = 'Please select operating days';
             }
         } else if (step === 'preferences') {
             if (data.campaign_types.length === 0) {
-                isValid = false;
+                newErrors.campaign_types = 'Please select at least one campaign type';
             }
             if (data.campaign_types.includes('music') && data.music_genres.length === 0) {
-                isValid = false;
+                newErrors.music_genres = 'Please select music genres when music campaigns are selected';
             }
         } else if (step === 'account') {
             if (!data.wallet_type) {
-                isValid = false;
+                newErrors.wallet_type = 'Wallet type is required';
             }
-            if (!data.wallet_pin || data.wallet_pin.length < 4) {
-                isValid = false;
+            if (!data.wallet_pin) {
+                newErrors.wallet_pin = 'Wallet PIN is required';
+            } else if (data.wallet_pin.length < 4) {
+                newErrors.wallet_pin = 'Wallet PIN must be at least 4 digits';
             }
-            if (data.wallet_pin !== data.confirm_pin) {
-                isValid = false;
+            if (!data.confirm_pin) {
+                newErrors.confirm_pin = 'Please confirm your wallet PIN';
+            } else if (data.wallet_pin !== data.confirm_pin) {
+                newErrors.confirm_pin = 'Wallet PIN confirmation does not match';
             }
             if (!data.terms) {
-                isValid = false;
+                newErrors.terms = 'You must accept the terms and conditions';
             }
             if (!data.turnstile_token) {
-                isValid = false;
+                newErrors.turnstile_token = 'Please complete the security verification';
             }
         }
 
-        return isValid;
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const nextStep = () => {
@@ -619,7 +648,13 @@ export default function DcdRegister() {
             const nextIndex = currentStepIndex + 1;
             if (nextIndex < steps.length) {
                 setCurrentStep(steps[nextIndex].id as Step);
+                // Clear errors when moving to next step
+                setErrors({});
             }
+        } else {
+            toast.error('Please fill all required fields correctly before proceeding. Check the form for any highlighted errors.', {
+                autoClose: 5000
+            });
         }
     };
 
@@ -710,6 +745,12 @@ export default function DcdRegister() {
             setProcessing(true);
 
             try {
+                // Transform data to match backend expectations
+                const submitData = {
+                    ...data,
+                    ward_id: data.ward, // Map ward to ward_id for backend
+                };
+
                 const response = await fetch('/api/dcd/create', {
                     method: 'POST',
                     headers: {
@@ -717,7 +758,7 @@ export default function DcdRegister() {
                         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(submitData),
                 });
 
                 const result = await response.json();
@@ -844,10 +885,11 @@ export default function DcdRegister() {
                                     id="referral_code"
                                     type="text"
                                     value={data.referral_code}
-                                    onChange={(e) => setData(prev => ({ ...prev, referral_code: e.target.value }))}
+                                    onChange={(e) => updateData('referral_code', e.target.value)}
                                     placeholder="Enter DA referral code if applicable"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                                <InputError message={errors.referral_code} />
                                 {data.referral_code && (
                                     <div className="mt-2 flex items-center space-x-2">
                                         {referralValidating ? (
@@ -879,11 +921,12 @@ export default function DcdRegister() {
                                         id="full_name"
                                         type="text"
                                         value={data.full_name}
-                                        onChange={(e) => setData(prev => ({ ...prev, full_name: e.target.value }))}
+                                        onChange={(e) => updateData('full_name', e.target.value)}
                                         required
                                         placeholder="Enter your full name"
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.full_name} />
                                 </div>
 
                                 <div>
@@ -894,11 +937,12 @@ export default function DcdRegister() {
                                         id="national_id"
                                         type="text"
                                         value={data.national_id}
-                                        onChange={(e) => setData(prev => ({ ...prev, national_id: e.target.value }))}
+                                        onChange={(e) => updateData('national_id', e.target.value)}
                                         required
                                         placeholder="Enter your national ID"
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.national_id} />
                                 </div>
                             </div>
 
@@ -911,18 +955,19 @@ export default function DcdRegister() {
                                         id="dob"
                                         type="date"
                                         value={data.dob}
-                                        onChange={(e) => setData(prev => ({ ...prev, dob: e.target.value }))}
+                                        onChange={(e) => updateData('dob', e.target.value)}
                                         max={MAX_DATE}
                                         required
                                         className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.dob} />
                                 </div>
 
                                 <div>
                                     <Label htmlFor="gender" className="text-sm font-medium mb-2 block">
                                         Gender <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
-                                    <Select value={data.gender} onValueChange={(value) => setData(prev => ({ ...prev, gender: value }))}>
+                                    <Select value={data.gender} onValueChange={(value) => updateData('gender', value)}>
                                         <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
                                             <SelectValue placeholder="Select gender" />
                                         </SelectTrigger>
@@ -932,6 +977,7 @@ export default function DcdRegister() {
                                             <SelectItem value="other">Other</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <InputError message={errors.gender} />
                                 </div>
                             </div>
 
@@ -943,11 +989,12 @@ export default function DcdRegister() {
                                     id="email"
                                     type="email"
                                     value={data.email}
-                                    onChange={(e) => setData(prev => ({ ...prev, email: e.target.value }))}
+                                    onChange={(e) => updateData('email', e.target.value)}
                                     required
                                     placeholder="preferred@email.com"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                                <InputError message={errors.email} />
                             </div>
 
                             <div>
@@ -958,11 +1005,12 @@ export default function DcdRegister() {
                                     id="phone"
                                     type="tel"
                                     value={data.phone}
-                                    onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value }))}
+                                    onChange={(e) => updateData('phone', e.target.value)}
                                     required
                                     placeholder="e.g., 0712 345678"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                                <InputError message={errors.phone} />
                             </div>
 
                             <div>
@@ -973,11 +1021,12 @@ export default function DcdRegister() {
                                     id="business_address"
                                     type="text"
                                     value={data.business_address}
-                                    onChange={(e) => setData(prev => ({ ...prev, business_address: e.target.value }))}
+                                    onChange={(e) => updateData('business_address', e.target.value)}
                                     required
                                     placeholder="Physical location for verification"
                                     className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
+                                <InputError message={errors.business_address} />
                             </div>
 
                             {/* Location Information */}
@@ -1041,7 +1090,7 @@ export default function DcdRegister() {
                                             Country <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                         <Select value={data.country} onValueChange={(value) => {
-                                            setData(prev => ({ ...prev, country: value, county: '', subcounty: '', ward: '' }));
+                                            updateData('country', value);
                                             updateLabels(value);
                                             setCounties([]);
                                             setSubcounties([]);
@@ -1063,6 +1112,7 @@ export default function DcdRegister() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <InputError message={errors.country} />
                                     </div>
 
                                     <div>
@@ -1070,7 +1120,7 @@ export default function DcdRegister() {
                                             {countyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                         <Select value={data.county} onValueChange={(value) => {
-                                            setData(prev => ({ ...prev, county: value, subcounty: '', ward: '' }));
+                                            updateData('county', value);
                                             setSubcounties([]);
                                             setWards([]);
                                             const selectedCounty = counties.find(c => c.id.toString() === value);
@@ -1090,6 +1140,7 @@ export default function DcdRegister() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <InputError message={errors.county} />
                                     </div>
 
                                     <div>
@@ -1097,7 +1148,7 @@ export default function DcdRegister() {
                                             {subcountyLabel} <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                         <Select value={data.subcounty} onValueChange={(value) => {
-                                            setData(prev => ({ ...prev, subcounty: value, ward: '' }));
+                                            updateData('subcounty', value);
                                             setWards([]);
                                             const selectedSubcounty = subcounties.find(s => s.id.toString() === value);
                                             if (selectedSubcounty) {
@@ -1116,13 +1167,14 @@ export default function DcdRegister() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <InputError message={errors.subcounty} />
                                     </div>
 
                                     <div>
                                         <Label htmlFor="ward" className="text-sm font-medium mb-2 block">
                                             Ward <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
-                                        <Select value={data.ward} onValueChange={(value) => setData(prev => ({ ...prev, ward: value }))} disabled={wardsLoading || !data.subcounty}>
+                                        <Select value={data.ward} onValueChange={(value) => updateData('ward', value)} disabled={wardsLoading || !data.subcounty}>
                                             <SelectTrigger className="mt-2 border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
                                                 <SelectValue placeholder={wardsLoading ? "Loading..." : "Select ward"} />
                                             </SelectTrigger>
@@ -1135,6 +1187,7 @@ export default function DcdRegister() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <InputError message={errors.ward} />
                                     </div>
                                 </div>
                                 {data.latitude && data.longitude && (
