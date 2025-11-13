@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, Loader2, Shield, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Phone, Mail, Calendar, Globe, Building2, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -972,7 +971,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="referral_code"
                                     type="text"
                                     value={data.referral_code}
-                                    onChange={(e) => setData('referral_code', e.target.value)}
+                                    onChange={(e) => updateData('referral_code', e.target.value)}
                                     placeholder="Enter referring DA's code"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1007,7 +1006,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="full_name"
                                     type="text"
                                     value={data.full_name}
-                                    onChange={(e) => setData('full_name', e.target.value)}
+                                    onChange={(e) => updateData('full_name', e.target.value)}
                                     placeholder="Enter your full name"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1024,7 +1023,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="national_id"
                                     type="text"
                                     value={data.national_id}
-                                    onChange={(e) => setData('national_id', e.target.value)}
+                                    onChange={(e) => updateData('national_id', e.target.value)}
                                     placeholder="Enter your national ID"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1057,7 +1056,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="dob"
                                     type="date"
                                     value={data.dob}
-                                    onChange={(e) => setData('dob', e.target.value)}
+                                    onChange={(e) => updateData('dob', e.target.value)}
                                     max="2007-11-12"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1070,7 +1069,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 <Label htmlFor="gender" className="text-sm font-medium mb-2 block">
                                     Gender <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.gender} onValueChange={(value) => setData('gender', value)}>
+                                <Select value={data.gender} onValueChange={(value) => updateData('gender', value)}>
                                     <SelectTrigger className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
                                         <SelectValue placeholder="Select gender" />
                                     </SelectTrigger>
@@ -1091,7 +1090,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="email"
                                     type="email"
                                     value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    onChange={(e) => updateData('email', e.target.value)}
                                     placeholder="primary@email.com"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
@@ -1266,7 +1265,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     <Label htmlFor="ward" className="text-sm font-medium mb-2 block">
                                         Ward <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
-                                    <Select value={data.ward} onValueChange={(value) => setData('ward', value)} disabled={wardsLoading || !data.subcounty}>
+                                    <Select value={data.ward} onValueChange={(value) => updateData('ward', value)} disabled={wardsLoading || !data.subcounty}>
                                         <SelectTrigger className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none">
                                             <SelectValue placeholder={wardsLoading ? "Loading..." : "Select ward"} />
                                         </SelectTrigger>
@@ -1290,7 +1289,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="address"
                                     type="text"
                                     value={data.address}
-                                    onChange={(e) => setData('address', e.target.value)}
+                                    onChange={(e) => updateData('address', e.target.value)}
                                     placeholder="Enter your full address"
                                     className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
                                 />
@@ -1305,7 +1304,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="phone"
                                     type="tel"
                                     value={data.phone}
-                                    onChange={(e) => setData('phone', e.target.value)}
+                                    onChange={(e) => updateData('phone', e.target.value)}
                                     placeholder="e.g., 0712 345678"
                                     className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
                                 />
@@ -1381,7 +1380,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 <Label htmlFor="followers" className="text-sm font-medium mb-2 block">
                                     Total Followers <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.followers} onValueChange={(value) => setData('followers', value)}>
+                                <Select value={data.followers} onValueChange={(value) => updateData('followers', value)}>
                                     <SelectTrigger className="border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none">
                                         <SelectValue placeholder="Select Range" />
                                     </SelectTrigger>
@@ -1400,7 +1399,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 <Label htmlFor="communication_channel" className="text-sm font-medium mb-2 block">
                                     Preferred Communication Channel <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.communication_channel} onValueChange={(value) => setData('communication_channel', value)}>
+                                <Select value={data.communication_channel} onValueChange={(value) => updateData('communication_channel', value)}>
                                     <SelectTrigger className="border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none">
                                         <SelectValue placeholder="Select Channel" />
                                     </SelectTrigger>
@@ -1435,7 +1434,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 <Label htmlFor="wallet_type" className="text-sm font-medium mb-2 block">
                                     Preferred Wallet Type <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.wallet_type} onValueChange={(value) => setData('wallet_type', value)}>
+                                <Select value={data.wallet_type} onValueChange={(value) => updateData('wallet_type', value)}>
                                     <SelectTrigger className="border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none">
                                         <SelectValue placeholder="Select Wallet Type" />
                                     </SelectTrigger>
@@ -1456,7 +1455,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     id="wallet_pin"
                                     type="password"
                                     value={data.wallet_pin}
-                                    onChange={(e) => setData('wallet_pin', e.target.value)}
+                                    onChange={(e) => updateData('wallet_pin', e.target.value)}
                                     maxLength={4}
                                     placeholder="Enter 4-digit PIN"
                                     className="border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
@@ -1473,7 +1472,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 id="confirm_pin"
                                 type="password"
                                 value={data.confirm_pin}
-                                onChange={(e) => setData('confirm_pin', e.target.value)}
+                                onChange={(e) => updateData('confirm_pin', e.target.value)}
                                 maxLength={4}
                                 placeholder="Confirm your PIN"
                                 className="border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
@@ -1502,7 +1501,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <Checkbox
                                             id="terms"
                                             checked={data.terms}
-                                            onCheckedChange={(checked) => setData('terms', checked === true)}
+                                            onCheckedChange={(checked) => updateData('terms', checked === true)}
                                             className={`border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-500 focus:ring-green-500 dark:focus:ring-green-400 ${data.terms ? 'bg-green-100 dark:bg-green-700' : ''}`}
                                         />
                                         <Label htmlFor="terms" className="text-sm text-green-800 dark:text-green-300 font-medium">
