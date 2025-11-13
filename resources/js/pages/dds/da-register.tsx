@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, Loader2, Shield, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Phone, Mail, Calendar, Globe, Building2, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
@@ -87,9 +88,8 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const [phoneValidating, setPhoneValidating] = useState(false);
     const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
     const [phoneMessage, setPhoneMessage] = useState('');
-    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const { data, setData, post, errors: inertiaErrors, reset } = useForm({
+    const { data, setData, post, errors, reset, clearErrors, setError } = useForm({
         referral_code: '',
         full_name: '',
         national_id: '',
@@ -664,12 +664,8 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     };
 
     const clearFieldError = (field: string) => {
-        if (errors[field]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
+        if (errors[field as keyof typeof errors]) {
+            clearErrors(field as keyof typeof errors);
         }
     };
 
@@ -679,85 +675,112 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     };
 
     const validateStep = (step: Step): boolean => {
-        const newErrors: Record<string, string> = {};
+        // Clear all existing errors first
+        clearErrors();
+        
+        let hasErrors = false;
 
         if (step === 'personal') {
             if (!data.full_name.trim()) {
-                newErrors.full_name = 'Full name is required';
+                setError('full_name', 'Full name is required');
+                hasErrors = true;
             }
             if (!data.national_id.trim()) {
-                newErrors.national_id = 'National ID is required';
+                setError('national_id', 'National ID is required');
+                hasErrors = true;
             } else if (!validateNationalId(data.national_id)) {
-                newErrors.national_id = 'National ID must contain only numbers';
+                setError('national_id', 'National ID must contain only numbers');
+                hasErrors = true;
             } else if (nationalIdValid === false) {
-                newErrors.national_id = nationalIdMessage || 'This National ID is already registered';
+                setError('national_id', nationalIdMessage || 'This National ID is already registered');
+                hasErrors = true;
             }
             if (!data.dob) {
-                newErrors.dob = 'Date of birth is required';
+                setError('dob', 'Date of birth is required');
+                hasErrors = true;
             }
             if (!data.gender) {
-                newErrors.gender = 'Gender is required';
+                setError('gender', 'Gender is required');
+                hasErrors = true;
             }
             if (!data.email.trim()) {
-                newErrors.email = 'Email address is required';
+                setError('email', 'Email address is required');
+                hasErrors = true;
             } else if (!validateEmail(data.email)) {
-                newErrors.email = 'Please enter a valid email address';
+                setError('email', 'Please enter a valid email address');
+                hasErrors = true;
             } else if (emailValid === false) {
-                newErrors.email = emailMessage || 'This email address is already registered';
+                setError('email', emailMessage || 'This email address is already registered');
+                hasErrors = true;
             }
             if (!data.country.trim()) {
-                newErrors.country = 'Country is required';
+                setError('country', 'Country is required');
+                hasErrors = true;
             }
             if (!data.county.trim()) {
-                newErrors.county = 'County is required';
+                setError('county', 'County is required');
+                hasErrors = true;
             }
             if (!data.subcounty.trim()) {
-                newErrors.subcounty = 'Sub-county is required';
+                setError('subcounty', 'Sub-county is required');
+                hasErrors = true;
             }
             if (!data.ward.trim()) {
-                newErrors.ward = 'Ward is required';
+                setError('ward', 'Ward is required');
+                hasErrors = true;
             }
             if (!data.address.trim()) {
-                newErrors.address = 'Address is required';
+                setError('address', 'Address is required');
+                hasErrors = true;
             }
             if (!data.phone.trim()) {
-                newErrors.phone = 'Phone number is required';
+                setError('phone', 'Phone number is required');
+                hasErrors = true;
             } else if (!validatePhone(data.phone)) {
-                newErrors.phone = 'Please enter a valid phone number';
+                setError('phone', 'Please enter a valid phone number');
+                hasErrors = true;
             } else if (phoneValid === false) {
-                newErrors.phone = phoneMessage || 'This phone number is already registered';
+                setError('phone', phoneMessage || 'This phone number is already registered');
+                hasErrors = true;
             }
         } else if (step === 'social') {
             if (data.platforms.length === 0) {
-                newErrors.platforms = 'Please select at least one social media platform';
+                setError('platforms', 'Please select at least one social media platform');
+                hasErrors = true;
             }
             if (!data.followers) {
-                newErrors.followers = 'Follower count range is required';
+                setError('followers', 'Follower count range is required');
+                hasErrors = true;
             }
             if (!data.communication_channel) {
-                newErrors.communication_channel = 'Preferred communication channel is required';
+                setError('communication_channel', 'Preferred communication channel is required');
+                hasErrors = true;
             }
         } else if (step === 'account') {
             if (!data.wallet_type) {
-                newErrors.wallet_type = 'Wallet type is required';
+                setError('wallet_type', 'Wallet type is required');
+                hasErrors = true;
             }
             if (!data.wallet_pin || data.wallet_pin.length < 4) {
-                newErrors.wallet_pin = 'PIN must be at least 4 digits';
+                setError('wallet_pin', 'PIN must be at least 4 digits');
+                hasErrors = true;
             }
             if (data.wallet_pin !== data.confirm_pin) {
-                newErrors.confirm_pin = 'PINs do not match';
+                setError('confirm_pin', 'PINs do not match');
+                hasErrors = true;
             }
             if (!data.terms) {
-                newErrors.terms = 'You must accept the terms and conditions';
+                setError('terms', 'You must accept the terms and conditions');
+                hasErrors = true;
             }
             // Turnstile token is now optional for development/demo
             // if (!data.turnstile_token) {
-            //     newErrors.turnstile_token = 'Please complete the security verification';
+            //     setError('turnstile_token', 'Please complete the security verification');
+            //     hasErrors = true;
             // }
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return !hasErrors;
     };
 
     const nextStep = () => {
@@ -950,13 +973,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="text"
                                     value={data.referral_code}
                                     onChange={(e) => setData('referral_code', e.target.value)}
-                                    required
                                     placeholder="Enter referring DA's code"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
-                                {errors.referral_code && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.referral_code}</p>
-                                )}
+                                <InputError message={errors.referral_code} />
                                 {data.referral_code && (
                                     <div className="mt-2 flex items-center space-x-2">
                                         {referralValidating ? (
@@ -988,13 +1008,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="text"
                                     value={data.full_name}
                                     onChange={(e) => setData('full_name', e.target.value)}
-                                    required
                                     placeholder="Enter your full name"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
-                                {errors.full_name && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.full_name}</p>
-                                )}
+                                <InputError message={errors.full_name} />
                             </div>
                         </div>
 
@@ -1008,13 +1025,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="text"
                                     value={data.national_id}
                                     onChange={(e) => setData('national_id', e.target.value)}
-                                    required
                                     placeholder="Enter your national ID"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
-                                {errors.national_id && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.national_id}</p>
-                                )}
+                                <InputError message={errors.national_id} />
                                 <div className="mt-2 flex items-center space-x-2">
                                     {nationalIdValidating ? (
                                         <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
@@ -1044,13 +1058,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="date"
                                     value={data.dob}
                                     onChange={(e) => setData('dob', e.target.value)}
-                                    required
                                     max="2007-11-12"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
-                                {errors.dob && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.dob}</p>
-                                )}
+                                <InputError message={errors.dob} />
                             </div>
                         </div>
 
@@ -1069,9 +1080,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectItem value="other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors.gender && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.gender}</p>
-                                )}
+                                <InputError message={errors.gender} />
                             </div>
 
                             <div>
@@ -1083,13 +1092,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    required
                                     placeholder="primary@email.com"
                                     className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                 />
-                                {errors.email && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
-                                )}
+                                <InputError message={errors.email} />
                                 <div className="mt-2 flex items-center space-x-2">
                                     {emailValidating ? (
                                         <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
@@ -1195,9 +1201,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {errors.country && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.country}</p>
-                                    )}
+                                    <InputError message={errors.country} />
                                 </div>
 
                                 <div>
@@ -1226,9 +1230,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {errors.county && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.county}</p>
-                                    )}
+                                    <InputError message={errors.county} />
                                 </div>
                             </div>
 
@@ -1257,9 +1259,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {errors.subcounty && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.subcounty}</p>
-                                    )}
+                                    <InputError message={errors.subcounty} />
                                 </div>
 
                                 <div>
@@ -1278,9 +1278,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {errors.ward && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ward}</p>
-                                    )}
+                                    <InputError message={errors.ward} />
                                 </div>
                             </div>
 
@@ -1293,13 +1291,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="text"
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
-                                    required
                                     placeholder="Enter your full address"
                                     className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
                                 />
-                                {errors.address && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.address}</p>
-                                )}
+                                <InputError message={errors.address} />
                             </div>
 
                             <div className="mt-4">
@@ -1311,13 +1306,10 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="tel"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    required
                                     placeholder="e.g., 0712 345678"
                                     className="border-cyan-300 dark:border-cyan-600/20 bg-white dark:bg-slate-800 focus:border-cyan-500 dark:focus:border-cyan-400 focus:outline-none"
                                 />
-                                {errors.phone && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
-                                )}
+                                <InputError message={errors.phone} />
                                 <div className="mt-2 flex items-center space-x-2">
                                     {phoneValidating ? (
                                         <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
@@ -1381,9 +1373,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     </div>
                                 ))}
                             </div>
-                            {errors.platforms && (
-                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.platforms}</p>
-                            )}
+                            <InputError message={errors.platforms} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1403,9 +1393,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectItem value="100k_plus">100K+</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors.followers && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.followers}</p>
-                                )}
+                                <InputError message={errors.followers} />
                             </div>
 
                             <div>
@@ -1423,9 +1411,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectItem value="phone">Phone</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors.communication_channel && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.communication_channel}</p>
-                                )}
+                                <InputError message={errors.communication_channel} />
                             </div>
                         </div>
                     </div>
@@ -1459,9 +1445,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectItem value="both">Both</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors.wallet_type && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.wallet_type}</p>
-                                )}
+                                <InputError message={errors.wallet_type} />
                             </div>
 
                             <div>
@@ -1473,14 +1457,11 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                     type="password"
                                     value={data.wallet_pin}
                                     onChange={(e) => setData('wallet_pin', e.target.value)}
-                                    required
                                     maxLength={4}
                                     placeholder="Enter 4-digit PIN"
                                     className="border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                                 />
-                                {errors.wallet_pin && (
-                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.wallet_pin}</p>
-                                )}
+                                <InputError message={errors.wallet_pin} />
                             </div>
                         </div>
 
@@ -1493,14 +1474,11 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                 type="password"
                                 value={data.confirm_pin}
                                 onChange={(e) => setData('confirm_pin', e.target.value)}
-                                required
                                 maxLength={4}
                                 placeholder="Confirm your PIN"
                                 className="border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                             />
-                            {errors.confirm_pin && (
-                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirm_pin}</p>
-                            )}
+                            <InputError message={errors.confirm_pin} />
                         </div>
 
                         <div className="bg-emerald-50 dark:bg-slate-700 border-l-4 border-emerald-400 dark:border-emerald-600 p-4 rounded-r-lg">
@@ -1531,9 +1509,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                             I agree to the terms and conditions <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                     </div>
-                                    {errors.terms && (
-                                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.terms}</p>
-                                    )}
+                                    <InputError message={errors.terms} />
                                 </div>
                             </div>
                         </div>
