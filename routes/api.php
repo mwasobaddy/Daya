@@ -49,6 +49,9 @@ Route::get('/wards', [WardsController::class, 'index']);
 Route::post('/validate-referral', [AdminController::class, 'validateReferralCode']);
 Route::get('/admin-referral-code', [AdminController::class, 'getAdminReferralCode']);
 
+// Email validation
+Route::post('/validate-email', [AdminController::class, 'validateEmail']);
+
 Route::prefix('admin')->group(function () {
     Route::post('/campaigns/{campaignId}/approve', [AdminController::class, 'approveCampaign']);
     Route::post('/campaigns/{campaignId}/complete', [AdminController::class, 'completeCampaign']);

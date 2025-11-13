@@ -191,4 +191,31 @@ class AdminController extends Controller
             'admin_name' => $admin->name
         ]);
     }
+
+    /**
+     * Validate an email address for uniqueness
+     */
+    public function validateEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        $email = strtolower($request->email);
+
+        // Check if email already exists in users table (case-insensitive search)
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if ($user) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'This email address is already registered'
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Email address is available'
+        ]);
+    }
 }
