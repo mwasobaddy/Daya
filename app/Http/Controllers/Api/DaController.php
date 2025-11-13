@@ -94,6 +94,9 @@ class DaController extends Controller
                     'gender' => $request->gender,
 
                     // Geographic Information
+                    'country_id' => $request->country,
+                    'county_id' => $request->county,
+                    'subcounty_id' => $request->subcounty,
                     'ward_id' => $request->ward_id,
                     'address' => $request->address,
                     'latitude' => $request->latitude,
