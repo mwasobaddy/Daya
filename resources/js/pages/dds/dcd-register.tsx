@@ -11,14 +11,7 @@ import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-declare global {
-    interface Window {
-        turnstile: {
-            render: (element: string | HTMLElement, config: { sitekey: string; callback: (token: string) => void }) => void;
-            remove: (element: string | HTMLElement) => void;
-        };
-    }
-}
+
 
 interface Country {
     id: number;
@@ -76,7 +69,6 @@ export default function DcdRegister() {
     const [wardsLoading, setWardsLoading] = useState(false);
     const [countyLabel, setCountyLabel] = useState('County');
     const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
-    const turnstileRef = useRef(null);
     const [referralValidating, setReferralValidating] = useState(false);
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
@@ -121,46 +113,9 @@ export default function DcdRegister() {
         wallet_pin: '',
         confirm_pin: '',
         terms: false,
-        turnstile_token: '',
     });
 
-    // Initialize Turnstile when component mounts
-    useEffect(() => {
-        // Check if Turnstile script is already loaded
-        if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
-            const script = document.createElement('script');
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
-        }
 
-        // Capture the element reference for cleanup
-        const turnstileElement = turnstileRef.current;
-
-        // Wait for Turnstile to be available and render the widget
-        const renderTurnstile = () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.render(turnstileElement, {
-                    sitekey: '1x00000000000000000000AA',
-                    callback: (token: string) => {
-                        setData(prev => ({ ...prev, turnstile_token: token }));
-                    },
-                });
-            } else {
-                // Retry after a short delay if not ready
-                setTimeout(renderTurnstile, 100);
-            }
-        };
-
-        renderTurnstile();
-
-        return () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.remove(turnstileElement);
-            }
-        };
-    }, []);
 
     // Fetch countries on component mount
     useEffect(() => {
@@ -692,12 +647,14 @@ export default function DcdRegister() {
     };
 
     const updateData = (field: string, value: any) => {
+        console.log(`Updating field ${field} with value:`, value, typeof value);
         setData(prev => ({ ...prev, [field]: value }));
         clearFieldError(field);
     };
 
     const validateStep = (step: Step): boolean => {
         const newErrors: Record<string, string> = {};
+        console.log(`Validating step: ${step}`, data);
 
         if (step === 'personal') {
             if (!data.full_name.trim()) {
@@ -772,6 +729,11 @@ export default function DcdRegister() {
                 newErrors.music_genres = 'Please select music genres when music campaigns are selected';
             }
         } else if (step === 'account') {
+            console.log('Account validation - data.wallet_type:', data.wallet_type, typeof data.wallet_type);
+            console.log('Account validation - data.wallet_pin:', data.wallet_pin, typeof data.wallet_pin);
+            console.log('Account validation - data.confirm_pin:', data.confirm_pin, typeof data.confirm_pin);
+            console.log('Account validation - data.terms:', data.terms, typeof data.terms);
+            
             if (!data.wallet_type) {
                 newErrors.wallet_type = 'Wallet type is required';
             }
@@ -788,11 +750,9 @@ export default function DcdRegister() {
             if (!data.terms) {
                 newErrors.terms = 'You must accept the terms and conditions';
             }
-            if (!data.turnstile_token) {
-                newErrors.turnstile_token = 'Please complete the security verification';
-            }
         }
 
+        console.log(`Validation errors for ${step}:`, newErrors);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -1424,10 +1384,11 @@ export default function DcdRegister() {
                                     id="business_name"
                                     type="text"
                                     value={data.business_name}
-                                    onChange={(e) => setData(prev => ({ ...prev, business_name: e.target.value }))}
+                                    onChange={(e) => updateData('business_name', e.target.value)}
                                     placeholder="Official business name"
                                     className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                 />
+                                <InputError message={errors.business_name} />
                             </div>
 
                             <div>
@@ -1453,18 +1414,19 @@ export default function DcdRegister() {
                                     <Input
                                         type="text"
                                         value={data.other_business_type}
-                                        onChange={(e) => setData(prev => ({ ...prev, other_business_type: e.target.value }))}
+                                        onChange={(e) => updateData('other_business_type', e.target.value)}
                                         placeholder="Please specify other business type"
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
                                 )}
+                                <InputError message={errors.business_types} />
                             </div>
 
                             <div>
                                 <Label htmlFor="daily_foot_traffic" className="text-sm font-medium mb-2 block">
                                     Daily Foot Traffic <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.daily_foot_traffic} onValueChange={(value) => setData(prev => ({ ...prev, daily_foot_traffic: value }))}>
+                                <Select value={data.daily_foot_traffic} onValueChange={(value) => updateData('daily_foot_traffic', value)}>
                                     <SelectTrigger className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none">
                                         <SelectValue placeholder="Select daily foot traffic" />
                                     </SelectTrigger>
@@ -1476,6 +1438,7 @@ export default function DcdRegister() {
                                         <SelectItem value="500+">500+ people</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.daily_foot_traffic} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1487,9 +1450,10 @@ export default function DcdRegister() {
                                         id="operating_hours_start"
                                         type="time"
                                         value={data.operating_hours_start}
-                                        onChange={(e) => setData(prev => ({ ...prev, operating_hours_start: e.target.value }))}
+                                        onChange={(e) => updateData('operating_hours_start', e.target.value)}
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.operating_hours_start} />
                                 </div>
 
                                 <div>
@@ -1500,9 +1464,10 @@ export default function DcdRegister() {
                                         id="operating_hours_end"
                                         type="time"
                                         value={data.operating_hours_end}
-                                        onChange={(e) => setData(prev => ({ ...prev, operating_hours_end: e.target.value }))}
+                                        onChange={(e) => updateData('operating_hours_end', e.target.value)}
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.operating_hours_end} />
                                 </div>
                             </div>
 
@@ -1525,6 +1490,7 @@ export default function DcdRegister() {
                                         </div>
                                     ))}
                                 </div>
+                                <InputError message={errors.operating_days} />
                             </div>
                         </div>
                     </div>
@@ -1563,6 +1529,7 @@ export default function DcdRegister() {
                                         </div>
                                     ))}
                                 </div>
+                                <InputError message={errors.campaign_types} />
                             </div>
 
                             {data.campaign_types.includes('music') && (
@@ -1589,11 +1556,12 @@ export default function DcdRegister() {
                                         <Input
                                             type="text"
                                             value={data.other_music_genre}
-                                            onChange={(e) => setData(prev => ({ ...prev, other_music_genre: e.target.value }))}
+                                            onChange={(e) => updateData('other_music_genre', e.target.value)}
                                             placeholder="Please specify other music genre"
                                             className="mt-2"
                                         />
                                     )}
+                                    <InputError message={errors.music_genres} />
                                 </div>
                             )}
 
@@ -1606,7 +1574,7 @@ export default function DcdRegister() {
                                             <Checkbox
                                                 id="safe_for_kids"
                                                 checked={data.safe_for_kids}
-                                                onCheckedChange={(checked) => setData(prev => ({ ...prev, safe_for_kids: checked === true }))}
+                                                onCheckedChange={(checked) => updateData('safe_for_kids', checked === true)}
                                                 className={`border-orange-300 dark:border-orange-600/20 bg-white dark:bg-slate-500 focus:ring-orange-500 dark:focus:ring-orange-400 ${ data.safe_for_kids ? 'bg-orange-100 dark:bg-orange-700' : '' }`}
                                             />
                                             <Label htmlFor="safe_for_kids" className="text-sm text-orange-800 dark:text-orange-300 font-medium">
@@ -1638,7 +1606,7 @@ export default function DcdRegister() {
                                 <Label htmlFor="wallet_type" className="text-sm font-medium mb-2 block">
                                     Wallet Type <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
-                                <Select value={data.wallet_type} onValueChange={(value) => setData(prev => ({ ...prev, wallet_type: value }))}>
+                                <Select value={data.wallet_type} onValueChange={(value) => updateData('wallet_type', value)}>
                                     <SelectTrigger className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none">
                                         <SelectValue placeholder="Select Wallet Type" />
                                     </SelectTrigger>
@@ -1648,6 +1616,7 @@ export default function DcdRegister() {
                                         <SelectItem value="both">Both</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.wallet_type} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1659,11 +1628,12 @@ export default function DcdRegister() {
                                         id="wallet_pin"
                                         type="password"
                                         value={data.wallet_pin}
-                                        onChange={(e) => setData(prev => ({ ...prev, wallet_pin: e.target.value }))}
+                                        onChange={(e) => updateData('wallet_pin', e.target.value)}
                                         placeholder="Enter 4-6 digit PIN"
                                         maxLength={6}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.wallet_pin} />
                                 </div>
 
                                 <div>
@@ -1674,11 +1644,12 @@ export default function DcdRegister() {
                                         id="confirm_pin"
                                         type="password"
                                         value={data.confirm_pin}
-                                        onChange={(e) => setData(prev => ({ ...prev, confirm_pin: e.target.value }))}
+                                        onChange={(e) => updateData('confirm_pin', e.target.value)}
                                         placeholder="Confirm your PIN"
                                         maxLength={6}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                                     />
+                                    <InputError message={errors.confirm_pin} />
                                 </div>
                             </div>
 
@@ -1703,27 +1674,19 @@ export default function DcdRegister() {
                                             <Checkbox
                                                 id="terms"
                                                 checked={data.terms}
-                                                onCheckedChange={(checked) => setData(prev => ({ ...prev, terms: checked === true }))}
+                                                onCheckedChange={(checked) => updateData('terms', checked === true)}
                                                 className={`border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-500 focus:ring-green-500 dark:focus:ring-green-400 ${ data.terms ? 'bg-green-100 dark:bg-green-700' : '' }`}
                                             />
                                             <Label htmlFor="terms" className="text-sm text-green-800 dark:text-green-300 font-medium">
                                                 I agree to the terms and conditions <span className='text-red-500 dark:text-red-400'>*</span>
                                             </Label>
                                         </div>
+                                        <InputError message={errors.terms} />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-slate-700 dark:to-slate-600 p-6 rounded-xl border-2 border-red-400">
-                                <div className="flex items-center justify-center py-4">
-                                    <div className="text-center">
-                                        <Shield className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                                        <h4 className="font-medium text-red-900 dark:text-red-300 mb-2">Security Verification</h4>
-                                        <p className="text-sm text-red-700 dark:text-red-400 mb-4">Complete the security check to finalize your registration</p>
-                                        <div ref={turnstileRef} className="flex justify-center"></div>
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 );

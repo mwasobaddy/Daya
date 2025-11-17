@@ -10,6 +10,14 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::redirect('/login', '/');
+Route::redirect('/register', '/');
+Route::redirect('/dashboard', '/');
+Route::redirect('/forgot-password', '/');
+Route::redirect('/user/confirm-password', '/');
+Route::redirect('/email/verify/{id}/{hash}', '/');
+
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
@@ -37,5 +45,9 @@ Route::get('/campaign/submit', function () {
 // Admin Action Routes (public - accessed via email links)
 Route::get('/admin/action/{action}/{token}', [App\Http\Controllers\AdminActionController::class, 'handleAction'])
     ->name('admin.action');
+
+// QR redirect (scan) route - signed
+Route::get('/qr/redirect', [\App\Http\Controllers\ScanRedirectController::class, 'handle'])
+    ->name('scan.redirect');
 
 require __DIR__.'/settings.php';

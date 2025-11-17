@@ -35,7 +35,7 @@ export default function Welcome({
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div>
 
                 <div className="flex min-h-screen flex-col items-center bg-transparent p-6 text-white lg:justify-center lg:p-8 relative z-10">
-                    <header className="mb-6 w-full max-w-[335px] not-has-[nav]:hidden lg:max-w-4xl">
+                    {/* <header className="mb-6 w-full max-w-[335px] not-has-[nav]:hidden lg:max-w-4xl">
                         <nav className="flex items-center justify-end gap-4">
                             {auth.user ? (
                                 <Link
@@ -63,7 +63,7 @@ export default function Welcome({
                                 </>
                             )}
                         </nav>
-                    </header>
+                    </header> */}
                     <main className="w-full max-w-4xl">
                         <div className="w-full">
                             <h1 className="mb-4 text-2xl font-semibold text-white">Welcome to Daya</h1>

@@ -1080,6 +1080,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                                         <SelectValue placeholder="Select gender" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
+                                        <SelectItem value="-">-</SelectItem>
                                         <SelectItem value="male">Male</SelectItem>
                                         <SelectItem value="female">Female</SelectItem>
                                         <SelectItem value="other">Other</SelectItem>
