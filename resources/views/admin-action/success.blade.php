@@ -56,6 +56,11 @@
         <h1 class="title">Action Completed Successfully</h1>
         <div class="action-type">{{ ucwords(str_replace('_', ' ', $action)) }}</div>
         <p class="message">{{ $message }}</p>
+        @if(isset($result['dcd']) && $result['dcd'])
+            <p><strong>DCD Assigned:</strong> {{ $result['dcd']['name'] }} ({{ $result['dcd']['email'] }})</p>
+        @else
+            <p><strong>Assignment:</strong> No DCD was automatically matched. Please assign a DCD manually from the admin dashboard.</p>
+        @endif
         <p style="color: #9ca3af; font-size: 0.875rem;">
             This action has been processed and recorded in the system.
         </p>

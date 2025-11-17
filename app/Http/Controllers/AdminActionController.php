@@ -28,7 +28,8 @@ class AdminActionController extends Controller
 
             return response()->view('admin-action.success', [
                 'message' => $result['message'],
-                'action' => $action
+                'action' => $action,
+                'result' => $result,
             ]);
 
         } catch (\InvalidArgumentException $e) {

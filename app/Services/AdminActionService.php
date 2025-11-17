@@ -148,11 +148,20 @@ class AdminActionService
                 \Log::warning('Failed to send CampaignApproved email to DCD: ' . $e->getMessage());
             }
         } else {
-            // No matched DCD - notify admins/client about approved but unassigned campaign
+            // No matched DCD - notify client and admins about the unassigned campaign
             try {
                 \Mail::to($client->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send CampaignApproved email to client: ' . $e->getMessage());
+            }
+            // Notify admins to manually assign a DCD
+            try {
+                $adminUsers = \App\Models\User::where('role', 'admin')->get();
+                foreach ($adminUsers as $admin) {
+                    \Mail::to($admin->email)->send(new \App\Mail\AdminCampaignPending($campaign));
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to notify admin of unassigned campaign: ' . $e->getMessage());
             }
         }
 
@@ -160,6 +169,7 @@ class AdminActionService
             'success' => true,
             'message' => 'Campaign approved successfully',
             'campaign_id' => $campaignId,
+            'dcd' => $dcd ? ['id' => $dcd->id, 'name' => $dcd->name, 'email' => $dcd->email] : null,
         ];
     }
 
