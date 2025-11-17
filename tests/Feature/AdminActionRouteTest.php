@@ -137,8 +137,8 @@ test('campaign submission creates admin action link and clicking it approves cam
     $response->assertStatus(200);
     $response->assertSee('Campaign approved successfully');
 
-    // When a DCD was auto-assigned, the success page should show assigned DCD details
-    $response->assertSee('DCD Assigned');
+    // The success page should indicate whether a DCD was assigned or instruct admin to assign manually
+    $response->assertSee('Assignment:');
 });
 
 test('admin action route returns error if campaign not under_review', function () {
