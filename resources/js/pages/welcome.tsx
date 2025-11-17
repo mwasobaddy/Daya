@@ -1,20 +1,10 @@
-import { dashboard, login, register } from '@/routes';
-import { type SharedData } from '@/types';
-import React, { useState } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
-import RoleSelector from '@/components/RoleSelector';
+import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, FileText } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
-export default function Welcome({
-    canRegister = true,
-}: {
-    canRegister?: boolean;
-}) {
-    const { auth } = usePage<SharedData>().props;
-    const [role, setRole] = useState<'client' | 'dcd' | 'da' | undefined>(undefined);
+export default function Welcome() {
 
     return (
         <>
