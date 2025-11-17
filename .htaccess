@@ -1,0 +1,55 @@
+##############################################################
+# Laravel root .htaccess for shared hosts (e.g. Hostinger)
+#
+# Purpose:
+#  - When the webserver document root cannot be set to `public/`:
+#    rewrite incoming requests to /public/ (internal rewrite, not redirect)
+#  - Deny direct access to non-public/sensitive folders and files
+#  - Set DirectoryIndex to `public/index.php`
+#
+# Note: For best security and performance, set the web server's document
+# root to the `public/` directory. The rules in this file are a safety net
+# for shared environments and will help keep your app secure when you cannot change
+# the document root.
+##############################################################
+
+# Don't list directory contents
+Options -Indexes
+
+# Prevent access to files starting with a dot (e.g. .env, .git)
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.|^.*\.(env|json|lock|sql|md|yml|yaml)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.|^.*\.(env|json|lock|sql|md|yml|yaml)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Protect some folders which should only be accessible from the server
+RedirectMatch 404 ^/(app|bootstrap|config|database|routes|resources|storage|tests|vendor)(/|$)
+
+# Make sure index points to public/index.php
+<IfModule mod_dir.c>
+    DirectoryIndex public/index.php index.php
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If request is already for the public folder, do nothing
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # If requested resource exists under root, let it be served
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Internally rewrite all requests to the public folder where Laravel's
+    # front controller (public/index.php) will handle them.
+    RewriteRule ^(.*)$ public/$1 [L,NC,QSA]
+</IfModule>
+
+# End of .htaccess
