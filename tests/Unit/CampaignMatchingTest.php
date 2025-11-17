@@ -1,0 +1,104 @@
+<?php
+
+use App\Models\Campaign;
+use App\Models\User;
+use App\Services\CampaignMatchingService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+test('assigns a dcd matching business name', function () {
+    // Create a Country/County/Subcounty/Ward since users require ward_id
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'ShopsRUs',
+        'account_type' => 'business',
+        'ward_id' => $ward->id,
+    ]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'Test Campaign',
+        'description' => 'Test description',
+        'budget' => 100,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Test objectives',
+        'campaign_objective' => 'brand_awareness',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'submitted',
+        'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business']],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->not->toBeNull();
+    expect($assigned->id)->toBe($dcd->id);
+    expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
+});
+
+test('does not select dcd with an active campaign', function () {
+    // Create Country/County/Subcounty/Ward and client (same as first test)
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'ShopsRUs',
+        'account_type' => 'business',
+        'ward_id' => $ward->id,
+    ]);
+
+    // Create an active campaign for this dcd
+    Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Existing Active Campaign',
+        'description' => 'Existing active campaign',
+        'budget' => 200,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Test objectives',
+        'campaign_objective' => 'brand_awareness',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'approved',
+        'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business']],
+    ]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'New Campaign',
+        'description' => 'New campaign description',
+        'budget' => 100,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Test objectives',
+        'campaign_objective' => 'brand_awareness',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'submitted',
+        'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business']],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->toBeNull();
+    expect($campaign->fresh()->dcd_id)->toBeNull();
+});
