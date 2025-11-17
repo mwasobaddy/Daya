@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Attachment;
 
 class CampaignApproved extends Mailable
 {
@@ -15,14 +16,16 @@ class CampaignApproved extends Mailable
 
     public $campaign;
     public $client;
+    public $qrFilename;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($campaign, $client)
+    public function __construct($campaign, $client, $qrFilename = null)
     {
         $this->campaign = $campaign;
         $this->client = $client;
+        $this->qrFilename = $qrFilename;
     }
 
     /**
@@ -53,6 +56,9 @@ class CampaignApproved extends Mailable
      */
     public function attachments(): array
     {
+        if ($this->qrFilename) {
+            return [Attachment::fromStorageDisk('public', $this->qrFilename)->as('campaign-qr.svg')];
+        }
         return [];
     }
 }

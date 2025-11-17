@@ -16,13 +16,18 @@ class AdminCampaignPending extends Mailable
     public $campaign;
     public $approveUrl;
     public $rejectUrl;
+    public $clientName;
+    public $clientEmail;
 
     /**
      * Create a new message instance.
      */
     public function __construct($campaign)
     {
-        $this->campaign = $campaign;
+        // Ensure the client relation is loaded and set simple name/email values for the view
+        $this->campaign = $campaign->loadMissing('client');
+        $this->clientName = optional($this->campaign->client)->name ?? null;
+        $this->clientEmail = optional($this->campaign->client)->email ?? null;
 
         $adminActionService = app(\App\Services\AdminActionService::class);
         $this->approveUrl = $adminActionService->generateActionLink('approve_campaign', $campaign->id);
@@ -50,6 +55,8 @@ class AdminCampaignPending extends Mailable
                 'campaign' => $this->campaign,
                 'approveUrl' => $this->approveUrl,
                 'rejectUrl' => $this->rejectUrl,
+                'clientName' => $this->clientName,
+                'clientEmail' => $this->clientEmail,
             ],
         );
     }

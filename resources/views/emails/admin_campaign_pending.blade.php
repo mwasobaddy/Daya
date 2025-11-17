@@ -35,8 +35,8 @@
 
             <div class="campaign-details">
                 <h3>{{ $campaign->title }}</h3>
-                <p><strong>Client:</strong> {{ $campaign->client_name }}</p>
-                <p><strong>Email:</strong> {{ $campaign->client_email }}</p>
+                <p><strong>Client:</strong> {{ $clientName ?? ($campaign->client->name ?? 'N/A') }}</p>
+                <p><strong>Email:</strong> {{ $clientEmail ?? ($campaign->client->email ?? 'N/A') }}</p>
                 <p><strong>Description:</strong> {{ $campaign->description }}</p>
                 <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
                 <p><strong>Submitted:</strong> {{ $campaign->created_at->format('M j, Y g:i A') }}</p>
