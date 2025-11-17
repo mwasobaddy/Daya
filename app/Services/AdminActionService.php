@@ -43,12 +43,18 @@ class AdminActionService
     {
         $adminAction = AdminAction::where('token', $token)
                                  ->where('action', $action)
-                                 ->where('expires_at', '>', Carbon::now())
-                                 ->whereNull('used_at')
                                  ->first();
 
         if (!$adminAction) {
-            throw new \InvalidArgumentException('Invalid or expired admin action link');
+            throw new \InvalidArgumentException('Invalid admin action link');
+        }
+
+        if ($adminAction->isUsed()) {
+            throw new \InvalidArgumentException('Admin action link has already been used');
+        }
+
+        if ($adminAction->isExpired()) {
+            throw new \InvalidArgumentException('Admin action link has expired');
         }
 
         // Mark as used
@@ -110,11 +116,45 @@ class AdminActionService
 
         $campaign->update(['status' => 'approved']);
 
-        // Notify DCD
-        $dcd = $campaign->dcd;
+        // Try to auto-match a DCD to this campaign
+        $matchingService = app(\App\Services\CampaignMatchingService::class);
+        $dcd = null;
+        try {
+            $dcd = $matchingService->assignDcd($campaign);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to auto-match DCD: ' . $e->getMessage());
+        }
+
         $client = $campaign->client;
 
-        \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
+        if ($dcd) {
+            // Generate campaign-specific QR code and attach to mail
+            $qrCodeService = app(\App\Services\QRCodeService::class);
+            try {
+                $qrFilename = $qrCodeService->generateDcdCampaignQr($dcd, $campaign);
+                // Store QR in campaign metadata for future reference
+                $metadata = $campaign->metadata ?? [];
+                $metadata['dcd_qr'] = $qrFilename;
+                $campaign->metadata = $metadata;
+                $campaign->save();
+            } catch (\Exception $e) {
+                \Log::warning('Failed to generate campaign QR: ' . $e->getMessage());
+                $qrFilename = null;
+            }
+
+            try {
+                \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client, $qrFilename ?? null));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send CampaignApproved email to DCD: ' . $e->getMessage());
+            }
+        } else {
+            // No matched DCD - notify admins/client about approved but unassigned campaign
+            try {
+                \Mail::to($client->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send CampaignApproved email to client: ' . $e->getMessage());
+            }
+        }
 
         return [
             'success' => true,
@@ -138,7 +178,11 @@ class AdminActionService
 
         // Notify client
         $client = $campaign->client;
-        \Mail::to($client->email)->send(new \App\Mail\CampaignRejected($campaign));
+        try {
+            \Mail::to($client->email)->send(new \App\Mail\CampaignRejected($campaign));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send CampaignRejected email to client: ' . $e->getMessage());
+        }
 
         return [
             'success' => true,
@@ -185,8 +229,16 @@ class AdminActionService
 
         // Notify both parties
         $client = $campaign->client;
-        \Mail::to($client->email)->send(new \App\Mail\CampaignCompleted($campaign, $dcd));
-        \Mail::to($dcd->email)->send(new \App\Mail\CampaignCompleted($campaign, $client));
+        try {
+            \Mail::to($client->email)->send(new \App\Mail\CampaignCompleted($campaign, $dcd));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send CampaignCompleted email to client: ' . $e->getMessage());
+        }
+        try {
+            \Mail::to($dcd->email)->send(new \App\Mail\CampaignCompleted($campaign, $client));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send CampaignCompleted email to DCD: ' . $e->getMessage());
+        }
 
         return [
             'success' => true,
@@ -213,7 +265,11 @@ class AdminActionService
 
         // Notify user
         $user = $earning->user;
-        \Mail::to($user->email)->send(new \App\Mail\PaymentCompleted($earning));
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\PaymentCompleted($earning));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send PaymentCompleted email to user: ' . $e->getMessage());
+        }
 
         return [
             'success' => true,
