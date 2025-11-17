@@ -45,6 +45,57 @@ class QRCodeService
     }
 
     /**
+     * Generate a campaign-specific QR code for a DCD and campaign.
+     * Returns storage filename (relative to public disk).
+     */
+    public function generateDcdCampaignQr(User $dcd, \App\Models\Campaign $campaign): string
+    {
+        if ($dcd->role !== 'dcd') {
+            throw new \InvalidArgumentException('User must be a DCD');
+        }
+
+        // Signed URL that records a scan and redirects to the campaign url
+        $qrData = \Illuminate\Support\Facades\URL::temporarySignedRoute('scan.redirect', now()->addYears(1), [
+            'dcd' => $dcd->id,
+            'campaign' => $campaign->id,
+        ]);
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(400),
+            new SvgImageBackEnd()
+        );
+        $writer = new Writer($renderer);
+        $svgContent = $writer->writeString($qrData);
+
+        // Store file
+        $filename = 'qr-codes/dcd_' . $dcd->id . '_camp_' . $campaign->id . '_' . time() . '.svg';
+        Storage::disk('public')->put($filename, $svgContent);
+
+        return $filename;
+    }
+
+    /**
+     * Record a campaign scan by DCD and campaign ids
+     */
+    public function recordCampaignScan(int $dcdId, int $campaignId, ?array $geoData = null)
+    {
+        $dcd = User::findOrFail($dcdId);
+        $campaign = \App\Models\Campaign::findOrFail($campaignId);
+
+        // Basic validation
+        if ($campaign->dcd_id !== $dcd->id) {
+            throw new \InvalidArgumentException('Campaign is not assigned to this DCD');
+        }
+
+        return \App\Models\Scan::create([
+            'dcd_id' => $dcdId,
+            'campaign_id' => $campaignId,
+            'scanned_at' => now(),
+            'geo' => $geoData,
+        ]);
+    }
+
+    /**
      * Generate QR code for a DA's referral
      */
     public function generateDAReferralQRCode(User $user): string
