@@ -31,9 +31,28 @@ class AdminActionController extends Controller
                 'action' => $action
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException $e) {
+            // Known invalid/expired or domain specific error - return 400
+            \Log::warning('Admin action validation error', [
+                'action' => $action,
+                'token' => $token,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->view('admin-action.error', [
-                'message' => 'An error occurred while processing your request.'
+                'message' => config('app.debug') ? $e->getMessage() : 'Invalid or expired admin action link.'
+            ], 400);
+        } catch (\Exception $e) {
+            // Log the exception details for debugging
+            \Log::error('Admin action failed', [
+                'action' => $action,
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->view('admin-action.error', [
+                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred while processing your request.'
             ], 500);
         }
     }

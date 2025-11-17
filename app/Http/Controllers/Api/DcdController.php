@@ -24,7 +24,10 @@ class DcdController extends Controller
 
     public function create(Request $request)
     {
-        $request->validate([
+        try {
+            \Log::info('DCD Create request received', $request->all());
+
+            $request->validate([
             // Referral & Identification
             'referral_code' => 'nullable|string|exists:users,referral_code',
             'full_name' => 'required|string|max:255',
@@ -45,7 +48,7 @@ class DcdController extends Controller
             'other_business_type' => 'required_if:business_types.*,other|string|nullable',
 
             // Business Traffic & Hours
-            'daily_foot_traffic' => 'required|in:less_than_50,50_200,200_plus',
+            'daily_foot_traffic' => 'required|in:1-10,11-50,51-100,101-500,500+',
             'operating_hours_start' => 'nullable|date_format:H:i',
             'operating_hours_end' => 'nullable|date_format:H:i',
             'operating_days' => 'nullable|array',
@@ -70,15 +73,28 @@ class DcdController extends Controller
 
             // Agreement
             'terms' => 'required|accepted',
-
-            // Security
-            'turnstile_token' => 'required|string',
         ]);
+
+        \Log::info('Validation passed, proceeding with user creation');
 
         // Find the referrer (if referral code provided) - can be any role
         $referrer = null;
         if ($request->referral_code) {
             $referrer = User::where('referral_code', $request->referral_code)->first();
+            if ($referrer) {
+                \Log::info('Referrer found', [
+                    'referral_code' => $request->referral_code,
+                    'referrer_id' => $referrer->id,
+                    'referrer_name' => $referrer->name,
+                    'referrer_role' => $referrer->role
+                ]);
+            } else {
+                \Log::warning('Referral code provided but no referrer found', [
+                    'referral_code' => $request->referral_code
+                ]);
+            }
+        } else {
+            \Log::info('No referral code provided');
         }
 
         // Create the user with comprehensive profile data
@@ -133,6 +149,15 @@ class DcdController extends Controller
             ],
         ]);
 
+        \Log::info('User created successfully', ['user_id' => $user->id, 'email' => $user->email]);
+
+        // Verify user was actually saved
+        $savedUser = User::find($user->id);
+        if (!$savedUser) {
+            throw new \Exception('User was not saved to database');
+        }
+        \Log::info('User verified in database', ['user_id' => $savedUser->id]);
+
         // Generate QR code
         $qrCodeFilename = $this->qrCodeService->generateDCDQRCode($user);
         $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
@@ -153,12 +178,40 @@ class DcdController extends Controller
         }
 
         // Send welcome email
+        \Log::info('Sending welcome email', [
+            'user_id' => $user->id,
+            'referrer_id' => $referrer ? $referrer->id : null,
+            'referrer_name' => $referrer ? $referrer->name : 'None'
+        ]);
         Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer));
+
+        // Send admin notification email to all admin users
+        $adminUsers = User::where('role', 'admin')->get();
+        if ($adminUsers->count() > 0) {
+            \Log::info('Sending admin notifications', [
+                'admin_count' => $adminUsers->count(),
+                'referrer_info' => $referrer ? ['id' => $referrer->id, 'name' => $referrer->name, 'role' => $referrer->role] : null
+            ]);
+            foreach ($adminUsers as $admin) {
+                Mail::to($admin->email)->send(new \App\Mail\AdminDcdRegistration($user, $referrer));
+            }
+        }
 
         return response()->json([
             'message' => 'DCD registered successfully',
             'qr_code' => $qrCodeUrl,
             'user' => $user
         ]);
+        } catch (\Exception $e) {
+            \Log::error('DCD registration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'Registration failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -25,6 +25,11 @@ class ClientController extends Controller
         \Log::info('Campaign submission started', ['email' => $request->email, 'campaign_title' => $request->campaign_title]);
         
         try {
+            \Log::info('Campaign submission validation started', [
+                'content_safety_preferences' => $request->content_safety_preferences,
+                'has_content_safety_preferences' => !empty($request->content_safety_preferences)
+            ]);
+            
             $request->validate([
                 // Account Information
                 'account_type' => 'required|in:startup,artist,label,ngo,agency,business',
@@ -32,6 +37,7 @@ class ClientController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
                 'phone' => 'required|string|max:20',
+
                 'country' => 'required|string|max:10',
                 'referral_code' => 'nullable|string|max:50',
 
@@ -44,10 +50,12 @@ class ClientController extends Controller
                 'description' => 'required|string|max:2000',
 
                 // Targeting & Budget
-                'content_safety' => 'required|in:family_friendly,mature_audience',
+                'content_safety_preferences' => 'required|array|min:1',
+                'content_safety_preferences.*' => 'string|in:kids,teen,adult,no_restrictions',
                 'target_country' => 'required|string|max:10',
                 'target_county' => 'required|string|max:50',
                 'target_subcounty' => 'required|string|max:50',
+                'target_ward' => 'required|string|max:50',
                 'business_types' => 'required|array|min:1',
                 'business_types.*' => 'string|max:50',
                 'start_date' => 'required|date|after_or_equal:today',
@@ -56,37 +64,34 @@ class ClientController extends Controller
                 // Additional
                 'target_audience' => 'nullable|string|max:1000',
                 'objectives' => 'nullable|string|max:500',
-
-                // Security
-                'turnstile_token' => 'required|string',
             ]);
 
-            // Verify Turnstile token (for production, replace with actual verification)
-            // For now, we'll skip actual verification in development
-            if (empty($request->turnstile_token)) {
-                return response()->json(['message' => 'Security verification failed'], 400);
-            }
+            \Log::info('Campaign submission validation passed', [
+                'content_safety_preferences' => $request->content_safety_preferences,
+                'content_safety_preferences_count' => count($request->content_safety_preferences ?? [])
+            ]);
 
             // For now, we'll create campaigns without DCD assignment (can be assigned later by admin)
             // In a future version, this could be enhanced to support DCD QR code scanning
 
-            // Create or find client user (clients don't need full registration)
-            $client = User::firstOrCreate(
-                ['email' => $request->email],
-                [
-                    'name' => $request->name,
-                    'role' => 'client',
-                    'phone' => $request->phone,
-                    'country' => $request->country,
-                    'business_name' => $request->business_name,
-                    'account_type' => $request->account_type,
-                    'referral_code' => $request->referral_code,
-                    'password' => bcrypt('temporary_password_' . time()), // Temporary password for client accounts
-                ]
-            );
+            // Enhanced user validation logic
+            $existingUser = User::where('email', $request->email)->first();
+            $client = null;
 
-            // Update client with latest information if user already exists
-            if (!$client->wasRecentlyCreated) {
+            if ($existingUser) {
+                // Check if existing user details match
+                $phoneMatches = $existingUser->phone === $request->phone;
+
+                if (!$phoneMatches) {
+                    // Details don't match - return error
+                    return response()->json([
+                        'message' => 'The email address you entered is already registered with different account details. Please verify your information and try again.',
+                        'error' => 'account_mismatch'
+                    ], 422);
+                }
+
+                // Details match - use existing user and update info
+                $client = $existingUser;
                 $client->update([
                     'name' => $request->name,
                     'phone' => $request->phone,
@@ -94,6 +99,21 @@ class ClientController extends Controller
                     'business_name' => $request->business_name,
                     'account_type' => $request->account_type,
                     'referral_code' => $request->referral_code,
+                    'ward_id' => $request->target_ward, // Update ward_id
+                ]);
+            } else {
+                // Create new client user
+                $client = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'role' => 'client',
+                    'phone' => $request->phone,
+                    'country' => $request->country,
+                    'business_name' => $request->business_name,
+                    'account_type' => $request->account_type,
+                    'referral_code' => $request->referral_code,
+                    'ward_id' => $request->target_ward, // Convert target_ward to ward_id
+                    'password' => bcrypt('temporary_password_' . time()), // Temporary password for client accounts
                 ]);
             }
 
@@ -114,12 +134,28 @@ class ClientController extends Controller
                     \Log::warning('Failed to send duplicate campaign notification: ' . $e->getMessage());
                 }
 
+                // Send notification to admins about duplicate attempt
+                try {
+                    $adminUsers = User::where('role', 'admin')->get();
+                    foreach ($adminUsers as $admin) {
+                        \Mail::to($admin->email)->send(new \App\Mail\CampaignNotification($existingActiveCampaign, 'admin_duplicate_attempt'));
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to send admin duplicate campaign notification: ' . $e->getMessage());
+                }
+
                 return response()->json([
                     'message' => 'You already have an active campaign. You can only have one active campaign at a time. Please check your email for details about your existing campaign.',
                     'existing_campaign_id' => $existingActiveCampaign->id,
                     'existing_campaign_title' => $existingActiveCampaign->title,
                     'existing_campaign_status' => $existingActiveCampaign->status,
                 ], 409); // 409 Conflict
+            }
+
+            // Convert content safety preferences to single value for storage
+            $contentSafety = 'family_friendly'; // default
+            if (in_array('adult', $request->content_safety_preferences) || in_array('no_restrictions', $request->content_safety_preferences)) {
+                $contentSafety = 'mature_audience';
             }
 
             // Create campaign with enhanced details
@@ -141,10 +177,12 @@ class ClientController extends Controller
                     'digital_product_link' => $request->digital_product_link,
                     'explainer_video_url' => $request->explainer_video_url,
                     'campaign_objective' => $request->campaign_objective,
-                    'content_safety' => $request->content_safety,
+                    'content_safety' => $contentSafety,
+                    'content_safety_preferences' => $request->content_safety_preferences,
                     'target_country' => $request->target_country,
                     'target_county' => $request->target_county,
                     'target_subcounty' => $request->target_subcounty,
+                    'target_ward' => $request->target_ward,
                     'business_types' => $request->business_types,
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
@@ -176,6 +214,24 @@ class ClientController extends Controller
                 $adminActionService->notifyAllAdminsOfPendingCampaign($campaign);
             } catch (\Exception $e) {
                 \Log::warning('Failed to notify admins: ' . $e->getMessage());
+            }
+
+            // Send admin notification email to all admin users about new campaign submission
+            $adminUsers = User::where('role', 'admin')->get();
+            if ($adminUsers->count() > 0) {
+                \Log::info('Sending admin notifications for campaign submission', [
+                    'admin_count' => $adminUsers->count(),
+                    'campaign_id' => $campaign->id,
+                    'client_id' => $client->id,
+                    'referrer_info' => $request->referral_code ? ['referral_code' => $request->referral_code] : null
+                ]);
+                foreach ($adminUsers as $admin) {
+                    try {
+                        \Mail::to($admin->email)->send(new \App\Mail\AdminCampaignSubmission($campaign, $client, null));
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to send admin notification email: ' . $e->getMessage());
+                    }
+                }
             }
 
             \Log::info('Campaign submitted successfully', [
