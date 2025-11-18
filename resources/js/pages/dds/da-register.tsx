@@ -113,6 +113,9 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         turnstile_token: '',
     });
 
+    // Determine the app base URL from Vite env or window origin as fallback
+    const APP_URL = import.meta.env.VITE_APP_URL ?? import.meta.env.VITE_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
+
     // Initialize Turnstile when component mounts
     useEffect(() => {
         // Check if Turnstile script is already loaded
@@ -816,7 +819,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
             });
             // Redirect to the registration page with started=true after a short delay
             setTimeout(() => {
-                window.location.href = 'http://127.0.0.1:8000/da/register?started=true';
+                window.location.href = `${APP_URL}/da/register?started=true`;
             }, 3000);
             return;
         }
@@ -926,7 +929,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                     });
                     // Redirect to the registration page with started=true after a short delay
                     setTimeout(() => {
-                        window.location.href = 'http://127.0.0.1:8000/da/register?started=true';
+                        window.location.href = `${APP_URL}/da/register?started=true`;
                     }, 3000);
                 } else {
                     console.log('Error response:', result);
