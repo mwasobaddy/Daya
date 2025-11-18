@@ -158,12 +158,12 @@ class DcdController extends Controller
         }
         \Log::info('User verified in database', ['user_id' => $savedUser->id]);
 
-        // Generate QR code
-        $qrCodeFilename = $this->qrCodeService->generateDCDQRCode($user);
-        $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
+    // Generate QR code (returns storage filename)
+    $qrCodeFilename = $this->qrCodeService->generateDCDQRCode($user);
+    $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
 
-        // Update user with QR code
-        $user->update(['qr_code' => $qrCodeUrl]);
+    // Update user with QR code filename (store the filename, not the external URL)
+    $user->update(['qr_code' => $qrCodeFilename]);
 
         // Create referral record if referrer exists
         if ($referrer) {
@@ -183,7 +183,8 @@ class DcdController extends Controller
             'referrer_id' => $referrer ? $referrer->id : null,
             'referrer_name' => $referrer ? $referrer->name : 'None'
         ]);
-        Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer));
+    // Pass the generated QR filename to the mailable so it can be attached
+    Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer, $qrCodeFilename));
 
         // Send admin notification email to all admin users
         $adminUsers = User::where('role', 'admin')->get();
