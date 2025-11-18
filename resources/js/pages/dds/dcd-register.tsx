@@ -115,6 +115,9 @@ export default function DcdRegister() {
         terms: false,
     });
 
+    // Determine the app base URL from Vite env or window origin as fallback
+    const APP_URL = import.meta.env.VITE_APP_URL ?? import.meta.env.VITE_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
+
 
 
     // Fetch countries on component mount
@@ -885,7 +888,7 @@ export default function DcdRegister() {
                     });
                     // Redirect to welcome page after success
                     setTimeout(() => {
-                        window.location.href = 'http://127.0.0.1:8000/dcd/register?started=true';
+                        window.location.href = `${APP_URL}/dcd/register?started=true`;
                     }, 3000);
                 } else {
                     console.log('DCD registration error:', result);
