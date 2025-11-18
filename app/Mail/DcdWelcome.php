@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 class DcdWelcome extends Mailable
@@ -16,15 +17,28 @@ class DcdWelcome extends Mailable
     public $user;
     public $referrer;
     public $qrCodeUrl;
+    public $qrCodeFilename;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $referrer)
+    public function __construct($user, $referrer, $qrCodeFilename = null)
     {
         $this->user = $user;
         $this->referrer = $referrer;
-        $this->qrCodeUrl = $user->qr_code ? \Storage::disk('public')->url($user->qr_code) : null;
+        // Accept a provided filename or fallback to what's stored on the user
+        $this->qrCodeFilename = $qrCodeFilename ?? $user->qr_code;
+        $this->qrCodeUrl = $this->qrCodeFilename ? \Storage::disk('public')->url($this->qrCodeFilename) : null;
+
+        // Attach the QR code file from the public disk so recipients can download it
+        if ($this->qrCodeFilename && \Storage::disk('public')->exists($this->qrCodeFilename)) {
+            try {
+                $this->attachFromStorageDisk('public', $this->qrCodeFilename, basename($this->qrCodeFilename), ['mime' => 'image/svg+xml']);
+            } catch (\Exception $e) {
+                // No-op: don't block sending email if attaching fails
+                \Log::warning('Failed to attach QR code to welcome email: ' . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -55,6 +69,20 @@ class DcdWelcome extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        if (! $this->qrCodeFilename) {
+            return [];
+        }
+
+        // Ensure the file exists in storage before attaching
+        if (! \Storage::disk('public')->exists($this->qrCodeFilename)) {
+            return [];
+        }
+
+        // Attach the QR code from the public disk (storage/app/public)
+        return [
+            Attachment::fromStorageDisk('public', $this->qrCodeFilename)
+                ->as(basename($this->qrCodeFilename))
+                ->withMime('image/svg+xml'),
+        ];
     }
 }
