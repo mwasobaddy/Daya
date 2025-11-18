@@ -26,9 +26,14 @@
 
             <div class="qr-code">
                 @if($qrCodeUrl)
-                    <img src="{{ $qrCodeUrl }}" alt="Your QR Code" style="max-width: 200px;" />
+                    <p>Your QR code is attached to this email for download (recommended).</p>
+                    <p style="margin-top: 8px;"><a href="{{ $qrCodeUrl }}" target="_blank" rel="noopener noreferrer">Download QR Code</a></p>
+                    {{-- Inline rendering retained when the storage URL is accessible — some mail clients block external images. --}}
+                    <div style="margin-top: 8px;">
+                        <img src="{{ $qrCodeUrl }}" alt="Your QR Code" style="max-width: 200px; display:block; margin: 8px auto;" />
+                    </div>
                 @else
-                    <p>QR Code will be generated shortly.</p>
+                    <p>QR Code will be generated shortly and provided as an attachment.</p>
                 @endif
             </div>
 
