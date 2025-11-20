@@ -31,6 +31,9 @@ class User extends Authenticatable
         'profile',
         'phone',
         'national_id',
+        'country_id',
+        'county_id',
+        'subcounty_id',
         'ward_id',
         'business_name',
         'account_type',
@@ -102,5 +105,20 @@ class User extends Authenticatable
     public function ward()
     {
         return $this->belongsTo(Ward::class);
+    }
+
+    public function subcounty()
+    {
+        return $this->belongsTo(Subcounty::class);
+    }
+
+    public function county()
+    {
+        return $this->belongsTo(County::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 }
