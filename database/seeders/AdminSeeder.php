@@ -14,41 +14,63 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // Update existing user or create new admin
-        $admin = User::where('email', 'kelvinramsiel@gmail.com')->first();
-
-        if ($admin) {
-            // Update existing user to admin role
-            $admin->update([
-                'role' => 'admin',
-                'wallet_status' => 'activated',
-                'profile' => array_merge($admin->profile ?? [], [
-                    'title' => 'System Administrator',
-                    'department' => 'IT',
-                    'permissions' => ['all'],
-                    'updated_by' => 'seeder',
-                    'updated_at' => now(),
-                ]),
-            ]);
-        } else {
-            // Create new admin user
-            User::create([
+        // Admin users to create/update
+        $admins = [
+            [
                 'name' => 'Kelvin Ramsiel',
                 'email' => 'kelvinramsiel@gmail.com',
-                'password' => Hash::make('password123'), // You should change this to a secure password
-                'role' => 'admin',
                 'phone' => '+1234567890',
                 'referral_code' => '7a3H4P',
-                'ward_id' => 1, // Default to first ward
-                'email_verified_at' => now(),
-                'wallet_status' => 'activated',
-                'profile' => [
-                    'title' => 'System Administrator',
-                    'department' => 'IT',
-                    'permissions' => ['all'],
-                    'created_by' => 'system',
-                ],
-            ]);
+                'title' => 'System Administrator',
+                'department' => 'IT',
+            ],
+            [
+                'name' => 'Akinola Dixon',
+                'email' => 'akinola.dixon@gmail.com',
+                'phone' => '+1234567891',
+                'referral_code' => '8b4I5Q',
+                'title' => 'System Administrator',
+                'department' => 'Operations',
+            ],
+        ];
+
+        foreach ($admins as $adminData) {
+            // Update existing user or create new admin
+            $admin = User::where('email', $adminData['email'])->first();
+
+            if ($admin) {
+                // Update existing user to admin role
+                $admin->update([
+                    'role' => 'admin',
+                    'wallet_status' => 'activated',
+                    'profile' => array_merge($admin->profile ?? [], [
+                        'title' => $adminData['title'],
+                        'department' => $adminData['department'],
+                        'permissions' => ['all'],
+                        'updated_by' => 'seeder',
+                        'updated_at' => now(),
+                    ]),
+                ]);
+            } else {
+                // Create new admin user
+                User::create([
+                    'name' => $adminData['name'],
+                    'email' => $adminData['email'],
+                    'password' => Hash::make('password123'), // You should change this to a secure password
+                    'role' => 'admin',
+                    'phone' => $adminData['phone'],
+                    'referral_code' => $adminData['referral_code'],
+                    'ward_id' => 1, // Default to first ward
+                    'email_verified_at' => now(),
+                    'wallet_status' => 'activated',
+                    'profile' => [
+                        'title' => $adminData['title'],
+                        'department' => $adminData['department'],
+                        'permissions' => ['all'],
+                        'created_by' => 'system',
+                    ],
+                ]);
+            }
         }
     }
 }
