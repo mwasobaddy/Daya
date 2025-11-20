@@ -1,55 +1,50 @@
-##############################################################
-# Laravel root .htaccess for shared hosts (e.g. Hostinger)
-#
-# Purpose:
-#  - When the webserver document root cannot be set to `public/`:
-#    rewrite incoming requests to /public/ (internal rewrite, not redirect)
-#  - Deny direct access to non-public/sensitive folders and files
-#  - Set DirectoryIndex to `public/index.php`
-#
-# Note: For best security and performance, set the web server's document
-# root to the `public/` directory. The rules in this file are a safety net
-# for shared environments and will help keep your app secure when you cannot change
-# the document root.
-##############################################################
-
-# Don't list directory contents
-Options -Indexes
-
-# Prevent access to files starting with a dot (e.g. .env, .git)
-<IfModule mod_authz_core.c>
-    <FilesMatch "^\.|^.*\.(env|json|lock|sql|md|yml|yaml)$">
-        Require all denied
-    </FilesMatch>
-</IfModule>
-<IfModule !mod_authz_core.c>
-    <FilesMatch "^\.|^.*\.(env|json|lock|sql|md|yml|yaml)$">
-        Order allow,deny
-        Deny from all
-    </FilesMatch>
-</IfModule>
-
-# Protect some folders which should only be accessible from the server
-RedirectMatch 404 ^/(app|bootstrap|config|database|routes|resources|storage|tests|vendor)(/|$)
-
-# Make sure index points to public/index.php
-<IfModule mod_dir.c>
-    DirectoryIndex public/index.php index.php
-</IfModule>
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # If request is already for the public folder, do nothing
-    RewriteCond %{REQUEST_URI} !^/public/
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # If requested resource exists under root, let it be served
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Handle PHP files in root (for compatibility)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/index.php [L]
 
-    # Internally rewrite all requests to the public folder where Laravel's
-    # front controller (public/index.php) will handle them.
-    RewriteRule ^(.*)$ public/$1 [L,NC,QSA]
+    # Serve static assets from public/build if they exist
+    RewriteCond %{REQUEST_URI} ^/build/
+    RewriteCond %{DOCUMENT_ROOT}/public/build/%{REQUEST_FILENAME} -f
+    RewriteRule ^build/(.*)$ public/build/$1 [L]
+
+    # Serve other static assets from public directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-# End of .htaccess
+# Security headers for Hostinger
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP settings for Hostinger
+<IfModule mod_php.c>
+    php_value upload_max_filesize 50M
+    php_value post_max_size 50M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+</IfModule>
