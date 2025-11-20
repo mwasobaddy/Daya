@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,18 @@ interface Ward {
     id: number;
     name: string;
     subcounty_id: number;
+}
+
+interface LocationData {
+    countryName?: string;
+    country?: string;
+    countyName?: string;
+    county?: string;
+    subcountyName?: string;
+    subcounty?: string;
+    wardName?: string;
+    ward?: string;
+    [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 type Step = 'personal' | 'business' | 'preferences' | 'account';
@@ -176,7 +188,7 @@ export default function DcdRegister() {
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.email]);
+    }, [data.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Validate national ID uniqueness when it changes
     useEffect(() => {
@@ -185,7 +197,7 @@ export default function DcdRegister() {
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.national_id]);
+    }, [data.national_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Validate phone uniqueness when it changes
     useEffect(() => {
@@ -194,7 +206,7 @@ export default function DcdRegister() {
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.phone]);
+    }, [data.phone]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Update labels based on selected country
     const updateLabels = (countryValue: string) => {
@@ -310,7 +322,7 @@ export default function DcdRegister() {
                 setReferralValid(false);
                 setReferralMessage(result.message || 'Invalid referral code');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setReferralValid(false);
             setReferralMessage('Failed to validate referral code');
         } finally {
@@ -345,7 +357,7 @@ export default function DcdRegister() {
                 setEmailValid(false);
                 setEmailMessage(result.message || 'This email address is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setEmailValid(false);
             setEmailMessage('Failed to validate email address');
         } finally {
@@ -380,7 +392,7 @@ export default function DcdRegister() {
                 setNationalIdValid(false);
                 setNationalIdMessage(result.message || 'This National ID is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setNationalIdValid(false);
             setNationalIdMessage('Failed to validate National ID');
         } finally {
@@ -415,7 +427,7 @@ export default function DcdRegister() {
                 setPhoneValid(false);
                 setPhoneMessage(result.message || 'This phone number is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setPhoneValid(false);
             setPhoneMessage('Failed to validate phone number');
         } finally {
@@ -423,7 +435,7 @@ export default function DcdRegister() {
         }
     };
 
-    const autoFillLocation = async (locationData: any) => {
+    const autoFillLocation = async (locationData: LocationData) => {
         console.log('Auto-filling location with data:', locationData);
         console.log('Full location data structure:', JSON.stringify(locationData, null, 2));
 
@@ -649,7 +661,7 @@ export default function DcdRegister() {
         }
     };
 
-    const updateData = (field: string, value: any) => {
+    const updateData = (field: string, value: string | string[] | boolean) => {
         console.log(`Updating field ${field} with value:`, value, typeof value);
         setData(prev => ({ ...prev, [field]: value }));
         clearFieldError(field);
@@ -782,7 +794,7 @@ export default function DcdRegister() {
         }
     };
 
-    const handleRegistrationError = (errors: any) => {
+    const handleRegistrationError = (errors: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.log('DCD registration error details:', errors);
 
         // Check if errors is an object with field-specific errors

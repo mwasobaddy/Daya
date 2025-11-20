@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
-import { CheckCircle, Loader2, Shield, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Phone, Mail, Calendar, Globe, Building2, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
@@ -49,7 +49,7 @@ interface Ward {
 
 type Step = 'personal' | 'social' | 'account';
 
-export default function DaRegister({ flash }: { flash?: { success?: string; error?: string } }) {
+export default function DaRegister() {
     // Initialize showForm based on URL parameters
     const getInitialShowForm = () => {
         if (typeof window !== 'undefined') {
@@ -88,7 +88,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
     const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
     const [phoneMessage, setPhoneMessage] = useState('');
 
-    const { data, setData, post, errors, reset, clearErrors, setError } = useForm({
+    const { data, setData, errors, reset, clearErrors, setError } = useForm({
         referral_code: '',
         full_name: '',
         national_id: '',
@@ -182,7 +182,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 if (hasStartedParam && !locationPermissionGranted && countries.length > 0) {
                     try {
                         await requestLocationPermission();
-                    } catch (error) {
+                    } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
                         // If location permission is denied, redirect back to landing page
                         window.location.href = '/da/register';
                     }
@@ -191,7 +191,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         };
 
         checkLocationPermission();
-    }, [locationPermissionGranted, countries]);
+    }, [locationPermissionGranted, countries]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Extract referral code from URL parameters or fetch admin's code
     useEffect(() => {
@@ -237,7 +237,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.email]);
+    }, [data.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Validate national ID uniqueness when it changes
     useEffect(() => {
@@ -246,7 +246,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.national_id]);
+    }, [data.national_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Validate phone uniqueness when it changes
     useEffect(() => {
@@ -255,7 +255,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.phone]);
+    }, [data.phone]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handlePlatformChange = (platform: string, checked: boolean | "indeterminate") => {
         const isChecked = checked === true;
@@ -346,7 +346,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 setReferralValid(false);
                 setReferralMessage(result.message || 'Invalid referral code');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setReferralValid(false);
             setReferralMessage('Failed to validate referral code');
         } finally {
@@ -381,7 +381,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 setEmailValid(false);
                 setEmailMessage(result.message || 'This email address is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setEmailValid(false);
             setEmailMessage('Failed to validate email address');
         } finally {
@@ -416,7 +416,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 setNationalIdValid(false);
                 setNationalIdMessage(result.message || 'This National ID is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setNationalIdValid(false);
             setNationalIdMessage('Failed to validate National ID');
         } finally {
@@ -451,7 +451,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
                 setPhoneValid(false);
                 setPhoneMessage(result.message || 'This phone number is already registered');
             }
-        } catch (error) {
+        } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
             setPhoneValid(false);
             setPhoneMessage('Failed to validate phone number');
         } finally {
@@ -459,7 +459,19 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }
     };
 
-    const autoFillLocation = async (locationData: any) => {
+interface LocationData {
+    countryName?: string;
+    country?: string;
+    countyName?: string;
+    county?: string;
+    subcountyName?: string;
+    subcounty?: string;
+    wardName?: string;
+    ward?: string;
+    [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+}
+
+    const autoFillLocation = async (locationData: LocationData) => {
         console.log('Auto-filling location with data:', locationData);
         console.log('Full location data structure:', JSON.stringify(locationData, null, 2));
 
@@ -671,8 +683,8 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }
     };
 
-    const updateData = (field: string, value: any) => {
-        setData(field as any, value);
+    const updateData = (field: string, value: string | string[] | boolean) => {
+        setData(field as keyof typeof data, value);
         clearFieldError(field);
     };
 
@@ -806,7 +818,7 @@ export default function DaRegister({ flash }: { flash?: { success?: string; erro
         }
     };
 
-    const handleRegistrationError = (errors: any) => {
+    const handleRegistrationError = (errors: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.log('Registration error details:', errors);
 
         // Check if this is actually a successful response coming through onError

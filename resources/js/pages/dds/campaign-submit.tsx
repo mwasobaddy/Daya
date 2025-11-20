@@ -8,10 +8,10 @@ import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, Shield, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church } from 'lucide-react';
+import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 
@@ -98,7 +98,7 @@ export default function CampaignSubmit({ flash }: Props) {
         };
 
         extractReferralCode();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchCountys = async (countryId: number) => {
         setCountysLoading(true);
@@ -181,7 +181,7 @@ export default function CampaignSubmit({ flash }: Props) {
                 setReferralValid(false);
                 setReferralMessage(result.message || 'Invalid referral code');
             }
-        } catch (error) {
+        } catch {
             setReferralValid(false);
             setReferralMessage('Failed to validate referral code');
         } finally {
@@ -340,18 +340,7 @@ export default function CampaignSubmit({ flash }: Props) {
                 setError('target_country', 'Target country is required');
                 hasErrors = true;
             }
-            if (!data.target_county) {
-                setError('target_county', 'Target county is required');
-                hasErrors = true;
-            }
-            if (!data.target_subcounty) {
-                setError('target_subcounty', 'Target sub-county is required');
-                hasErrors = true;
-            }
-            if (!data.target_ward) {
-                setError('target_ward', 'Target ward is required');
-                hasErrors = true;
-            }
+            // County, subcounty, and ward are now optional
             if (data.business_types.length === 0) {
                 setError('business_types', 'Please select at least one business type');
                 hasErrors = true;
@@ -385,8 +374,8 @@ export default function CampaignSubmit({ flash }: Props) {
         }
     };
 
-    const updateData = (field: string, value: any) => {
-        setData(field as any, value);
+    const updateData = (field: string, value: string | string[]) => {
+        setData(field as keyof typeof data, value);
         clearFieldError(field);
     };
 
@@ -545,6 +534,20 @@ export default function CampaignSubmit({ flash }: Props) {
             }
         } else {
             setData('business_types', current.filter((t: string) => t !== value));
+        }
+        clearFieldError('business_types');
+    };
+
+    const handleSelectAllBusinessTypes = () => {
+        const allTypes = businessCategories.flatMap(cat => cat.types);
+        const isAllSelected = allTypes.every(type => data.business_types.includes(type));
+        
+        if (isAllSelected) {
+            // Deselect all
+            setData('business_types', []);
+        } else {
+            // Select all
+            setData('business_types', allTypes);
         }
         clearFieldError('business_types');
     };
@@ -975,7 +978,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_county" className="text-xs text-gray-600 mb-1.5 block">{countyLabel}</Label>
+                                        <Label htmlFor="target_county" className="text-xs text-gray-600 mb-1.5 block">{countyLabel} (Optional)</Label>
                                         <Select
                                             value={data.target_county}
                                             onValueChange={(value) => {
@@ -1004,7 +1007,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_subcounty" className="text-xs text-gray-600 mb-1.5 block">{subcountyLabel}</Label>
+                                        <Label htmlFor="target_subcounty" className="text-xs text-gray-600 mb-1.5 block">{subcountyLabel} (Optional)</Label>
                                         <Select
                                             value={data.target_subcounty}
                                             onValueChange={(value) => {
@@ -1031,7 +1034,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_ward" className="text-xs text-gray-600 mb-1.5 block">Ward</Label>
+                                        <Label htmlFor="target_ward" className="text-xs text-gray-600 mb-1.5 block">Ward (Optional)</Label>
                                         <Select
                                             value={data.target_ward}
                                             onValueChange={(value) => setData('target_ward', value)}
@@ -1051,15 +1054,26 @@ export default function CampaignSubmit({ flash }: Props) {
                                     </div>
                                 </div>
                                 <InputError message={errors.target_country} />
-                                <InputError message={errors.target_county} />
-                                <InputError message={errors.target_subcounty} />
-                                <InputError message={errors.target_ward} />
+                                {/* County, subcounty, and ward errors removed as they are now optional */}
                             </div>
 
                             <div className="text-sm font-medium mb-2 block">
                                 <Label className="text-sm font-medium mb-2 block">
                                     Business Type Targeting <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
+                                <div className="flex justify-end mb-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleSelectAllBusinessTypes}
+                                        className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-600 dark:hover:bg-orange-900/20"
+                                    >
+                                        {businessCategories.flatMap(cat => cat.types).every(type => data.business_types.includes(type)) 
+                                            ? 'Deselect All' 
+                                            : 'Select All'}
+                                    </Button>
+                                </div>
                                 <div className="max-h-96 overflow-y-auto">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4 bg-orange-50 dark:bg-slate-800 border-orange-200 dark:border-orange-600">
                                         {businessCategories.map((cat) => (
