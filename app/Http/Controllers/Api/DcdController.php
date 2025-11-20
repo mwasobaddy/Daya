@@ -97,6 +97,17 @@ class DcdController extends Controller
             \Log::info('No referral code provided');
         }
 
+        // Get ward and populate location hierarchy
+        $ward = \App\Models\Ward::with('subcounty.county.country')->find($request->ward_id);
+        if (!$ward) {
+            return response()->json(['message' => 'Invalid ward selected'], 422);
+        }
+
+        // Generate unique referral code for new DCD
+        do {
+            $referralCode = Str::upper(Str::random(8));
+        } while (User::where('referral_code', $referralCode)->exists());
+
         // Create the user with comprehensive profile data
         $user = User::create([
             'name' => $request->full_name,
@@ -105,11 +116,14 @@ class DcdController extends Controller
             'role' => 'dcd',
             'national_id' => $request->national_id,
             'phone' => $request->phone,
+            'country_id' => $ward->subcounty->county->country->id,
+            'county_id' => $ward->subcounty->county->id,
+            'subcounty_id' => $ward->subcounty->id,
             'ward_id' => $request->ward_id,
             'wallet_pin' => bcrypt($request->wallet_pin),
             'wallet_type' => $request->wallet_type,
             'wallet_status' => 'active',
-            'referral_code' => Str::upper(Str::random(8)), // Generate referral code for this DCD
+            'referral_code' => $referralCode, // Generate referral code for this DCD
             'profile' => [
                 // Personal Information
                 'full_name' => $request->full_name,
@@ -185,6 +199,13 @@ class DcdController extends Controller
         ]);
     // Pass the generated QR filename to the mailable so it can be attached
     Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer, $qrCodeFilename));
+
+    // Send wallet creation notification
+    try {
+        Mail::to($user->email)->send(new \App\Mail\WalletCreated($user));
+    } catch (\Exception $e) {
+        \Log::warning('Failed to send wallet creation email to DCD: ' . $e->getMessage());
+    }
 
         // Send admin notification email to all admin users
         $adminUsers = User::where('role', 'admin')->get();

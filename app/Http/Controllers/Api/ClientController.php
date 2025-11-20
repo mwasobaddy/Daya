@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Campaign;
+use App\Models\Country;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Mail;
 
 class ClientController extends Controller
@@ -53,9 +55,9 @@ class ClientController extends Controller
                 'content_safety_preferences' => 'required|array|min:1',
                 'content_safety_preferences.*' => 'string|in:kids,teen,adult,no_restrictions',
                 'target_country' => 'required|string|max:10',
-                'target_county' => 'required|string|max:50',
-                'target_subcounty' => 'required|string|max:50',
-                'target_ward' => 'required|string|max:50',
+                'target_county' => 'nullable|string|max:50',
+                'target_subcounty' => 'nullable|string|max:50',
+                'target_ward' => 'nullable|string|max:50',
                 'business_types' => 'required|array|min:1',
                 'business_types.*' => 'string|max:50',
                 'start_date' => 'required|date|after_or_equal:today',
@@ -99,9 +101,29 @@ class ClientController extends Controller
                     'business_name' => $request->business_name,
                     'account_type' => $request->account_type,
                     'referral_code' => $request->referral_code,
-                    'ward_id' => $request->target_ward, // Update ward_id
+                    'country_id' => $request->target_country ? \App\Models\Country::where('code', strtoupper($request->target_country))->first()?->id : null,
+                    'county_id' => $request->target_county,
+                    'subcounty_id' => $request->target_subcounty,
+                    'ward_id' => $request->target_ward, // Update ward_id (nullable)
                 ]);
             } else {
+                // Generate unique referral code for new client
+                $referralCode = null;
+                if ($request->referral_code) {
+                    // Use provided code if it's unique
+                    $existingCode = User::where('referral_code', strtoupper($request->referral_code))->first();
+                    if (!$existingCode) {
+                        $referralCode = strtoupper($request->referral_code);
+                    }
+                }
+                
+                // If no valid code provided, generate a unique one
+                if (!$referralCode) {
+                    do {
+                        $referralCode = Str::upper(Str::random(8));
+                    } while (User::where('referral_code', $referralCode)->exists());
+                }
+
                 // Create new client user
                 $client = User::create([
                     'name' => $request->name,
@@ -111,8 +133,11 @@ class ClientController extends Controller
                     'country' => $request->country,
                     'business_name' => $request->business_name,
                     'account_type' => $request->account_type,
-                    'referral_code' => $request->referral_code,
-                    'ward_id' => $request->target_ward, // Convert target_ward to ward_id
+                    'referral_code' => $referralCode,
+                    'country_id' => $request->target_country ? \App\Models\Country::where('code', strtoupper($request->target_country))->first()?->id : null,
+                    'county_id' => $request->target_county,
+                    'subcounty_id' => $request->target_subcounty,
+                    'ward_id' => $request->target_ward, // Convert target_ward to ward_id (nullable)
                     'password' => bcrypt('temporary_password_' . time()), // Temporary password for client accounts
                 ]);
             }
