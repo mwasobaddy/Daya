@@ -28,6 +28,7 @@ class DaController extends Controller
 
             $request->validate([
                 'referral_code' => 'nullable|string|regex:/^[A-Za-z0-9]{6,8}$/',
+                'referrer_id' => 'nullable|exists:users,id',
                 'full_name' => 'required|string|max:255',
                 'national_id' => 'required|string|unique:users,national_id',
                 'dob' => 'required|date|before:today',
@@ -51,12 +52,12 @@ class DaController extends Controller
 
             \Log::info('Validation passed, proceeding with user creation');
 
-            // Find the referrer (if referral code provided and valid)
+            // Find the referrer (if referral code provided and valid, or referrer_id provided)
             $referrer = null;
             if ($request->referral_code && strlen($request->referral_code) >= 6) {
                 $referrer = User::where('referral_code', strtoupper($request->referral_code))->first();
                 if ($referrer) {
-                    \Log::info('Referrer found', [
+                    \Log::info('Referrer found by referral code', [
                         'referral_code' => $request->referral_code,
                         'referrer_id' => $referrer->id,
                         'referrer_name' => $referrer->name,
@@ -67,10 +68,23 @@ class DaController extends Controller
                         'referral_code' => $request->referral_code
                     ]);
                 }
+            } elseif ($request->referrer_id) {
+                $referrer = User::find($request->referrer_id);
+                if ($referrer) {
+                    \Log::info('Referrer found by ID', [
+                        'referrer_id' => $referrer->id,
+                        'referrer_name' => $referrer->name,
+                        'referrer_role' => $referrer->role
+                    ]);
+                } else {
+                    \Log::warning('Referrer ID provided but no referrer found', [
+                        'referrer_id' => $request->referrer_id
+                    ]);
+                }
             } else {
-                \Log::info('No referral code provided or invalid length', [
+                \Log::info('No referral code or referrer ID provided', [
                     'referral_code' => $request->referral_code,
-                    'length' => $request->referral_code ? strlen($request->referral_code) : 0
+                    'referrer_id' => $request->referrer_id
                 ]);
             }
 
@@ -145,10 +159,16 @@ class DaController extends Controller
 
             // Create referral record if referrer exists
             if ($referrer) {
+                $referralType = match($referrer->role) {
+                    'admin' => 'admin_to_da',
+                    'da' => 'da_to_da',
+                    default => 'user_to_da'
+                };
+                
                 $referral = \App\Models\Referral::create([
                     'referrer_id' => $referrer->id,
                     'referred_id' => $user->id,
-                    'type' => 'admin_to_da', // or whatever type based on referrer role
+                    'type' => $referralType,
                 ]);
 
                 // Allocate venture shares for the referral
