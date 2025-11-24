@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
-test('generate dcd campaign qr returns stored filename', function () {
+test('generate dcd campaign qr returns base64 pdf content', function () {
     Storage::fake('public');
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
@@ -35,7 +35,8 @@ test('generate dcd campaign qr returns stored filename', function () {
     ]);
 
     $svc = app(QRCodeService::class);
-    $filename = $svc->generateDcdCampaignQr($dcd, $campaign);
+    $base64Content = $svc->generateDcdCampaignQr($dcd, $campaign);
 
-    Storage::disk('public')->assertExists($filename);
+    expect($base64Content)->toBeString();
+    expect(strpos($base64Content, 'JVBERi0x'))->toBe(0); // PDF header in base64
 });

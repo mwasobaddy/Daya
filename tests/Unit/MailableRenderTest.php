@@ -65,15 +65,17 @@ test('dcd welcome mailable renders and attaches qr code', function () {
     $referrer = User::factory()->create(['role' => 'da', 'ward_id' => $ward->id]);
     $dcd = User::factory()->create(['role' => 'dcd', 'ward_id' => $ward->id]);
 
-    // create sample svg file in public disk
-    Storage::disk('public')->put('qr-codes/test-dcd.svg', '<svg><rect width="50" height="50" /></svg>');
-    // Set user to reference filename
-    $dcd->qr_code = 'qr-codes/test-dcd.svg';
+    // Create fake base64 PDF content
+    $fakePdfBase64 = base64_encode('%PDF-1.4 fake pdf content');
+    $dcd->qr_code = $fakePdfBase64;
     $dcd->save();
 
-    $mailable = new DcdWelcome($dcd, $referrer, 'qr-codes/test-dcd.svg');
+    $mailable = new DcdWelcome($dcd, $referrer, $fakePdfBase64);
     $html = $mailable->render();
 
     expect($html)->toContain('Your QR Code');
-    $mailable->assertHasAttachmentFromStorageDisk('public', 'qr-codes/test-dcd.svg', null, ['mime' => 'image/svg+xml']);
+    
+    $attachments = $mailable->attachments();
+    expect($attachments)->toHaveCount(1);
+    expect($attachments[0]->as)->toBe('qr-code.pdf');
 });
