@@ -172,12 +172,11 @@ class DcdController extends Controller
         }
         \Log::info('User verified in database', ['user_id' => $savedUser->id]);
 
-    // Generate QR code (returns storage filename)
-    $qrCodeFilename = $this->qrCodeService->generateDCDQRCode($user);
-    $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
+        // Generate QR code (returns base64 PDF)
+        $qrCodeBase64 = $this->qrCodeService->generateDCDQRCode($user);
 
-    // Update user with QR code filename (store the filename, not the external URL)
-    $user->update(['qr_code' => $qrCodeFilename]);
+        // Update user with QR code base64
+        $user->update(['qr_code' => $qrCodeBase64]);
 
         // Create referral record if referrer exists
         if ($referrer) {
@@ -197,8 +196,7 @@ class DcdController extends Controller
             'referrer_id' => $referrer ? $referrer->id : null,
             'referrer_name' => $referrer ? $referrer->name : 'None'
         ]);
-    // Pass the generated QR filename to the mailable so it can be attached
-    Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer, $qrCodeFilename));
+        Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer, $qrCodeBase64));
 
     // Send wallet creation notification
     try {
@@ -221,7 +219,7 @@ class DcdController extends Controller
 
         return response()->json([
             'message' => 'DCD registered successfully',
-            'qr_code' => $qrCodeUrl,
+            'qr_code' => $qrCodeBase64,
             'user' => $user
         ]);
         } catch (\Exception $e) {

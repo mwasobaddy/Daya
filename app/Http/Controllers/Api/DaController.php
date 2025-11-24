@@ -150,12 +150,11 @@ class DaController extends Controller
             }
             \Log::info('User verified in database', ['user_id' => $savedUser->id]);
 
-            // Generate QR code
-            $qrCodeFilename = $this->qrCodeService->generateDAReferralQRCode($user);
-            $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
+            // Generate QR code (returns base64 PDF)
+            $qrCodeBase64 = $this->qrCodeService->generateDAReferralQRCode($user);
 
-            // Update user with QR code
-            $user->update(['qr_code' => $qrCodeUrl]);
+            // Update user with QR code base64
+            $user->update(['qr_code' => $qrCodeBase64]);
 
             // Create referral record if referrer exists
             if ($referrer) {
@@ -204,7 +203,7 @@ class DaController extends Controller
 
             return response()->json([
                 'message' => 'DA registered successfully',
-                'qr_code' => $qrCodeUrl,
+                'qr_code' => $qrCodeBase64,
                 'user' => $user
             ]);
         } catch (\Exception $e) {
