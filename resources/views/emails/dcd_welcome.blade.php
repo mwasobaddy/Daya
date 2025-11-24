@@ -25,16 +25,8 @@
             <p>Here's your unique QR code for campaign scanning:</p>
 
             <div class="qr-code">
-                @if($qrCodeUrl)
-                    <p>Your QR code is attached to this email for download (recommended).</p>
-                    <p style="margin-top: 8px;"><a href="{{ $qrCodeUrl }}" target="_blank" rel="noopener noreferrer">Download QR Code</a></p>
-                    {{-- Inline rendering retained when the storage URL is accessible — some mail clients block external images. --}}
-                    <div style="margin-top: 8px;">
-                        <img src="{{ $qrCodeUrl }}" alt="Your QR Code" style="max-width: 200px; display:block; margin: 8px auto;" />
-                    </div>
-                @else
-                    <p>QR Code will be generated shortly and provided as an attachment.</p>
-                @endif
+                <p>Your QR code is attached to this email as a PDF file for download.</p>
+                <p>You can use this QR code to allow clients to submit campaigns by scanning it.</p>
             </div>
 
             <h3>How to Earn</h3>
