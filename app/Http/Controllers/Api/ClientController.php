@@ -42,6 +42,7 @@ class ClientController extends Controller
 
                 'country' => 'required|string|max:10',
                 'referral_code' => 'nullable|string|max:50',
+                'dcd_id' => 'nullable|integer|exists:users,id', // For QR code scans
 
                 // Campaign Information
                 'campaign_title' => 'required|string|max:255',
@@ -183,10 +184,21 @@ class ClientController extends Controller
                 $contentSafety = 'mature_audience';
             }
 
+            // Determine DCD assignment - either from QR scan or admin assignment later
+            $dcdId = null;
+            if ($request->dcd_id) {
+                // Verify the DCD exists and is active
+                $dcd = User::where('id', $request->dcd_id)->where('role', 'dcd')->first();
+                if ($dcd) {
+                    $dcdId = $dcd->id;
+                    \Log::info('Campaign assigned to DCD from QR scan', ['dcd_id' => $dcdId, 'dcd_name' => $dcd->name]);
+                }
+            }
+
             // Create campaign with enhanced details
             $campaign = Campaign::create([
                 'client_id' => $client->id,
-                'dcd_id' => null, // Will be assigned later by admin
+                'dcd_id' => $dcdId, // From QR scan or null for admin assignment
                 'title' => $request->campaign_title,
                 'description' => $request->description,
                 'budget' => $request->budget,

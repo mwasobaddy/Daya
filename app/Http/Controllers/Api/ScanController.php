@@ -22,7 +22,7 @@ class ScanController extends Controller
     public function recordScan(Request $request)
     {
         $request->validate([
-            'dcd_qr_code' => 'required|string',
+            'dcd_id' => 'required|integer|exists:users,id',
         ]);
 
         try {
@@ -37,7 +37,7 @@ class ScanController extends Controller
             }
 
             $scan = $this->qrCodeService->recordScan(
-                $request->dcd_qr_code,
+                $request->dcd_id,
                 $request->ip(),
                 $geoData
             );
