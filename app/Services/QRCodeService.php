@@ -9,6 +9,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class QRCodeService
 {
@@ -21,8 +22,8 @@ class QRCodeService
             throw new \InvalidArgumentException('User must be a DCD');
         }
 
-        // Create QR code data - URL that clients can scan
-        $qrData = route('dds.campaign.submit') . '?dcd_qr=' . urlencode($user->qr_code);
+        // Create QR code data - URL that clients can scan using DCD ID
+        $qrData = route('dds.campaign.submit') . '?dcd_id=' . $user->id;
 
         // Generate SVG QR code
         $renderer = new ImageRenderer(
@@ -32,21 +33,25 @@ class QRCodeService
         $writer = new Writer($renderer);
         $svgContent = $writer->writeString($qrData);
 
-        // Generate unique filename
-        $filename = 'qr-codes/' . $user->id . '_' . time() . '.svg';
+        // Create HTML template with QR code
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
 
-        // Store the QR code
-        Storage::disk('public')->put($filename, $svgContent);
+        // Generate PDF
+        $pdf = Pdf::loadHTML($html);
+        $pdfContent = $pdf->output();
 
-        // Update user with QR code path
-        $user->update(['qr_code' => $filename]);
+        // Base64 encode the PDF
+        $base64Pdf = base64_encode($pdfContent);
 
-        return $filename;
+        // Update user with base64-encoded PDF
+        $user->update(['qr_code' => $base64Pdf]);
+
+        return $base64Pdf;
     }
 
     /**
      * Generate a campaign-specific QR code for a DCD and campaign.
-     * Returns storage filename (relative to public disk).
+     * Returns base64-encoded PDF content.
      */
     public function generateDcdCampaignQr(User $dcd, \App\Models\Campaign $campaign): string
     {
@@ -67,11 +72,17 @@ class QRCodeService
         $writer = new Writer($renderer);
         $svgContent = $writer->writeString($qrData);
 
-        // Store file
-        $filename = 'qr-codes/dcd_' . $dcd->id . '_camp_' . $campaign->id . '_' . time() . '.svg';
-        Storage::disk('public')->put($filename, $svgContent);
+        // Create HTML template with QR code
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
 
-        return $filename;
+        // Generate PDF
+        $pdf = Pdf::loadHTML($html);
+        $pdfContent = $pdf->output();
+
+        // Base64 encode the PDF
+        $base64Pdf = base64_encode($pdfContent);
+
+        return $base64Pdf;
     }
 
     /**
@@ -104,6 +115,11 @@ class QRCodeService
             throw new \InvalidArgumentException('User must be a DA');
         }
 
+        // Ensure user has a referral code
+        if (!$user->referral_code) {
+            throw new \InvalidArgumentException('DA user must have a referral code');
+        }
+
         // Create QR code data - URL for DCD registration with referral code
         $qrData = route('dds.dcd.register') . '?ref=' . urlencode($user->referral_code);
 
@@ -115,24 +131,28 @@ class QRCodeService
         $writer = new Writer($renderer);
         $svgContent = $writer->writeString($qrData);
 
-        // Generate unique filename
-        $filename = 'qr-codes/da_' . $user->id . '_' . time() . '.svg';
+        // Create HTML template with QR code
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
 
-        // Store the QR code
-        Storage::disk('public')->put($filename, $svgContent);
+        // Generate PDF
+        $pdf = Pdf::loadHTML($html);
+        $pdfContent = $pdf->output();
 
-        return $filename;
+        // Base64 encode the PDF
+        $base64Pdf = base64_encode($pdfContent);
+
+        return $base64Pdf;
     }
 
     /**
      * Record a scan event
      */
-    public function recordScan(string $dcdQrCode, ?string $clientIp = null, ?array $geoData = null): Scan
+    public function recordScan(int $dcdId, ?string $clientIp = null, ?array $geoData = null): Scan
     {
-        $dcd = User::where('qr_code', $dcdQrCode)->where('role', 'dcd')->first();
+        $dcd = User::where('id', $dcdId)->where('role', 'dcd')->first();
 
         if (!$dcd) {
-            throw new \InvalidArgumentException('Invalid DCD QR code');
+            throw new \InvalidArgumentException('Invalid DCD ID');
         }
 
         return Scan::create([
