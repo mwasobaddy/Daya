@@ -16,16 +16,16 @@ class CampaignApproved extends Mailable
 
     public $campaign;
     public $client;
-    public $qrFilename;
+    public $qrCodeBase64;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($campaign, $client, $qrFilename = null)
+    public function __construct($campaign, $client, $qrCodeBase64 = null)
     {
         $this->campaign = $campaign;
         $this->client = $client;
-        $this->qrFilename = $qrFilename;
+        $this->qrCodeBase64 = $qrCodeBase64;
     }
 
     /**
@@ -56,8 +56,11 @@ class CampaignApproved extends Mailable
      */
     public function attachments(): array
     {
-        if ($this->qrFilename) {
-            return [Attachment::fromStorageDisk('public', $this->qrFilename)->as('campaign-qr.svg')];
+        if ($this->qrCodeBase64) {
+            return [
+                Attachment::fromData(base64_decode($this->qrCodeBase64), 'campaign-qr.pdf')
+                    ->withMime('application/pdf'),
+            ];
         }
         return [];
     }

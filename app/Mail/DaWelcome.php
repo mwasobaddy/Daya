@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 class DaWelcome extends Mailable
@@ -15,7 +16,7 @@ class DaWelcome extends Mailable
 
     public $user;
     public $referrer;
-    public $qrCodeUrl;
+    public $qrCodeBase64;
 
     /**
      * Create a new message instance.
@@ -24,7 +25,7 @@ class DaWelcome extends Mailable
     {
         $this->user = $user;
         $this->referrer = $referrer;
-        $this->qrCodeUrl = $user->qr_code ? \Storage::disk('public')->url($user->qr_code) : null;
+        $this->qrCodeBase64 = $user->qr_code;
     }
 
     /**
@@ -44,7 +45,7 @@ class DaWelcome extends Mailable
     {
         return new Content(
             view: 'emails.da_welcome',
-            with: ['user' => $this->user, 'referrer' => $this->referrer, 'qrCodeUrl' => $this->qrCodeUrl],
+            with: ['user' => $this->user, 'referrer' => $this->referrer],
         );
     }
 
@@ -55,6 +56,12 @@ class DaWelcome extends Mailable
      */
     public function attachments(): array
     {
+        if ($this->qrCodeBase64) {
+            return [
+                Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'referral-qr-code.pdf')
+                    ->withMime('application/pdf'),
+            ];
+        }
         return [];
     }
 }

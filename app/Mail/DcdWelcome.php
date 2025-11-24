@@ -16,29 +16,16 @@ class DcdWelcome extends Mailable
 
     public $user;
     public $referrer;
-    public $qrCodeUrl;
-    public $qrCodeFilename;
+    public $qrCodeBase64;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $referrer, $qrCodeFilename = null)
+    public function __construct($user, $referrer, $qrCodeBase64 = null)
     {
         $this->user = $user;
         $this->referrer = $referrer;
-        // Accept a provided filename or fallback to what's stored on the user
-        $this->qrCodeFilename = $qrCodeFilename ?? $user->qr_code;
-        $this->qrCodeUrl = $this->qrCodeFilename ? \Storage::disk('public')->url($this->qrCodeFilename) : null;
-
-        // Attach the QR code file from the public disk so recipients can download it
-        if ($this->qrCodeFilename && \Storage::disk('public')->exists($this->qrCodeFilename)) {
-            try {
-                $this->attachFromStorageDisk('public', $this->qrCodeFilename, basename($this->qrCodeFilename), ['mime' => 'image/svg+xml']);
-            } catch (\Exception $e) {
-                // No-op: don't block sending email if attaching fails
-                \Log::warning('Failed to attach QR code to welcome email: ' . $e->getMessage());
-            }
-        }
+        $this->qrCodeBase64 = $qrCodeBase64 ?? $user->qr_code;
     }
 
     /**
@@ -58,7 +45,7 @@ class DcdWelcome extends Mailable
     {
         return new Content(
             view: 'emails.dcd_welcome',
-            with: ['user' => $this->user, 'referrer' => $this->referrer, 'qrCodeUrl' => $this->qrCodeUrl],
+            with: ['user' => $this->user, 'referrer' => $this->referrer],
         );
     }
 
@@ -69,20 +56,12 @@ class DcdWelcome extends Mailable
      */
     public function attachments(): array
     {
-        if (! $this->qrCodeFilename) {
-            return [];
+        if ($this->qrCodeBase64) {
+            return [
+                Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'qr-code.pdf')
+                    ->withMime('application/pdf'),
+            ];
         }
-
-        // Ensure the file exists in storage before attaching
-        if (! \Storage::disk('public')->exists($this->qrCodeFilename)) {
-            return [];
-        }
-
-        // Attach the QR code from the public disk (storage/app/public)
-        return [
-            Attachment::fromStorageDisk('public', $this->qrCodeFilename)
-                ->as(basename($this->qrCodeFilename))
-                ->withMime('image/svg+xml'),
-        ];
+        return [];
     }
 }
