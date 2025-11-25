@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Scan;
+use App\Services\ScanRewardService;
 use Illuminate\Support\Facades\Storage;
 use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+// Image backends are unused — we use GDLibRenderer directly for PNG/JPEG
+use BaconQrCode\Renderer\GDLibRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Dompdf\Dompdf;
 
 class QRCodeService
 {
@@ -25,20 +27,21 @@ class QRCodeService
         // Create QR code data - URL that clients can scan using DCD ID
         $qrData = route('dds.campaign.submit') . '?dcd_id=' . $user->id;
 
-        // Generate SVG QR code
-        $renderer = new ImageRenderer(
-            new RendererStyle(400),
-            new SvgImageBackEnd()
-        );
+        // Generate PNG QR code
+        $renderer = new GDLibRenderer(200, 4, 'jpeg');
         $writer = new Writer($renderer);
-        $svgContent = $writer->writeString($qrData);
+        $pngContent = $writer->writeString($qrData);
 
-        // Create HTML template with QR code
-        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
+        // Embed PNG into HTML via data URI (avoid file path / chroot issues)
+        $b64Png = base64_encode($pngContent);
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body><img src="data:image/jpeg;base64,' . $b64Png . '" style="width:200px;height:200px;" /></body></html>';
 
         // Generate PDF
-        $pdf = Pdf::loadHTML($html);
-        $pdfContent = $pdf->output();
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdfContent = $dompdf->output();
 
         // Base64 encode the PDF
         $base64Pdf = base64_encode($pdfContent);
@@ -65,19 +68,20 @@ class QRCodeService
             'campaign' => $campaign->id,
         ]);
 
-        $renderer = new ImageRenderer(
-            new RendererStyle(400),
-            new SvgImageBackEnd()
-        );
+        $renderer = new GDLibRenderer(200, 4, 'jpeg');
         $writer = new Writer($renderer);
-        $svgContent = $writer->writeString($qrData);
+        $pngContent = $writer->writeString($qrData);
 
-        // Create HTML template with QR code
-        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
+        // Embed PNG into HTML via data URI (avoid file path / chroot issues)
+        $b64Png = base64_encode($pngContent);
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body><img src="data:image/jpeg;base64,' . $b64Png . '" style="width:200px;height:200px;" /></body></html>';
 
         // Generate PDF
-        $pdf = Pdf::loadHTML($html);
-        $pdfContent = $pdf->output();
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdfContent = $dompdf->output();
 
         // Base64 encode the PDF
         $base64Pdf = base64_encode($pdfContent);
@@ -98,13 +102,27 @@ class QRCodeService
             throw new \InvalidArgumentException('Campaign is not assigned to this DCD');
         }
 
-        return \App\Models\Scan::create([
+        $deviceFingerprint = $geoData['fingerprint'] ?? null;
+        $scan = \App\Models\Scan::create([
             'dcd_id' => $dcdId,
             'campaign_id' => $campaignId,
             'scanned_at' => now(),
             'geo' => $geoData,
+            'device_fingerprint' => $deviceFingerprint,
         ]);
+
+        // Use the ScanRewardService to credit and dedupe earnings
+        try {
+            $svc = app(ScanRewardService::class);
+            $svc->creditScanReward($scan);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to credit scan reward via ScanRewardService: ' . $e->getMessage());
+        }
+
+        return $scan;
     }
+
+    // Compute pay per scan was moved to ScanRewardService
 
     /**
      * Generate QR code for a DA's referral
@@ -123,20 +141,109 @@ class QRCodeService
         // Create QR code data - URL for DCD registration with referral code
         $qrData = route('dds.dcd.register') . '?ref=' . urlencode($user->referral_code);
 
-        // Generate SVG QR code
-        $renderer = new ImageRenderer(
-            new RendererStyle(400),
-            new SvgImageBackEnd()
-        );
+        // Generate PNG QR code
+        $renderer = new GDLibRenderer(200, 4, 'jpeg');
         $writer = new Writer($renderer);
-        $svgContent = $writer->writeString($qrData);
+        $pngContent = $writer->writeString($qrData);
 
-        // Create HTML template with QR code
-        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body>' . $svgContent . '</body></html>';
+            // Logo embed (optional) - load public/PDFLogo.png and embed base64.
+            $logoSvg = null;
+            try {
+                $logoPath = public_path('PDFLogo.png');
+                if (file_exists($logoPath)) {
+                    $svgContents = file_get_contents($logoPath);
+                    $logoSvg = 'data:image/svg+xml;base64,' . base64_encode($svgContents);
+                }
+            } catch (\Exception $e) {
+                // ignore logo if it can't be read
+                $logoSvg = null;
+            }
+
+            // Embed JPEG QR image as data URI
+            $b64Png = base64_encode($pngContent);
+        
+            // Create a simple poster-like HTML template that resembles the attached design
+            $html = '<html>
+                        <head>
+                            <meta charset="utf-8">
+                            <style>
+                                body {
+                                    font-family: "Helvetica", Arial, sans-serif;
+                                    padding: 0;
+                                    display: block;
+                                    margin: auto;
+                                    background: #fefbf0;
+                                    border-radius: 8px;
+                                }
+                                .poster {
+                                    display: block;
+                                    margin: 70px auto;
+                                }
+                                .logo {
+                                    display: block;
+                                    margin: auto;
+                                    width: 100%;
+                                    text-align: center;
+                                }
+                                .logo img {
+                                    width: 340px;
+                                    max-width: 90%;
+                                    height: auto;
+                                    display: block;
+                                    margin: 0 auto;
+                                    border-radius: 8px;
+                                }
+                                h1.title {
+                                    font-size: 36px;
+                                    margin: 18px 0 6px;
+                                    color:#0a0a0a;
+                                    text-align: center;
+                                }
+                                .qr {
+                                    margin-top: 8px;
+                                    text-align: center;
+                                }
+                                .qr img {
+                                    width: 280px;
+                                    height: 280px;
+                                }
+                                p.caption {
+                                    font-size: 36px;
+                                    font-weight: bold;
+                                    margin-top: 12px;
+                                    text-align: center;
+                                }
+                                .footer {
+                                    margin-top: 18px;
+                                    font-size: 12px;
+                                    color:#333;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="poster">';
+
+                                if ($logoSvg) {
+                                    $html .= '<div class="logo">
+                                                <img src="' . $logoSvg . '" alt="Daya logo" />
+                                            </div>';
+                                }
+
+                                $html .= '<h1 class="title">Discover with Daya</h1>';
+                                $html .= '<div class="qr"><img src="data:image/jpeg;base64,' . $b64Png . '" alt="Referral QR" /></div>';
+                                $html .= '<p class="caption">Scan to register</p>';
+                                $html .= '<div class="footer">&nbsp;</div>';
+                                $html .= '
+                            </div>
+                        </body>
+                    </html>';
 
         // Generate PDF
-        $pdf = Pdf::loadHTML($html);
-        $pdfContent = $pdf->output();
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdfContent = $dompdf->output();
 
         // Base64 encode the PDF
         $base64Pdf = base64_encode($pdfContent);
