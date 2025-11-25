@@ -102,3 +102,48 @@ test('does not select dcd with an active campaign', function () {
     expect($assigned)->toBeNull();
     expect($campaign->fresh()->dcd_id)->toBeNull();
 });
+
+test('assigns a dcd matching music genres and preferred country', function () {
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    // Create DCD with profile music genres
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'MusicHouse',
+        'account_type' => 'business',
+        'ward_id' => $ward->id,
+        'country_id' => $country->id,
+        'profile' => ['music_genres' => ['Afrobeats', 'Electronic']],
+    ]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'Genre Campaign',
+        'description' => 'Test description',
+        'budget' => 100,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Test objectives',
+        'campaign_objective' => 'music_promotion',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'submitted',
+        'metadata' => [
+            'music_genres' => ['Afrobeats'],
+            'target_country' => 'KEN',
+        ],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->not->toBeNull();
+    expect($assigned->id)->toBe($dcd->id);
+    expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
+});
