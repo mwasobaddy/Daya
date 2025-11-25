@@ -152,7 +152,7 @@ export default function DaRegister() {
                 window.turnstile.remove(turnstileElement);
             }
         };
-    }, []);
+    }, [setData]);
 
     // Fetch countries on component mount
     useEffect(() => {
@@ -170,7 +170,7 @@ export default function DaRegister() {
         };
 
         fetchCountries();
-    }, []);
+    }, [setData]);
 
     // Check location permission when URL has started=true parameter
     useEffect(() => {
@@ -219,7 +219,7 @@ export default function DaRegister() {
         };
 
         extractReferralCode();
-    }, []);
+    }, [setData]);
 
     // Validate referral code when it changes
     useEffect(() => {
