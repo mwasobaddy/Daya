@@ -24,14 +24,14 @@ class AdminSeeder extends Seeder
                 'title' => 'System Administrator',
                 'department' => 'IT',
             ],
-            [
-                'name' => 'Akinola Dixon',
-                'email' => 'akinola.dixon@gmail.com',
-                'phone' => '+1234567891',
-                'referral_code' => '8b4I5Q',
-                'title' => 'System Administrator',
-                'department' => 'Operations',
-            ],
+            // [
+            //     'name' => 'Akinola Dixon',
+            //     'email' => 'akinola.dixon@gmail.com',
+            //     'phone' => '+1234567891',
+            //     'referral_code' => '8b4I5Q',
+            //     'title' => 'System Administrator',
+            //     'department' => 'Operations',
+            // ],
         ];
 
         foreach ($admins as $adminData) {
