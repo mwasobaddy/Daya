@@ -30,6 +30,10 @@ yarn-error.log
 
 # custom ignores
 PRD.md
+Earning.md
 index-client.html
 index-dcd.html
 index-da.html
+scripts/run_generate_da_pdf.php
+scripts/debug_genre_query.php
+scripts/debug_scan_earning.php
