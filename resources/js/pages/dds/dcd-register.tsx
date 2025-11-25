@@ -127,8 +127,7 @@ export default function DcdRegister() {
         terms: false,
     });
 
-    // Determine the app base URL from Vite env or window origin as fallback
-    const APP_URL = import.meta.env.VITE_APP_URL ?? import.meta.env.VITE_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
+    // APP_URL is no longer used for redirects; constant removed to avoid linter errors
 
 
 
@@ -898,9 +897,9 @@ export default function DcdRegister() {
                     toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your account details.', {
                         autoClose: 3000
                     });
-                    // Redirect to welcome page after success
+                    // Redirect to the Daya homepage after a short delay
                     setTimeout(() => {
-                        window.location.href = `${APP_URL}/dcd/register?started=true`;
+                        window.location.href = 'https://www.daya.africa';
                     }, 3000);
                 } else {
                     console.log('DCD registration error:', result);

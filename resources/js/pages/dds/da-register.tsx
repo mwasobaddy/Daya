@@ -113,8 +113,7 @@ export default function DaRegister() {
         turnstile_token: '',
     });
 
-    // Determine the app base URL from Vite env or window origin as fallback
-    const APP_URL = import.meta.env.VITE_APP_URL ?? import.meta.env.VITE_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
+    // APP_URL is no longer used for redirects; constant removed to avoid linter errors
 
     // Initialize Turnstile when component mounts
     useEffect(() => {
@@ -829,10 +828,10 @@ interface LocationData {
             toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
                 autoClose: 3000
             });
-            // Redirect to the registration page with started=true after a short delay
-            setTimeout(() => {
-                window.location.href = `${APP_URL}/da/register?started=true`;
-            }, 3000);
+                    // Redirect to the Daya homepage after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'https://www.daya.africa';
+                    }, 3000);
             return;
         }
 
@@ -939,9 +938,9 @@ interface LocationData {
                     toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
                         autoClose: 3000
                     });
-                    // Redirect to the registration page with started=true after a short delay
+                    // Redirect to the Daya homepage after a short delay
                     setTimeout(() => {
-                        window.location.href = `${APP_URL}/da/register?started=true`;
+                        window.location.href = 'https://www.daya.africa';
                     }, 3000);
                 } else {
                     console.log('Error response:', result);

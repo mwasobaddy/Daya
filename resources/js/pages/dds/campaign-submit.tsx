@@ -449,6 +449,10 @@ export default function CampaignSubmit({ flash }: Props) {
 
                     // Show success toast
                     toast.success(result.message || 'Campaign submitted successfully!');
+                    // Redirect to the Daya homepage after a brief delay
+                    setTimeout(() => {
+                        window.location.href = 'https://www.daya.africa';
+                    }, 2000);
                 } else if (response.status === 409) {
                     // User already has an active campaign
                     console.log('User has existing active campaign:', result);
