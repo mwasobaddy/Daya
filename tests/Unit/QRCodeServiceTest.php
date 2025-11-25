@@ -5,10 +5,11 @@ use App\Models\User;
 use App\Models\Campaign;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
-test('generate dcd campaign qr returns base64 pdf content', function () {
+test('generate dcd campaign qr saves pdf to storage and returns filename', function () {
     Storage::fake('public');
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
@@ -35,8 +36,9 @@ test('generate dcd campaign qr returns base64 pdf content', function () {
     ]);
 
     $svc = app(QRCodeService::class);
-    $base64Content = $svc->generateDcdCampaignQr($dcd, $campaign);
+    $filename = $svc->generateDcdCampaignQr($dcd, $campaign);
 
-    expect($base64Content)->toBeString();
-    expect(strpos($base64Content, 'JVBERi0x'))->toBe(0); // PDF header in base64
+    expect($filename)->toBeString();
+    expect(Str::startsWith($filename, 'qrcodes/'))->toBeTrue();
+    expect(Storage::disk('public')->exists($filename))->toBeTrue();
 });

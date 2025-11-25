@@ -115,9 +115,7 @@ class DaSeeder extends Seeder
             try {
                 $qrCodeService = app(QRCodeService::class);
                 $qrCodeFilename = $qrCodeService->generateDAReferralQRCode($da);
-                $qrCodeUrl = $qrCodeService->getQRCodeUrl($qrCodeFilename);
-                
-                $da->update(['qr_code' => $qrCodeUrl]);
+                $da->update(['qr_code' => $qrCodeFilename]);
                 $this->command->info('Generated QR code for: ' . $da->name);
             } catch (\Exception $e) {
                 $this->command->warn('Could not generate QR code for ' . $da->name . ': ' . $e->getMessage());

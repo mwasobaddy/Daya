@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\SerializesModels;
 
 class DcdWelcome extends Mailable
@@ -57,6 +58,25 @@ class DcdWelcome extends Mailable
     public function attachments(): array
     {
         if ($this->qrCodeBase64) {
+            // If it's a file path in storage, attach from storage
+            if (Storage::disk('public')->exists($this->qrCodeBase64)) {
+                return [
+                    Attachment::fromStorageDisk('public', $this->qrCodeBase64)
+                        ->as('qr-code.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+
+            // If it's a URL, attach from URL
+            if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
+                return [
+                    Attachment::fromUrl($this->qrCodeBase64)
+                        ->as('qr-code.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+
+            // Otherwise, assume it's base64 PDF data
             return [
                 Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'qr-code.pdf')
                     ->withMime('application/pdf'),

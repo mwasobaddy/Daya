@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\SerializesModels;
 
 class DaWelcome extends Mailable
@@ -57,6 +58,22 @@ class DaWelcome extends Mailable
     public function attachments(): array
     {
         if ($this->qrCodeBase64) {
+            if (Storage::disk('public')->exists($this->qrCodeBase64)) {
+                return [
+                    Attachment::fromStorageDisk('public', $this->qrCodeBase64)
+                        ->as('referral-qr-code.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+
+            if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
+                return [
+                    Attachment::fromUrl($this->qrCodeBase64)
+                        ->as('referral-qr-code.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+
             return [
                 Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'referral-qr-code.pdf')
                     ->withMime('application/pdf'),

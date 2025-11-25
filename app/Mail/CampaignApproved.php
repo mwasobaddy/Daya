@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Storage;
 
 class CampaignApproved extends Mailable
 {
@@ -57,8 +58,24 @@ class CampaignApproved extends Mailable
     public function attachments(): array
     {
         if ($this->qrCodeBase64) {
+            if (Storage::disk('public')->exists($this->qrCodeBase64)) {
+                return [
+                    Attachment::fromStorageDisk('public', $this->qrCodeBase64)
+                        ->as('campaign-qr.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+            if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
+                return [
+                    Attachment::fromUrl($this->qrCodeBase64)
+                        ->as('campaign-qr.pdf')
+                        ->withMime('application/pdf'),
+                ];
+            }
+
+            // Provide the decoded base64 to the Attachment closure
             return [
-                Attachment::fromData(base64_decode($this->qrCodeBase64), 'campaign-qr.pdf')
+                Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'campaign-qr.pdf')
                     ->withMime('application/pdf'),
             ];
         }

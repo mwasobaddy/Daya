@@ -43,13 +43,14 @@ class QRCodeService
         $dompdf->render();
         $pdfContent = $dompdf->output();
 
-        // Base64 encode the PDF
-        $base64Pdf = base64_encode($pdfContent);
+        // Store PDF to storage/public/qrcodes and return filename
+        $filename = 'qrcodes/dcd_' . $user->id . '_' . time() . '.pdf';
+        Storage::disk('public')->put($filename, $pdfContent);
 
-        // Update user with base64-encoded PDF
-        $user->update(['qr_code' => $base64Pdf]);
+        // Update the user with the stored filename (not base64)
+        $user->update(['qr_code' => $filename]);
 
-        return $base64Pdf;
+        return $filename;
     }
 
     /**
@@ -83,10 +84,11 @@ class QRCodeService
         $dompdf->render();
         $pdfContent = $dompdf->output();
 
-        // Base64 encode the PDF
-        $base64Pdf = base64_encode($pdfContent);
+        // Store the campaign QR PDF into storage and return filename
+        $filename = 'qrcodes/campaign_' . $dcd->id . '_' . $campaign->id . '_' . time() . '.pdf';
+        Storage::disk('public')->put($filename, $pdfContent);
 
-        return $base64Pdf;
+        return $filename;
     }
 
     /**
@@ -245,10 +247,11 @@ class QRCodeService
         $dompdf->render();
         $pdfContent = $dompdf->output();
 
-        // Base64 encode the PDF
-        $base64Pdf = base64_encode($pdfContent);
+        // Store the generated DA referral PDF in storage and return filename
+        $filename = 'qrcodes/da_' . $user->id . '_' . time() . '.pdf';
+        Storage::disk('public')->put($filename, $pdfContent);
 
-        return $base64Pdf;
+        return $filename;
     }
 
     /**
