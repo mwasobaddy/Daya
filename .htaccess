@@ -1,50 +1,8 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
+# Redirect all requests to the Laravel public folder
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Handle PHP files in root (for compatibility)
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/index.php [L]
-
-    # Serve static assets from public/build if they exist
-    RewriteCond %{REQUEST_URI} ^/build/
-    RewriteCond %{DOCUMENT_ROOT}/public/build/%{REQUEST_FILENAME} -f
-    RewriteRule ^build/(.*)$ public/build/$1 [L]
-
-    # Serve other static assets from public directory
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
-    RewriteRule ^(.*)$ public/$1 [L]
-</IfModule>
-
-# Security headers for Hostinger
-<IfModule mod_headers.c>
-    Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-</IfModule>
-
-# PHP settings for Hostinger
-<IfModule mod_php.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 50M
-    php_value memory_limit 256M
-    php_value max_execution_time 300
-</IfModule>
+# Serve static assets directly from public/build
+RewriteCond %{REQUEST_URI} ^/build/
+RewriteRule ^build/(.*)$ public/build/$1 [L]
