@@ -215,6 +215,8 @@ export default function CampaignSubmit({ flash }: Props) {
         objectives: '',
         // allow custom 'other' business type from targeting UI
         other_business_type: '',
+        music_genres: [] as string[],
+        other_music_genre: '',
     });
 
     const steps = [
@@ -231,6 +233,12 @@ export default function CampaignSubmit({ flash }: Props) {
         { value: 'no_restrictions', label: 'No Restriction' },
     ];
 
+    const musicGenres = [
+        'Afrobeat', 'Benga', 'Blues', 'Classical', 'Country', 'Electronic',
+        'Folk', 'Funk', 'Gospel', 'Hip Hop', 'Jazz', 'Kwaito', 'Pop', 'R&B',
+        'Reggae', 'Rock', 'Soul', 'Traditional', 'Other'
+    ];
+
     const currentStepIndex = steps.findIndex(step => step.id === currentStep);
 
     // Validate referral code when it changes
@@ -241,6 +249,20 @@ export default function CampaignSubmit({ flash }: Props) {
 
         return () => clearTimeout(timeoutId);
     }, [data.referral_code]);
+
+    const handleMusicGenreChange = (genre: string, checked: boolean | 'indeterminate' | undefined) => {
+        const isChecked = Boolean(checked);
+        if (isChecked) {
+            setData('music_genres', [...(data.music_genres || []), genre]);
+        } else {
+            setData('music_genres', (data.music_genres || []).filter((g: string) => g !== genre));
+        }
+        // clear potential errors
+        clearErrors('music_genres');
+        if (genre === 'Other') {
+            clearErrors('other_music_genre');
+        }
+    };
 
     // Validation functions
     const validateEmail = (email: string): boolean => {
@@ -269,10 +291,6 @@ export default function CampaignSubmit({ flash }: Props) {
         let hasErrors = false;
 
         if (step === 'account') {
-            if (!data.account_type) {
-                setError('account_type', 'Account type is required');
-                hasErrors = true;
-            }
             if (!data.business_name.trim()) {
                 setError('business_name', 'Business/organization name is required');
                 hasErrors = true;
@@ -300,6 +318,11 @@ export default function CampaignSubmit({ flash }: Props) {
                 hasErrors = true;
             }
         } else if (step === 'campaign') {
+            // account_type must be set on campaign details now
+            if (!data.account_type) {
+                setError('account_type', 'Account type is required');
+                hasErrors = true;
+            }
             if (!data.campaign_title.trim()) {
                 setError('campaign_title', 'Campaign title is required');
                 hasErrors = true;
@@ -326,6 +349,18 @@ export default function CampaignSubmit({ flash }: Props) {
             if (!data.description.trim()) {
                 setError('description', 'Campaign description is required');
                 hasErrors = true;
+            }
+
+            // If 'label' or 'artist', require music_genres
+            if (data.account_type === 'label' || data.account_type === 'artist') {
+                if (!data.music_genres || data.music_genres.length === 0) {
+                    setError('music_genres', 'Please select at least one music genre');
+                    hasErrors = true;
+                }
+                if (data.music_genres?.includes('Other') && !data.other_music_genre?.trim()) {
+                    setError('other_music_genre', 'Please specify other music genre');
+                    hasErrors = true;
+                }
             }
         } else if (step === 'targeting') {
             if (!data.budget || parseFloat(data.budget) < 50) {
@@ -570,26 +605,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         </div>
 
                         <div className="space-y-5">
-                            <div>
-                                <Label htmlFor="account_type" className="text-sm font-medium mb-2 block">
-                                    Account Type <span className='text-red-500 dark:text-red-400'>*</span>
-                                </Label>
-                                <Select value={data.account_type} onValueChange={(value) => updateData('account_type', value)}>
-                                    <SelectTrigger className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none">
-                                        <SelectValue placeholder="Select account type" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-blue-300 dark:border-blue-600/20">
-                                        <SelectItem value="-">-</SelectItem>
-                                        <SelectItem value="startup"><Rocket/> Startup</SelectItem>
-                                        <SelectItem value="artist"><Palette /> Artist</SelectItem>
-                                        <SelectItem value="label"><Music /> Label</SelectItem>
-                                        <SelectItem value="ngo"><Handshake /> NGO</SelectItem>
-                                        <SelectItem value="agency"><Briefcase /> Agency</SelectItem>
-                                        <SelectItem value="business"><Building /> Business</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.account_type} />
-                            </div>
+                            {/* Account Type moved to Campaign step; we'll keep account details simpler here */}
 
                             <div>
                                 <Label htmlFor="business_name" className="text-sm font-medium mb-2 block">
@@ -749,6 +765,55 @@ export default function CampaignSubmit({ flash }: Props) {
                                 />
                                 <InputError message={errors.campaign_title} />
                             </div>
+
+                            <div>
+                                <Label htmlFor="account_type" className="text-sm font-medium mb-2 block">
+                                    Account Type <span className='text-red-500 dark:text-red-400'>*</span>
+                                </Label>
+                                <Select value={data.account_type} onValueChange={(value) => updateData('account_type', value)}>
+                                    <SelectTrigger className="border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none">
+                                        <SelectValue placeholder="Select account type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600/20">
+                                        <SelectItem value="-">-</SelectItem>
+                                        <SelectItem value="startup"><Rocket/> Startup</SelectItem>
+                                        <SelectItem value="artist"><Palette /> Artist</SelectItem>
+                                        <SelectItem value="label"><Music /> Label</SelectItem>
+                                        <SelectItem value="ngo"><Handshake /> NGO</SelectItem>
+                                        <SelectItem value="agency"><Briefcase /> Agency</SelectItem>
+                                        <SelectItem value="business"><Building /> Business</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.account_type} />
+                            </div>
+
+                            {/* If artist/label, allow selecting music genres */}
+                            {(data.account_type === 'artist' || data.account_type === 'label') && (
+                                <div>
+                                    <Label className="text-sm font-medium mb-2 block">Music Genres <span className='text-red-500 dark:text-red-400'>*</span></Label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {musicGenres.map((genre) => (
+                                            <div key={genre} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`genre_${genre}`}
+                                                    checked={(data.music_genres || []).includes(genre)}
+                                                    onCheckedChange={(checked) => handleMusicGenreChange(genre, checked)}
+                                                    className="border-purple-300 dark:border-purple-600/20"
+                                                />
+                                                <Label htmlFor={`genre_${genre}`} className="text-sm">{genre}</Label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <InputError message={errors.music_genres} />
+                                    { (data.music_genres || []).includes('Other') && (
+                                        <div className="mt-2">
+                                            <Label htmlFor="other_music_genre" className="text-sm font-medium mb-2 block">Specify Other Genre</Label>
+                                            <Input id="other_music_genre" value={data.other_music_genre} onChange={(e) => updateData('other_music_genre', e.target.value)} placeholder="Enter genre" />
+                                            <InputError message={errors.other_music_genre} />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div>
                                 <Label htmlFor="digital_product_link" className="text-sm font-medium mb-2 block">
@@ -1311,6 +1376,12 @@ export default function CampaignSubmit({ flash }: Props) {
                                         <div className="flex justify-between py-2">
                                             <span className="text-gray-600">Business Types:</span>
                                             <span className="font-medium text-gray-900">{data.business_types.length} selected</span>
+                                        </div>
+                                    )}
+                                    {data.music_genres && data.music_genres.length > 0 && (
+                                        <div className="flex justify-between py-2">
+                                            <span className="text-gray-600">Music Genres:</span>
+                                            <span className="font-medium text-gray-900">{Array.isArray(data.music_genres) ? data.music_genres.join(', ') : data.music_genres}</span>
                                         </div>
                                     )}
                                 </div>
