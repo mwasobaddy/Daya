@@ -48,10 +48,10 @@
             The Daya Team</p>
         </div>
 
-        &lt;div class="footer"&gt;
-            &lt;p&gt;This is an automated message. Please do not reply to this email.&lt;/p&gt;
-            &lt;p&gt;© 2024 Daya. All rights reserved.&lt;/p&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>© 2024 Daya. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
