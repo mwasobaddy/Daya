@@ -112,14 +112,14 @@ class DaSeeder extends Seeder
             $this->command->info('Created DA: ' . $da->name . ' (' . $da->email . ')');
 
             // Generate QR code for the DA
-            try {
-                $qrCodeService = app(QRCodeService::class);
-                $qrCodeFilename = $qrCodeService->generateDAReferralQRCode($da);
-                $da->update(['qr_code' => $qrCodeFilename]);
-                $this->command->info('Generated QR code for: ' . $da->name);
-            } catch (\Exception $e) {
-                $this->command->warn('Could not generate QR code for ' . $da->name . ': ' . $e->getMessage());
-            }
+            // try {
+            //     $qrCodeService = app(QRCodeService::class);
+            //     $qrCodeFilename = $qrCodeService->generateDAReferralQRCode($da);
+            //     $da->update(['qr_code' => $qrCodeFilename]);
+            //     $this->command->info('Generated QR code for: ' . $da->name);
+            // } catch (\Exception $e) {
+            //     $this->command->warn('Could not generate QR code for ' . $da->name . ': ' . $e->getMessage());
+            // }
 
             // Create referral record
             $referral = Referral::create([
