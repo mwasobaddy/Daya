@@ -55,33 +55,33 @@ class DcdWelcome extends Mailable
      *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
-    public function attachments(): array
-    {
-        if ($this->qrCodeBase64) {
-            // If it's a file path in storage, attach from storage
-            if (Storage::disk('public')->exists($this->qrCodeBase64)) {
-                return [
-                    Attachment::fromStorageDisk('public', $this->qrCodeBase64)
-                        ->as('qr-code.pdf')
-                        ->withMime('application/pdf'),
-                ];
-            }
+    // public function attachments(): array
+    // {
+    //     if ($this->qrCodeBase64) {
+    //         // If it's a file path in storage, attach from storage
+    //         if (Storage::disk('public')->exists($this->qrCodeBase64)) {
+    //             return [
+    //                 Attachment::fromStorageDisk('public', $this->qrCodeBase64)
+    //                     ->as('qr-code.pdf')
+    //                     ->withMime('application/pdf'),
+    //             ];
+    //         }
 
-            // If it's a URL, attach from URL
-            if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
-                return [
-                    Attachment::fromUrl($this->qrCodeBase64)
-                        ->as('qr-code.pdf')
-                        ->withMime('application/pdf'),
-                ];
-            }
+    //         // If it's a URL, attach from URL
+    //         if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
+    //             return [
+    //                 Attachment::fromUrl($this->qrCodeBase64)
+    //                     ->as('qr-code.pdf')
+    //                     ->withMime('application/pdf'),
+    //             ];
+    //         }
 
-            // Otherwise, assume it's base64 PDF data
-            return [
-                Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'qr-code.pdf')
-                    ->withMime('application/pdf'),
-            ];
-        }
-        return [];
-    }
+    //         // Otherwise, assume it's base64 PDF data
+    //         return [
+    //             Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'qr-code.pdf')
+    //                 ->withMime('application/pdf'),
+    //         ];
+    //     }
+    //     return [];
+    // }
 }
