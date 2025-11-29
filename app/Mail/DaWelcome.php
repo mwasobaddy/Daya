@@ -55,30 +55,30 @@ class DaWelcome extends Mailable
      *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
-    public function attachments(): array
-    {
-        if ($this->qrCodeBase64) {
-            if (Storage::disk('public')->exists($this->qrCodeBase64)) {
-                return [
-                    Attachment::fromStorageDisk('public', $this->qrCodeBase64)
-                        ->as('referral-qr-code.pdf')
-                        ->withMime('application/pdf'),
-                ];
-            }
+    // public function attachments(): array
+    // {
+    //     if ($this->qrCodeBase64) {
+    //         if (Storage::disk('public')->exists($this->qrCodeBase64)) {
+    //             return [
+    //                 Attachment::fromStorageDisk('public', $this->qrCodeBase64)
+    //                     ->as('referral-qr-code.pdf')
+    //                     ->withMime('application/pdf'),
+    //             ];
+    //         }
 
-            if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
-                return [
-                    Attachment::fromUrl($this->qrCodeBase64)
-                        ->as('referral-qr-code.pdf')
-                        ->withMime('application/pdf'),
-                ];
-            }
+    //         if (filter_var($this->qrCodeBase64, FILTER_VALIDATE_URL)) {
+    //             return [
+    //                 Attachment::fromUrl($this->qrCodeBase64)
+    //                     ->as('referral-qr-code.pdf')
+    //                     ->withMime('application/pdf'),
+    //             ];
+    //         }
 
-            return [
-                Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'referral-qr-code.pdf')
-                    ->withMime('application/pdf'),
-            ];
-        }
-        return [];
-    }
+    //         return [
+    //             Attachment::fromData(fn () => base64_decode($this->qrCodeBase64), 'referral-qr-code.pdf')
+    //                 ->withMime('application/pdf'),
+    //         ];
+    //     }
+    //     return [];
+    // }
 }
