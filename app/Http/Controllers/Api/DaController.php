@@ -151,10 +151,10 @@ class DaController extends Controller
             \Log::info('User verified in database', ['user_id' => $savedUser->id]);
 
             // Generate QR code as PDF file and save filename
-            $qrFilename = $this->qrCodeService->generateDAReferralQRCode($user);
+            // $qrFilename = $this->qrCodeService->generateDAReferralQRCode($user);
 
             // Update user with QR code filename
-            $user->update(['qr_code' => $qrFilename]);
+            // $user->update(['qr_code' => $qrFilename]);
 
             // Create referral record if referrer exists
             if ($referrer) {
@@ -203,7 +203,7 @@ class DaController extends Controller
 
             return response()->json([
                 'message' => 'DA registered successfully',
-                'qr_code' => $qrFilename,
+                // 'qr_code' => $qrFilename,
                 'user' => $user
             ]);
         } catch (\Exception $e) {
