@@ -1,58 +1,59 @@
-&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Campaign Completed&lt;/title&gt;
-    &lt;style&gt;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Completed</title>
+    <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
         .content { padding: 20px; }
+        
         .campaign-details { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }
         .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class="container"&gt;
-        &lt;div class="header"&gt;
-            &lt;h1&gt;Campaign Completed Successfully!&lt;/h1&gt;
-            &lt;p&gt;Congratulations on completing this campaign.&lt;/p&gt;
-        &lt;/div&gt;
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Campaign Completed Successfully!</h1>
+            <p>Congratulations on completing this campaign.</p>
+        </div>
 
-        &lt;div class="content"&gt;
-            &lt;h2&gt;Campaign Summary&lt;/h2&gt;
-            &lt;div class="campaign-details"&gt;
-                &lt;p&gt;&lt;strong&gt;Title:&lt;/strong&gt; {{ $campaign-&gt;title }}&lt;/p&gt;
-                &lt;p&gt;&lt;strong&gt;Description:&lt;/strong&gt; {{ $campaign-&gt;description }}&lt;/p&gt;
-                &lt;p&gt;&lt;strong&gt;Budget:&lt;/strong&gt; ${{ number_format($campaign-&gt;budget, 2) }}&lt;/p&gt;
-                &lt;p&gt;&lt;strong&gt;{{ $otherUser-&gt;role === 'client' ? 'DCD' : 'Client' }}:&lt;/strong&gt; {{ $otherUser-&gt;name }} ({{ $otherUser-&gt;email }})&lt;/p&gt;
-                &lt;p&gt;&lt;strong&gt;Status:&lt;/strong&gt; {{ ucfirst($campaign-&gt;status) }}&lt;/p&gt;
-                &lt;p&gt;&lt;strong&gt;Completed At:&lt;/strong&gt; {{ $campaign-&gt;completed_at?-&gt;format('M j, Y g:i A') }}&lt;/p&gt;
-            &lt;/div&gt;
+        <div class="content">
+            <h2>Campaign Summary</h2>
+            <div class="campaign-details">
+                <p><strong>Title:</strong> {{ $campaign->title }}</p>
+                <p><strong>Description:</strong> {{ $campaign->description }}</p>
+                <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
+                <p><strong>{{ $otherUser->role === 'client' ? 'DCD' : 'Client' }}:</strong> {{ $otherUser->name }} ({{ $otherUser->email }})</p>
+                <p><strong>Status:</strong> {{ ucfirst($campaign->status) }}</p>
+                <p><strong>Completed At:</strong> {{ $campaign->completed_at?->format('M j, Y g:i A') }}</p>
+            </div>
 
-            @if($otherUser-&gt;role === 'client')
-                &lt;!-- Email to DCD --&gt;
-                &lt;h3&gt;Your Earnings&lt;/h3&gt;
-                &lt;p&gt;Congratulations! You have earned ${{ number_format($campaign-&gt;budget * 0.20, 2) }} KeDDS tokens from this campaign completion.&lt;/p&gt;
-                &lt;p&gt;Your venture shares have been allocated and will be reflected in your monthly report.&lt;/p&gt;
+            @if($otherUser->role === 'client')
+                <!-- Email to DCD -->
+                <h3>Your Earnings</h3>
+                <p>Congratulations! You have earned ${{ number_format($campaign->budget * 0.20, 2) }} KeDDS tokens from this campaign completion.</p>
+                <p>Your venture shares have been allocated and will be reflected in your monthly report.</p>
             @else
-                &lt;!-- Email to Client --&gt;
-                &lt;h3&gt;Campaign Complete&lt;/h3&gt;
-                &lt;p&gt;Your campaign has been successfully completed by our Digital Content Distributor.&lt;/p&gt;
-                &lt;p&gt;Thank you for choosing Daya for your campaign needs.&lt;/p&gt;
+                <!-- Email to Client -->
+                <h3>Campaign Complete</h3>
+                <p>Your campaign has been successfully completed by our Digital Content Distributor.</p>
+                <p>Thank you for choosing Daya for your campaign needs.</p>
             @endif
 
-            &lt;p&gt;If you have any questions or need further assistance, please contact our support team.&lt;/p&gt;
+            <p>If you have any questions or need further assistance, please contact our support team.</p>
 
-            &lt;p&gt;Best regards,&lt;br&gt;
-            The Daya Team&lt;/p&gt;
-        &lt;/div&gt;
+            <p>Best regards,<br>
+            The Daya Team</p>
+        </div>
 
-        &lt;div class="footer"&gt;
-            &lt;p&gt;This is an automated message. Please do not reply to this email.&lt;/p&gt;
-            &lt;p&gt;© 2024 Daya. All rights reserved.&lt;/p&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>© 2024 Daya. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
