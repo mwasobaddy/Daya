@@ -28,13 +28,86 @@ class QRCodeService
         $qrData = route('dds.campaign.submit') . '?dcd_id=' . $user->id;
 
         // Generate PNG QR code
-        $renderer = new GDLibRenderer(200, 4, 'jpeg');
+        $renderer = new GDLibRenderer(400, 4, 'png');
         $writer = new Writer($renderer);
         $pngContent = $writer->writeString($qrData);
 
         // Embed PNG into HTML via data URI (avoid file path / chroot issues)
         $b64Png = base64_encode($pngContent);
-        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body><img src="data:image/jpeg;base64,' . $b64Png . '" style="width:200px;height:200px;" /></body></html>';
+        $html = '<html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: "Helvetica", Arial, sans-serif;
+                        padding: 0;
+                        display: block;
+                        margin: auto;
+                        background: #fefbf0;
+                        border-radius: 8px;
+                    }
+                    .poster {
+                        display: block;
+                        margin: 70px auto;
+                    }
+                    .logo {
+                        display: block;
+                        margin: auto;
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .logo img {
+                        width: 340px;
+                        max-width: 90%;
+                        height: auto;
+                        display: block;
+                        margin: 0 auto;
+                        border-radius: 8px;
+                    }
+                    h1.title {
+                        font-size: 36px;
+                        margin: 18px 0 6px;
+                        color:#0a0a0a;
+                        text-align: center;
+                    }
+                    .qr {
+                        margin-top: 8px;
+                        text-align: center;
+                    }
+                    .qr img {
+                        width: 400px;
+                        height: 400px;
+                    }
+                    p.caption {
+                        font-size: 36px;
+                        font-weight: bold;
+                        margin-top: 12px;
+                        text-align: center;
+                    }
+                    .footer {
+                        margin-top: 18px;
+                        font-size: 12px;
+                        color:#333;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="poster">';
+
+                    if ($logoSvg) {
+                        $html .= '<div class="logo">
+                                    <img src="' . $logoSvg . '" alt="Daya logo" />
+                                </div>';
+                    }
+
+                    $html .= '<h1 class="title">Discover with Daya</h1>';
+                    $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
+                    $html .= '<p class="caption">Scan to register</p>';
+                    $html .= '<div class="footer">&nbsp;</div>';
+                    $html .= '
+                </div>
+            </body>
+        </html>';
 
         // Generate PDF
         $dompdf = new Dompdf();
@@ -69,13 +142,13 @@ class QRCodeService
             'campaign' => $campaign->id,
         ]);
 
-        $renderer = new GDLibRenderer(200, 4, 'jpeg');
+        $renderer = new GDLibRenderer(400, 4, 'png');
         $writer = new Writer($renderer);
         $pngContent = $writer->writeString($qrData);
 
         // Embed PNG into HTML via data URI (avoid file path / chroot issues)
         $b64Png = base64_encode($pngContent);
-        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body><img src="data:image/jpeg;base64,' . $b64Png . '" style="width:200px;height:200px;" /></body></html>';
+        $html = '<html><head><style>body { text-align: center; padding: 20px; }</style></head><body><img src="data:image/png;base64,' . $b64Png . '" style="width:400px;height:400px;" /></body></html>';
 
         // Generate PDF
         $dompdf = new Dompdf();
@@ -144,7 +217,7 @@ class QRCodeService
         $qrData = route('dds.dcd.register') . '?ref=' . urlencode($user->referral_code);
 
         // Generate PNG QR code
-        $renderer = new GDLibRenderer(200, 4, 'jpeg');
+        $renderer = new GDLibRenderer(400, 4, 'png');
         $writer = new Writer($renderer);
         $pngContent = $writer->writeString($qrData);
 
@@ -161,7 +234,7 @@ class QRCodeService
                 $logoSvg = null;
             }
 
-            // Embed JPEG QR image as data URI
+            // Embed PNG QR image as data URI
             $b64Png = base64_encode($pngContent);
         
             // Create a simple poster-like HTML template that resembles the attached design
@@ -206,8 +279,8 @@ class QRCodeService
                                     text-align: center;
                                 }
                                 .qr img {
-                                    width: 280px;
-                                    height: 280px;
+                                    width: 400px;
+                                    height: 400px;
                                 }
                                 p.caption {
                                     font-size: 36px;
@@ -232,7 +305,7 @@ class QRCodeService
                                 }
 
                                 $html .= '<h1 class="title">Discover with Daya</h1>';
-                                $html .= '<div class="qr"><img src="data:image/jpeg;base64,' . $b64Png . '" alt="Referral QR" /></div>';
+                                $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
                                 $html .= '<p class="caption">Scan to register</p>';
                                 $html .= '<div class="footer">&nbsp;</div>';
                                 $html .= '
