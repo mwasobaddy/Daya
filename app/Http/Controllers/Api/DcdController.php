@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Referral;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
+use App\Mail\ReferralBonusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -188,6 +189,13 @@ class DcdController extends Controller
 
             // Allocate venture shares for the referral
             $this->ventureShareService->allocateSharesForReferral($referral);
+
+            // Notify referrer of venture share update
+            try {
+                \Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusNotification($referrer, $this->ventureShareService));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send referral bonus notification to DA: ' . $e->getMessage());
+            }
         }
 
         // Send welcome email

@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\DcdWelcome;
+use App\Mail\ReferralBonusNotification;
+use App\Services\VentureShareService;
 
 uses(RefreshDatabase::class);
 
@@ -78,4 +80,23 @@ test('dcd welcome mailable renders and attaches qr code', function () {
     // $attachments = $mailable->attachments();
     // expect($attachments)->toHaveCount(1);
     // expect($attachments[0]->as)->toBe('qr-code.pdf');
+});
+
+test('referral bonus notification mailable renders successfully', function () {
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $referrer = User::factory()->create(['role' => 'da', 'ward_id' => $ward->id]);
+
+    $ventureShareService = app(VentureShareService::class);
+
+    $mailable = new ReferralBonusNotification($referrer, $ventureShareService);
+    $html = $mailable->render();
+
+    expect($html)->toContain('Referral Bonus Update');
+    expect($html)->toContain($referrer->name);
+    expect($html)->toContain('KeDDS Tokens');
+    expect($html)->toContain('KeDWS Tokens');
 });
