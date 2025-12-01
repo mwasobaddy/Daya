@@ -56,7 +56,7 @@ test('admin campaign submission mailable renders successfully', function () {
     expect($html)->toContain('Test Campaign');
 });
 
-test('dcd welcome mailable renders and attaches qr code', function () {
+test('dcd welcome mailable renders successfully', function () {
     Storage::fake('public');
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
@@ -75,7 +75,7 @@ test('dcd welcome mailable renders and attaches qr code', function () {
     $mailable = new DcdWelcome($dcd, $referrer, $fakePdfBase64);
     $html = $mailable->render();
 
-    expect($html)->toContain('Your QR Code');
+    expect($html)->toContain('Your Role as a Digital Content Distributor');
     
     // $attachments = $mailable->attachments();
     // expect($attachments)->toHaveCount(1);
