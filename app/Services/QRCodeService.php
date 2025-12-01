@@ -31,6 +31,19 @@ class QRCodeService
         $renderer = new GDLibRenderer(400, 4, 'png');
         $writer = new Writer($renderer);
         $pngContent = $writer->writeString($qrData);
+        
+        // Logo embed (optional) - load public/PDFLogo.png and embed base64.
+        $logoSvg = null;
+        try {
+            $logoPath = public_path('PDFLogo.png');
+            if (file_exists($logoPath)) {
+                $svgContents = file_get_contents($logoPath);
+                $logoSvg = 'data:image/svg+xml;base64,' . base64_encode($svgContents);
+            }
+        } catch (\Exception $e) {
+            // ignore logo if it can't be read
+            $logoSvg = null;
+        }
 
         // Embed PNG into HTML via data URI (avoid file path / chroot issues)
         $b64Png = base64_encode($pngContent);
