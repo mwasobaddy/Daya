@@ -51,6 +51,16 @@ interface Ward {
 
 type Step = 'account' | 'campaign' | 'targeting' | 'review';
 
+const currencyMap: Record<string, string> = {
+    'ken': 'KSh',
+    'nga': '₦',
+    // Add more countries as needed
+};
+
+const getCurrencySymbol = (countryCode: string): string => {
+    return currencyMap[countryCode.toLowerCase()] || '$';
+};
+
 export default function CampaignSubmit({ flash }: Props) {
     const [currentStep, setCurrentStep] = useState<Step>('account');
     const [countries, setCountries] = useState<Country[]>([]);
@@ -880,7 +890,7 @@ export default function CampaignSubmit({ flash }: Props) {
 
                                 <div>
                                     <Label htmlFor="budget" className="text-sm font-medium mb-2 block">
-                                        Budget ($) <span className='text-red-500 dark:text-red-400'>*</span>
+                                        Budget ({getCurrencySymbol(data.country)}) <span className='text-red-500 dark:text-red-400'>*</span>
                                     </Label>
                                     <Input
                                         id="budget"
@@ -967,7 +977,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         <div className="space-y-6">
                             <div>
                                 <Label htmlFor="budget" className="text-sm font-medium mb-2 block">
-                                    Budget ($) <span className='text-red-500 dark:text-red-400'>*</span>
+                                    Budget ({getCurrencySymbol(data.country)}) <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
                                 <Input
                                     id="budget"
@@ -1346,7 +1356,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                     </div>
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Budget:</span>
-                                        <span className="font-medium text-green-600">${data.budget}</span>
+                                        <span className="font-medium text-green-600">{getCurrencySymbol(data.country)}{data.budget}</span>
                                     </div>
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Duration:</span>
