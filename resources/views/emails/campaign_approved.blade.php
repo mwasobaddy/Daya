@@ -33,10 +33,13 @@
             &lt;h3&gt;Next Steps&lt;/h3&gt;
             &lt;ul&gt;
                 &lt;li&gt;Contact the client to discuss campaign requirements&lt;/li&gt;
+                &lt;li&gt;&lt;strong&gt;Use the attached QR code&lt;/strong&gt; to direct potential customers to the client's product&lt;/li&gt;
                 &lt;li&gt;Begin executing the campaign according to the specifications&lt;/li&gt;
                 &lt;li&gt;Keep the client updated on progress&lt;/li&gt;
                 &lt;li&gt;Submit final deliverables when complete&lt;/li&gt;
             &lt;/ul&gt;
+
+            &lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; The attached QR code PDF contains a scannable code that will direct users directly to the client's digital product ({{ $campaign-&gt;digital_product_link }}). Print this QR code and display it in your business location or share it digitally to earn commissions from verified scans.&lt;/p&gt;
 
             &lt;p&gt;&lt;strong&gt;Potential Earnings:&lt;/strong&gt; You can earn up to 20% commission (${{ number_format($campaign-&gt;budget * 0.20, 2) }}) from this campaign.&lt;/p&gt;
 
