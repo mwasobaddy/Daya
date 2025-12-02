@@ -753,8 +753,8 @@ export default function DcdRegister() {
             }
             if (!data.wallet_pin) {
                 newErrors.wallet_pin = 'Wallet PIN is required';
-            } else if (data.wallet_pin.length < 4) {
-                newErrors.wallet_pin = 'Wallet PIN must be at least 4 digits';
+            } else if (data.wallet_pin.length !== 4) {
+                newErrors.wallet_pin = 'Wallet PIN must be exactly 4 digits';
             }
             if (!data.confirm_pin) {
                 newErrors.confirm_pin = 'Please confirm your wallet PIN';
@@ -1642,9 +1642,9 @@ export default function DcdRegister() {
                                         id="wallet_pin"
                                         type="password"
                                         value={data.wallet_pin}
-                                        onChange={(e) => updateData('wallet_pin', e.target.value)}
-                                        placeholder="Enter 4-6 digit PIN"
-                                        maxLength={6}
+                                        onChange={(e) => updateData('wallet_pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                        placeholder="Enter 4-digit PIN"
+                                        maxLength={4}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                                     />
                                     <InputError message={errors.wallet_pin} />
@@ -1658,9 +1658,9 @@ export default function DcdRegister() {
                                         id="confirm_pin"
                                         type="password"
                                         value={data.confirm_pin}
-                                        onChange={(e) => updateData('confirm_pin', e.target.value)}
+                                        onChange={(e) => updateData('confirm_pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
                                         placeholder="Confirm your PIN"
-                                        maxLength={6}
+                                        maxLength={4}
                                         className="mt-2 border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400 focus:outline-none"
                                     />
                                     <InputError message={errors.confirm_pin} />
