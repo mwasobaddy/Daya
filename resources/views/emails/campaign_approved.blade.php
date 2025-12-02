@@ -26,20 +26,14 @@
                 <p><strong>Title:</strong> {{ $campaign->title }}</p>
                 <p><strong>Description:</strong> {{ $campaign->description }}</p>
                 <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
-                <p><strong>Client:</strong> 
-                    {{ $client->name }}
-                    {{-- ({{ $client->email }}) --}}
-                </p>
+                <p><strong>Client:</strong> {{ $client->name }}</p>
                 <p><strong>Status:</strong> {{ ucfirst($campaign->status) }}</p>
             </div>
 
             <h3>Next Steps</h3>
             <ul>
-                {{-- <li>Contact the client to discuss campaign requirements</li> --}}
                 <li><strong>Use the attached QR code</strong> to direct potential customers to the client's product</li>
                 <li>Begin executing the campaign according to the specifications</li>
-                {{-- <li>Keep the client updated on progress</li>
-                <li>Submit final deliverables when complete</li> --}}
             </ul>
 
             <p><strong>Important:</strong> The attached QR code PDF contains a scannable code that will direct users directly to the client's digital product ({{ $campaign->digital_product_link }}). Print this QR code and display it in your business location or share it digitally to earn commissions from verified scans.</p>
