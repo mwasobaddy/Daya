@@ -52,13 +52,27 @@ interface Ward {
 type Step = 'account' | 'campaign' | 'targeting' | 'review';
 
 const currencyMap: Record<string, string> = {
-    'ken': 'KSh',
-    'nga': '₦',
+    'KE': 'KSh',
+    'NG': '₦',
     // Add more countries as needed
 };
 
 const getCurrencySymbol = (countryCode: string): string => {
-    return currencyMap[countryCode.toLowerCase()] || '$';
+    return currencyMap[countryCode.toUpperCase()] || '$';
+};
+
+// Cost per click mapping based on campaign objective
+const cpcMap: Record<string, number> = {
+    'music_promotion': 1,      // Light-Touch
+    'brand_awareness': 1,      // Light-Touch (simple)
+    'event_promotion': 1,      // Light-Touch (simple)
+    'social_cause': 1,         // Light-Touch (basic)
+    'app_downloads': 5,        // Moderate-Touch
+    'product_launch': 5,       // Moderate-Touch
+};
+
+const getCostPerClick = (objective: string): number => {
+    return cpcMap[objective] || 1; // Default to 1 if not found
 };
 
 export default function CampaignSubmit({ flash }: Props) {
@@ -886,6 +900,11 @@ export default function CampaignSubmit({ flash }: Props) {
                                         </SelectContent>
                                     </Select>
                                     <InputError message={errors.campaign_objective} />
+                                    {data.campaign_objective && data.campaign_objective !== '-' && (
+                                        <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
+                                            Cost per click: {getCurrencySymbol(data.country)} {getCostPerClick(data.campaign_objective)}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -1357,6 +1376,10 @@ export default function CampaignSubmit({ flash }: Props) {
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Budget:</span>
                                         <span className="font-medium text-green-600">{getCurrencySymbol(data.country)}{data.budget}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-gray-100">
+                                        <span className="text-gray-600">Cost per Click:</span>
+                                        <span className="font-medium text-blue-600">{getCurrencySymbol(data.country)}{getCostPerClick(data.campaign_objective)}</span>
                                     </div>
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Duration:</span>
