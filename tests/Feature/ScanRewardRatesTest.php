@@ -134,3 +134,41 @@ test('brand_awareness without explainer rewards KSh 1, with explainer rewards KS
     $scanExplainer = \App\Models\Scan::where('campaign_id', $campaignExplainer->id)->first();
     expect((float) $scanExplainer->earnings)->toBe(5.0);
 });
+
+test('music_promotion scan rewards N10 for Nigerian clients', function () {
+    $kenya = \App\Models\Country::create(['code' => 'KE', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $nigeria = \App\Models\Country::create(['code' => 'NG', 'name' => 'Nigeria', 'county_label' => 'State', 'subcounty_label' => 'LGA']);
+    $county = \App\Models\County::create(['country_id' => $nigeria->id, 'name' => 'Test State']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test LGA']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'country_id' => $nigeria->id, 'ward_id' => $ward->id]);
+    $dcd = User::factory()->create(['role' => 'dcd', 'ward_id' => $ward->id]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Nigerian Music Campaign',
+        'description' => 'Music in Nigeria',
+        'budget' => 100,
+        'county' => 'Example',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'None',
+        'campaign_objective' => 'music_promotion',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'approved',
+    ]);
+
+    $url = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaign->id]);
+    $response = $this->get($url);
+    $response->assertRedirect($campaign->digital_product_link);
+
+    $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
+    $earning = Earning::where('related_id', $scan->id)->where('type', 'scan')->first();
+    expect($earning)->not->toBeNull();
+    expect((float)$earning->amount)->toBe(10.0); // 1 KSh * 10 for Nigeria
+
+    $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
+    expect((float) $scan->earnings)->toBe(10.0);
+});

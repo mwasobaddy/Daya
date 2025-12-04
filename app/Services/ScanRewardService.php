@@ -88,21 +88,36 @@ class ScanRewardService
         $objective = $campaign->campaign_objective ?? null;
         $explainer = $campaign->explainer_video_url ?? $metadata['explainer_video_url'] ?? null;
 
+        // Get base pay per scan in Kenyan Shillings
         switch ($objective) {
             case 'music_promotion':
-                return 1.0;
+                $basePay = 1.0;
+                break;
             case 'app_downloads':
-                return 5.0;
+                $basePay = 5.0;
+                break;
             case 'product_launch':
-                return 5.0;
+                $basePay = 5.0;
+                break;
             case 'brand_awareness':
-                return $explainer ? 5.0 : 1.0;
+                $basePay = $explainer ? 5.0 : 1.0;
+                break;
             case 'event_promotion':
-                return $explainer ? 5.0 : 1.0;
+                $basePay = $explainer ? 5.0 : 1.0;
+                break;
             case 'social_cause':
-                return $explainer ? 5.0 : 1.0;
+                $basePay = $explainer ? 5.0 : 1.0;
+                break;
             default:
-                return 1.0;
+                $basePay = 1.0;
         }
+
+        // Adjust for currency: 1 KSh = 10 Naira
+        $client = $campaign->client;
+        if ($client && $client->country && $client->country->code === 'NG') {
+            return $basePay * 10;
+        }
+
+        return $basePay;
     }
 }
