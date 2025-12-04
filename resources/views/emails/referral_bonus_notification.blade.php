@@ -26,8 +26,8 @@
 
             <div class="balances">
                 <h3>Your Current Venture Share Balances:</h3>
-                <p><strong>KeDDS Tokens:</strong> {{ number_format($balances['kedds'], 2) }}</p>
-                <p><strong>KeDWS Tokens:</strong> {{ number_format($balances['kedws'], 2) }}</p>
+                <p><strong>{{ $tokenNames['dds'] }} Tokens:</strong> {{ number_format($balances['kedds'], 2) }}</p>
+                <p><strong>{{ $tokenNames['dws'] }} Tokens:</strong> {{ number_format($balances['kedws'], 2) }}</p>
             </div>
 
             <p>These tokens represent your earnings and can be redeemed for various benefits on the platform. Keep referring more members to increase your balances!</p>

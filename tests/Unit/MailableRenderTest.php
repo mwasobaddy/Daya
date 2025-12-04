@@ -88,7 +88,11 @@ test('referral bonus notification mailable renders successfully', function () {
     $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
     $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
 
-    $referrer = User::factory()->create(['role' => 'da', 'ward_id' => $ward->id]);
+    $referrer = User::factory()->create([
+        'role' => 'da', 
+        'ward_id' => $ward->id,
+        'country_id' => $country->id
+    ]);
 
     $ventureShareService = app(VentureShareService::class);
 
@@ -99,4 +103,27 @@ test('referral bonus notification mailable renders successfully', function () {
     expect($html)->toContain($referrer->name);
     expect($html)->toContain('KeDDS Tokens');
     expect($html)->toContain('KeDWS Tokens');
+});
+
+test('referral bonus notification mailable renders with Nigerian tokens', function () {
+    $country = \App\Models\Country::create(['code' => 'ng', 'name' => 'Nigeria', 'county_label' => 'State', 'subcounty_label' => 'Local Government']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test State']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test LG']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $referrer = User::factory()->create([
+        'role' => 'da', 
+        'ward_id' => $ward->id,
+        'country_id' => $country->id
+    ]);
+
+    $ventureShareService = app(VentureShareService::class);
+
+    $mailable = new ReferralBonusNotification($referrer, $ventureShareService);
+    $html = $mailable->render();
+
+    expect($html)->toContain('Referral Bonus Update');
+    expect($html)->toContain($referrer->name);
+    expect($html)->toContain('NgDDS Tokens');
+    expect($html)->toContain('NgDWS Tokens');
 });

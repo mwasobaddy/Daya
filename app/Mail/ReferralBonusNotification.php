@@ -16,6 +16,7 @@ class ReferralBonusNotification extends Mailable
 
     public User $referrer;
     public array $balances;
+    public array $tokenNames;
 
     /**
      * Create a new message instance.
@@ -24,6 +25,14 @@ class ReferralBonusNotification extends Mailable
     {
         $this->referrer = $referrer;
         $this->balances = $ventureShareService->getTotalShares($referrer);
+        
+        // Determine token names based on user's country
+        $countryCode = $referrer->country ? strtoupper($referrer->country->code) : 'KE'; // Default to KE if no country set
+        
+        $this->tokenNames = [
+            'dds' => $countryCode === 'NG' ? 'NgDDS' : 'KeDDS',
+            'dws' => $countryCode === 'NG' ? 'NgDWS' : 'KeDWS',
+        ];
     }
 
     /**
@@ -46,6 +55,7 @@ class ReferralBonusNotification extends Mailable
             with: [
                 'referrer' => $this->referrer,
                 'balances' => $this->balances,
+                'tokenNames' => $this->tokenNames,
             ],
         );
     }
