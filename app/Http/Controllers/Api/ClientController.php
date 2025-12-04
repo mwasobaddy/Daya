@@ -151,41 +151,6 @@ class ClientController extends Controller
                 ]);
             }
 
-            // Check if client already has an active campaign
-            $existingActiveCampaign = Campaign::where('client_id', $client->id)
-                ->whereIn('status', ['submitted', 'approved', 'active'])
-                ->where(function ($query) {
-                    $query->whereNull('completed_at')
-                          ->orWhere('completed_at', '>', now());
-                })
-                ->first();
-
-            if ($existingActiveCampaign) {
-                // Send email to user about existing campaign
-                try {
-                    \Mail::to($client->email)->send(new \App\Mail\CampaignNotification($existingActiveCampaign, 'duplicate_attempt'));
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to send duplicate campaign notification: ' . $e->getMessage());
-                }
-
-                // Send notification to admins about duplicate attempt
-                try {
-                    $adminUsers = User::where('role', 'admin')->get();
-                    foreach ($adminUsers as $admin) {
-                        \Mail::to($admin->email)->send(new \App\Mail\CampaignNotification($existingActiveCampaign, 'admin_duplicate_attempt'));
-                    }
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to send admin duplicate campaign notification: ' . $e->getMessage());
-                }
-
-                return response()->json([
-                    'message' => 'You already have an active campaign. You can only have one active campaign at a time. Please check your email for details about your existing campaign.',
-                    'existing_campaign_id' => $existingActiveCampaign->id,
-                    'existing_campaign_title' => $existingActiveCampaign->title,
-                    'existing_campaign_status' => $existingActiveCampaign->status,
-                ], 409); // 409 Conflict
-            }
-
             // Convert content safety preferences to single value for storage
             $contentSafety = 'family_friendly'; // default
             if (in_array('adult', $request->content_safety_preferences) || in_array('no_restrictions', $request->content_safety_preferences)) {

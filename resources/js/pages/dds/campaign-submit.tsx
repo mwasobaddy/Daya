@@ -477,10 +477,6 @@ export default function CampaignSubmit({ flash }: Props) {
                     setTimeout(() => {
                         window.location.href = 'https://www.daya.africa';
                     }, 2000);
-                } else if (response.status === 409) {
-                    // User already has an active campaign
-                    console.log('User has existing active campaign:', result);
-                    toast.error(result.message || 'You already have an active campaign. Check your email for details.');
                 } else {
                     console.error('Campaign submission error:', result);
 
