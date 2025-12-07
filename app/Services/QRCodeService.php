@@ -15,144 +15,21 @@ use Dompdf\Dompdf;
 
 class QRCodeService
 {
-    /**
-     * Generate QR code for a DCD
-     */
-    public function generateDCDQRCode(User $user): string
-    {
-        if ($user->role !== 'dcd') {
-            throw new \InvalidArgumentException('User must be a DCD');
-        }
 
-        // Create QR code data - URL that clients can scan using DCD ID
-        $qrData = route('dds.campaign.submit') . '?dcd_id=' . $user->id;
-
-        // Generate PNG QR code
-        $renderer = new GDLibRenderer(400, 4, 'png');
-        $writer = new Writer($renderer);
-        $pngContent = $writer->writeString($qrData);
-        
-        // Logo embed (optional) - load public/PDFLogo.png and embed base64.
-        $logoSvg = null;
-        try {
-            $logoPath = public_path('PDFLogo.png');
-            if (file_exists($logoPath)) {
-                $svgContents = file_get_contents($logoPath);
-                $logoSvg = 'data:image/svg+xml;base64,' . base64_encode($svgContents);
-            }
-        } catch (\Exception $e) {
-            // ignore logo if it can't be read
-            $logoSvg = null;
-        }
-
-        // Embed PNG into HTML via data URI (avoid file path / chroot issues)
-        $b64Png = base64_encode($pngContent);
-        $html = '<html>
-            <head>
-                <meta charset="utf-8">
-                <style>
-                    body {
-                        font-family: "Helvetica", Arial, sans-serif;
-                        padding: 0;
-                        display: block;
-                        margin: auto;
-                        background: #fefbf0;
-                        border-radius: 8px;
-                    }
-                    .poster {
-                        display: block;
-                        margin: 70px auto;
-                    }
-                    .logo {
-                        display: block;
-                        margin: auto;
-                        width: 100%;
-                        text-align: center;
-                    }
-                    .logo img {
-                        width: 340px;
-                        max-width: 90%;
-                        height: auto;
-                        display: block;
-                        margin: 0 auto;
-                        border-radius: 8px;
-                    }
-                    h1.title {
-                        font-size: 36px;
-                        margin: 18px 0 6px;
-                        color:#0a0a0a;
-                        text-align: center;
-                    }
-                    .qr {
-                        margin-top: 8px;
-                        text-align: center;
-                    }
-                    .qr img {
-                        width: 400px;
-                        height: 400px;
-                    }
-                    p.caption {
-                        font-size: 36px;
-                        font-weight: bold;
-                        margin-top: 12px;
-                        text-align: center;
-                    }
-                    .footer {
-                        margin-top: 18px;
-                        font-size: 12px;
-                        color:#333;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="poster">';
-
-                    if ($logoSvg) {
-                        $html .= '<div class="logo">
-                                    <img src="' . $logoSvg . '" alt="Daya logo" />
-                                </div>';
-                    }
-
-                    $html .= '<h1 class="title">Discover with Daya</h1>';
-                    $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
-                    $html .= '<p class="caption">Scan to register</p>';
-                    $html .= '<div class="footer">&nbsp;</div>';
-                    $html .= '
-                </div>
-            </body>
-        </html>';
-
-        // Generate PDF
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        $pdfContent = $dompdf->output();
-
-        // Store PDF to storage/public/qrcodes and return filename
-        $filename = 'qrcodes/dcd_' . $user->id . '_' . time() . '.pdf';
-        Storage::disk('public')->put($filename, $pdfContent);
-
-        // Update the user with the stored filename (not base64)
-        $user->update(['qr_code' => $filename]);
-
-        return $filename;
-    }
 
     /**
-     * Generate a campaign-specific QR code for a DCD and campaign.
-     * Returns base64-encoded PDF content.
+     * Generate a single DCD QR code that works with smart campaign selection.
+     * Returns filename of stored PDF.
      */
-    public function generateDcdCampaignQr(User $dcd, \App\Models\Campaign $campaign): string
+    public function generateDcdQr(User $dcd): string
     {
         if ($dcd->role !== 'dcd') {
             throw new \InvalidArgumentException('User must be a DCD');
         }
 
-        // Signed URL that records a scan and redirects to the campaign url
-        $qrData = \Illuminate\Support\Facades\URL::temporarySignedRoute('scan.redirect', now()->addYears(1), [
+        // Signed URL that finds active campaign for DCD and redirects
+        $qrData = \Illuminate\Support\Facades\URL::temporarySignedRoute('scan.dcd', now()->addYears(1), [
             'dcd' => $dcd->id,
-            'campaign' => $campaign->id,
         ]);
 
         $renderer = new GDLibRenderer(400, 4, 'png');
@@ -256,30 +133,31 @@ class QRCodeService
         $dompdf->render();
         $pdfContent = $dompdf->output();
 
-        // Store the campaign QR PDF into storage and return filename
-        $filename = 'qrcodes/campaign_' . $dcd->id . '_' . $campaign->id . '_' . time() . '.pdf';
+        // Store the DCD QR PDF into storage and return filename
+        $filename = 'qrcodes/dcd_' . $dcd->id . '_' . time() . '.pdf';
         Storage::disk('public')->put($filename, $pdfContent);
 
         return $filename;
     }
 
     /**
-     * Record a campaign scan by DCD and campaign ids
+     * Find active campaign for DCD and record scan
      */
-    public function recordCampaignScan(int $dcdId, int $campaignId, ?array $geoData = null)
+    public function recordDcdScan(int $dcdId, ?array $geoData = null)
     {
         $dcd = User::findOrFail($dcdId);
-        $campaign = \App\Models\Campaign::findOrFail($campaignId);
-
-        // Basic validation
-        if ($campaign->dcd_id !== $dcd->id) {
-            throw new \InvalidArgumentException('Campaign is not assigned to this DCD');
+        
+        // Find active campaign for this DCD using smart selection logic
+        $activeCampaign = $this->findActiveCampaignForDcd($dcd);
+        
+        if (!$activeCampaign) {
+            throw new \InvalidArgumentException('No active campaigns found for this DCD');
         }
 
         $deviceFingerprint = $geoData['fingerprint'] ?? null;
         $scan = \App\Models\Scan::create([
             'dcd_id' => $dcdId,
-            'campaign_id' => $campaignId,
+            'campaign_id' => $activeCampaign->id,
             'scanned_at' => now(),
             'geo' => $geoData,
             'device_fingerprint' => $deviceFingerprint,
@@ -293,7 +171,55 @@ class QRCodeService
             \Log::warning('Failed to credit scan reward via ScanRewardService: ' . $e->getMessage());
         }
 
-        return $scan;
+        return ['scan' => $scan, 'campaign' => $activeCampaign];
+    }
+
+    /**
+     * Find the active campaign for a DCD using smart selection logic
+     */
+    private function findActiveCampaignForDcd(User $dcd): ?\App\Models\Campaign
+    {
+        $today = now()->format('Y-m-d');
+        
+        // Get all assigned campaigns for this DCD, ordered by creation date (oldest first)
+        $campaigns = \App\Models\Campaign::where('dcd_id', $dcd->id)
+            ->whereIn('status', ['approved', 'active'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+            
+        foreach ($campaigns as $campaign) {
+            $metadata = $campaign->metadata ?? [];
+            $startDate = $metadata['start_date'] ?? null;
+            $endDate = $metadata['end_date'] ?? null;
+            
+            // Skip if no date information
+            if (!$startDate || !$endDate) {
+                continue;
+            }
+            
+            // Check if campaign is expired
+            if ($today > $endDate) {
+                continue;
+            }
+            
+            // Check if campaign is active today
+            if ($today >= $startDate && $today <= $endDate) {
+                return $campaign;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Legacy method for backward compatibility - delegates to recordDcdScan
+     * @deprecated Use recordDcdScan instead
+     */
+    public function recordCampaignScan(int $dcdId, int $campaignId, ?array $geoData = null)
+    {
+        // For backward compatibility, we'll just delegate to the new DCD scan method
+        // The campaign ID is ignored since we now use smart selection
+        return $this->recordDcdScan($dcdId, $geoData);
     }
 
     // Compute pay per scan was moved to ScanRewardService
@@ -501,7 +427,7 @@ class QRCodeService
     public function regenerateQRCode(User $user): string
     {
         if ($user->role === 'dcd') {
-            return $this->generateDCDQRCode($user);
+            return $this->generateDcdQr($user);
         } elseif ($user->role === 'da') {
             return $this->generateDAReferralQRCode($user);
         }
