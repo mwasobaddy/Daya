@@ -38,4 +38,37 @@ class ScanRedirectController extends Controller
             abort(400, 'Invalid scan');
         }
     }
+
+    /**
+     * Handle DCD-specific QR scan with smart campaign selection
+     */
+    public function handleDcd(Request $request)
+    {
+        // Validate signed URL
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Invalid or expired QR code');
+        }
+
+        $dcdId = (int) $request->query('dcd');
+
+        try {
+            // Use smart campaign selection and record scan
+            $result = $this->qrCodeService->recordDcdScan($dcdId, null);
+            $campaign = $result['campaign'];
+
+            return redirect()->away($campaign->digital_product_link);
+        } catch (\Exception $e) {
+            // Log and show user-friendly message
+            \Log::warning('DCD QR scan error: ' . $e->getMessage(), [
+                'dcd_id' => $dcdId,
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip()
+            ]);
+
+            // Show "no active campaigns" message using a simple view
+            return response()->view('errors.no-active-campaigns', [
+                'message' => 'No active campaigns right now, try again later'
+            ], 404);
+        }
+    }
 }
