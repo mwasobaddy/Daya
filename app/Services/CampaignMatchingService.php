@@ -28,11 +28,39 @@ class CampaignMatchingService
 
         // Basic matching algorithm: first try exact business name match, then account type
         return DB::transaction(function () use ($campaign, $businessName, $businessTypes, $musicGenres, $targetCountryCode) {
-            // Build base query for DCDs that do not have active campaigns
-            $baseQuery = User::where('role', 'dcd')
-                ->whereDoesntHave('assignedCampaigns', function ($q) {
+            // Get campaign date range from metadata
+            $campaignMetadata = $campaign->metadata ?? [];
+            $startDate = $campaignMetadata['start_date'] ?? null;
+            $endDate = $campaignMetadata['end_date'] ?? null;
+            
+            // Build base query for DCDs that do not have overlapping campaigns
+            $baseQuery = User::where('role', 'dcd');
+            
+            if ($startDate && $endDate) {
+                $baseQuery->whereDoesntHave('assignedCampaigns', function ($q) use ($startDate, $endDate) {
+                    $q->whereIn('status', ['submitted', 'approved', 'active'])
+                      ->where(function ($dateQuery) use ($startDate, $endDate) {
+                          // Check for overlapping date ranges using SQLite compatible JSON
+                          if (config('database.default') === 'sqlite') {
+                              $dateQuery->whereRaw(
+                                  "(json_extract(metadata, '$.start_date') <= ? AND json_extract(metadata, '$.end_date') >= ?)",
+                                  [$endDate, $startDate]
+                              );
+                          } else {
+                              // MySQL version
+                              $dateQuery->whereRaw(
+                                  "(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.start_date')) <= ? AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.end_date')) >= ?)",
+                                  [$endDate, $startDate]
+                              );
+                          }
+                      });
+                });
+            } else {
+                // Fallback to old logic if dates not available
+                $baseQuery->whereDoesntHave('assignedCampaigns', function ($q) {
                     $q->whereIn('status', ['submitted', 'approved', 'active']);
                 });
+            }
 
             // Try business name exact match (case insensitive)
             if ($businessName) {
