@@ -128,22 +128,22 @@ class AdminActionService
         $client = $campaign->client;
 
         if ($dcd) {
-            // Generate campaign-specific QR code and attach to mail
+            // Ensure DCD has a QR code (DCD-specific, not campaign-specific)
             $qrCodeService = app(\App\Services\QRCodeService::class);
-            try {
-                $qrFilename = $qrCodeService->generateDcdCampaignQr($dcd, $campaign);
-                // Store QR filename in campaign metadata for future reference
-                $metadata = $campaign->metadata ?? [];
-                $metadata['dcd_qr'] = $qrFilename;
-                $campaign->metadata = $metadata;
-                $campaign->save();
-            } catch (\Exception $e) {
-                \Log::warning('Failed to generate campaign QR: ' . $e->getMessage());
-                $qrCodeBase64 = null;
+            $qrFilename = null;
+            
+            if (!$dcd->qr_code) {
+                try {
+                    $qrFilename = $qrCodeService->generateDCDQRCode($dcd);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to generate DCD QR code: ' . $e->getMessage());
+                }
+            } else {
+                $qrFilename = $dcd->qr_code;
             }
 
             try {
-                \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client, $qrFilename ?? null));
+                \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client, $qrFilename));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send CampaignApproved email to DCD: ' . $e->getMessage());
             }
