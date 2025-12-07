@@ -149,7 +149,7 @@ test('campaign submission requiring music genres for label account type works an
     $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
     $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
 
-    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'MusicShop', 'account_type' => 'dcd', 'ward_id' => $ward->id]);
+    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'MusicShop', 'account_type' => 'business', 'ward_id' => $ward->id]);
     $dcd->profile = array_merge($dcd->profile ?? [], ['music_genres' => ['Hip Hop', 'Pop']]);
     $dcd->save();
 

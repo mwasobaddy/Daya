@@ -39,7 +39,7 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
         'budget' => 200,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
-        'duration' => '2025-11-17 to 2025-11-20',
+        'duration' => '2025-12-07 to 2025-12-10',
         'objectives' => 'Test objectives',
         'campaign_objective' => 'music_promotion',
         'digital_product_link' => 'https://example.com',
@@ -48,6 +48,8 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
             'music_genres' => ['Afrobeats'],
             'target_country' => 'KEN',
             'pay_per_scan' => 1.23,
+            'start_date' => '2025-12-07',
+            'end_date' => '2025-12-10',
         ],
     ]);
 
@@ -70,8 +72,9 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
         return $mail->hasTo($dcd->email) && count($mail->attachments()) > 0;
     });
 
-    // Now simulate a scan redirect (client scans the QR) and assert an Earning is created
-    $signedUrl = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $campaign->dcd_id, 'campaign' => $campaign->id]);
+    // Now simulate a scan redirect (client scans the QR) and assert an Earning is created  
+    // Now simulate a scan redirect (client scans the DCD QR) and assert an Earning is created
+    $signedUrl = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $campaign->dcd_id]);
     $redirectResponse = $this->get($signedUrl);
     $redirectResponse->assertRedirect($campaign->digital_product_link);
 
