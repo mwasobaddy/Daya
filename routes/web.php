@@ -46,8 +46,10 @@ Route::get('/campaign/submit', function () {
 Route::get('/admin/action/{action}/{token}', [App\Http\Controllers\AdminActionController::class, 'handleAction'])
     ->name('admin.action');
 
-// QR redirect (scan) route - signed
+// QR redirect (scan) routes - signed
 Route::get('/qr/redirect', [\App\Http\Controllers\ScanRedirectController::class, 'handle'])
     ->name('scan.redirect');
+Route::get('/qr/dcd', [\App\Http\Controllers\ScanRedirectController::class, 'handleDcd'])
+    ->name('scan.dcd');
 
 require __DIR__.'/settings.php';
