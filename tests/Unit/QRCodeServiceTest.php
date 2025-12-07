@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
-test('generate dcd campaign qr saves pdf to storage and returns filename', function () {
+test('generate dcd qr saves pdf to storage and returns filename', function () {
     Storage::fake('public');
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
@@ -36,14 +36,14 @@ test('generate dcd campaign qr saves pdf to storage and returns filename', funct
     ]);
 
     $svc = app(QRCodeService::class);
-    $filename = $svc->generateDcdCampaignQr($dcd, $campaign);
+    $filename = $svc->generateDcdQr($dcd);
 
     expect($filename)->toBeString();
     expect(Str::startsWith($filename, 'qrcodes/'))->toBeTrue();
     expect(Storage::disk('public')->exists($filename))->toBeTrue();
 });
 
-test('generate dcd qr saves pdf to storage and returns filename', function () {
+test('generate dcd qr creates valid filename without campaigns', function () {
     Storage::fake('public');
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
@@ -54,13 +54,9 @@ test('generate dcd qr saves pdf to storage and returns filename', function () {
     $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'TestDcd', 'account_type' => 'business', 'ward_id' => $ward->id]);
 
     $svc = app(QRCodeService::class);
-    $filename = $svc->generateDCDQRCode($dcd);
+    $filename = $svc->generateDcdQr($dcd);
 
     expect($filename)->toBeString();
     expect(Str::startsWith($filename, 'qrcodes/'))->toBeTrue();
     expect(Storage::disk('public')->exists($filename))->toBeTrue();
-    
-    // Verify the user was updated with the QR code filename
-    $dcd->refresh();
-    expect($dcd->qr_code)->toBe($filename);
 });

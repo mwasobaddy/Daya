@@ -76,10 +76,12 @@ test('dcd welcome mailable renders successfully', function () {
     $html = $mailable->render();
 
     expect($html)->toContain('Your Role as a Digital Content Distributor');
+    expect($html)->toContain('Your Personal QR Code');
+    expect($html)->toContain('Attached to this email is your personal DCD QR code PDF');
     
-    // $attachments = $mailable->attachments();
-    // expect($attachments)->toHaveCount(1);
-    // expect($attachments[0]->as)->toBe('qr-code.pdf');
+    $attachments = $mailable->attachments();
+    expect($attachments)->toHaveCount(1);
+    expect($attachments[0]->as)->toBe('dcd-qr-code.pdf');
 });
 
 test('referral bonus notification mailable renders successfully', function () {

@@ -52,7 +52,7 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
 
     // Mock QRCodeService to avoid file generation complexity.
     $mockQr = $this->mock(QRCodeService::class, function ($mock) use ($dcd, $campaign) {
-        $mock->shouldReceive('generateDcdCampaignQr')->andReturn('qr-codes/test.svg');
+        $mock->shouldReceive('generateDcdQr')->andReturn('qr-codes/test.svg');
     });
 
     $svc = app(\App\Services\AdminActionService::class);
@@ -62,5 +62,8 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
 
     $campaign->refresh();
     expect($campaign->dcd_id)->toBe($dcd->id);
-    expect($campaign->metadata['dcd_qr'] ?? null)->not->toBeNull();
+    
+    // Verify DCD has QR code generated 
+    $dcd->refresh();
+    expect($dcd->qr_code)->not->toBeNull();
 });
