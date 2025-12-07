@@ -10,28 +10,7 @@
         .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
         .content { padding: 20px; }
         .welcome-info { background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; }
-        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Welcome to Daya, {{ $user->name }}!</h1>
-            <p>You're now part of the Daya network. Start earning by scanning campaigns!</p>
-        </div>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Daya</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
-        .welcome-info { background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; }
+        .qr-info { background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin: 20px 0; }
         .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
     </style>
 </head>
@@ -58,11 +37,17 @@
             </div>
             @endif
 
+            <div class="qr-info">
+                <h3 style="color: #0c5460; margin-top: 0;">📱 Your Personal QR Code</h3>
+                <p><strong>Attached to this email is your personal DCD QR code PDF.</strong></p>
+                <p>This QR code is unique to you and will be used for all your campaign activities. Keep it safe and accessible!</p>
+            </div>
+
             <h3>How to Earn</h3>
             <ul>
                 <li>Wait for campaign assignments to be sent to your email</li>
-                <li>When assigned a campaign, you'll receive detailed instructions and QR codes</li>
-                <li>Execute the campaign by displaying QR codes and directing customers to the client's products</li>
+                <li>When assigned a campaign, you'll use your personal QR code (attached) for customer interactions</li>
+                <li>Display your QR code prominently and direct customers to scan it</li>
                 <li>You earn commissions on successful campaign completions (up to 20% of campaign budget)</li>
                 <li>Track your earnings through monthly reports sent to this email</li>
             </ul>
