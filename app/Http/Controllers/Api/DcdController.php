@@ -174,7 +174,7 @@ class DcdController extends Controller
         \Log::info('User verified in database', ['user_id' => $savedUser->id]);
 
         // Generate QR code file and store filename in DB
-        $qrFilename = $this->qrCodeService->generateDCDQRCode($user);
+        $qrFilename = $this->qrCodeService->generateDcdQr($user);
 
         // Update user with QR code filename
         $user->update(['qr_code' => $qrFilename]);
