@@ -29,7 +29,6 @@ class CampaignMatchingService
         // Basic matching algorithm: first try exact business name match, then account type
         return DB::transaction(function () use ($campaign, $businessName, $businessTypes, $musicGenres, $targetCountryCode) {
             // Build base query for DCDs that do not have active campaigns
-            // We'll check for date overlaps separately in PHP to support SQLite
             $baseQuery = User::where('role', 'dcd')
                 ->whereDoesntHave('assignedCampaigns', function ($q) {
                     $q->whereIn('status', ['submitted', 'approved', 'active']);
@@ -37,35 +36,31 @@ class CampaignMatchingService
 
             // Try business name exact match (case insensitive)
             if ($businessName) {
-                $candidates = (clone $baseQuery)
+                $candidate = (clone $baseQuery)
                     ->whereRaw('LOWER(business_name) = ?', [strtolower($businessName)])
                     ->orderBy('created_at', 'asc')
                     ->lockForUpdate()
-                    ->get();
+                    ->first();
 
-                foreach ($candidates as $candidate) {
-                    if (!$this->hasDateOverlap($candidate, $campaign)) {
-                        $campaign->dcd_id = $candidate->id;
-                        $campaign->save();
-                        return $candidate;
-                    }
+                if ($candidate) {
+                    $campaign->dcd_id = $candidate->id;
+                    $campaign->save();
+                    return $candidate;
                 }
             }
 
             // Fallback: match by account_type (business_types array)
             if (!empty($businessTypes) && is_array($businessTypes)) {
-                $candidates = (clone $baseQuery)
+                $candidate = (clone $baseQuery)
                     ->whereIn('account_type', $businessTypes)
                     ->orderBy('created_at', 'asc')
                     ->lockForUpdate()
-                    ->get();
+                    ->first();
 
-                foreach ($candidates as $candidate) {
-                    if (!$this->hasDateOverlap($candidate, $campaign)) {
-                        $campaign->dcd_id = $candidate->id;
-                        $campaign->save();
-                        return $candidate;
-                    }
+                if ($candidate) {
+                    $campaign->dcd_id = $candidate->id;
+                    $campaign->save();
+                    return $candidate;
                 }
             }
 
@@ -87,13 +82,11 @@ class CampaignMatchingService
                     }
                 }
 
-                $candidates = $candidateQuery->lockForUpdate()->get();
-                foreach ($candidates as $candidate) {
-                    if (!$this->hasDateOverlap($candidate, $campaign)) {
-                        $campaign->dcd_id = $candidate->id;
-                        $campaign->save();
-                        return $candidate;
-                    }
+                $candidate = $candidateQuery->lockForUpdate()->first();
+                if ($candidate) {
+                    $campaign->dcd_id = $candidate->id;
+                    $campaign->save();
+                    return $candidate;
                 }
 
                 // Fallback: query a smaller candidate set (possibly country-filtered) and do PHP-level matching to support SQLite / other DBs.
@@ -106,11 +99,9 @@ class CampaignMatchingService
                     $profile = is_string($candidateUser->profile) ? json_decode($candidateUser->profile, true) : (array) $candidateUser->profile;
                     $dcdGenres = $profile['music_genres'] ?? [];
                     if (!empty($dcdGenres) && array_intersect($musicGenres, $dcdGenres)) {
-                        if (!$this->hasDateOverlap($candidateUser, $campaign)) {
-                            $campaign->dcd_id = $candidateUser->id;
-                            $campaign->save();
-                            return $candidateUser;
-                        }
+                        $campaign->dcd_id = $candidateUser->id;
+                        $campaign->save();
+                        return $candidateUser;
                     }
                 }
             }
@@ -118,55 +109,5 @@ class CampaignMatchingService
             // No match found
             return null;
         });
-    }
-
-    /**
-     * Check if a DCD has any campaigns that overlap with the new campaign's date range
-     */
-    private function hasDateOverlap(User $dcd, Campaign $newCampaign): bool
-    {
-        $newMetadata = $newCampaign->metadata ?? [];
-        $newStartDate = $newMetadata['start_date'] ?? null;
-        $newEndDate = $newMetadata['end_date'] ?? null;
-
-        if (!$newStartDate || !$newEndDate) {
-            return false; // No dates to compare
-        }
-
-        try {
-            $newStart = \Carbon\Carbon::parse($newStartDate);
-            $newEnd = \Carbon\Carbon::parse($newEndDate);
-        } catch (\Exception $e) {
-            return false; // Invalid date format, skip overlap check
-        }
-
-        // Get all active campaigns for this DCD
-        $existingCampaigns = Campaign::where('dcd_id', $dcd->id)
-            ->whereIn('status', ['submitted', 'approved', 'active'])
-            ->get();
-
-        foreach ($existingCampaigns as $existingCampaign) {
-            $existingMetadata = $existingCampaign->metadata ?? [];
-            $existingStartDate = $existingMetadata['start_date'] ?? null;
-            $existingEndDate = $existingMetadata['end_date'] ?? null;
-
-            if (!$existingStartDate || !$existingEndDate) {
-                continue; // Skip campaigns without proper dates
-            }
-
-            try {
-                $existingStart = \Carbon\Carbon::parse($existingStartDate);
-                $existingEnd = \Carbon\Carbon::parse($existingEndDate);
-
-                // Check for overlap: new campaign overlaps if it starts before existing ends and ends after existing starts
-                if ($newStart->lte($existingEnd) && $newEnd->gte($existingStart)) {
-                    return true; // Overlap found
-                }
-            } catch (\Exception $e) {
-                continue; // Skip campaigns with invalid dates
-            }
-        }
-
-        return false; // No overlaps found
     }
 }

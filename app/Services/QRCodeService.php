@@ -16,7 +16,7 @@ use Dompdf\Dompdf;
 class QRCodeService
 {
     /**
-     * Generate DCD-specific QR code with signed URL for scanning
+     * Generate QR code for a DCD
      */
     public function generateDCDQRCode(User $user): string
     {
@@ -24,10 +24,8 @@ class QRCodeService
             throw new \InvalidArgumentException('User must be a DCD');
         }
 
-        // Create signed QR code URL for DCD scans
-        $qrData = \Illuminate\Support\Facades\URL::temporarySignedRoute('scan.dcd', now()->addYears(1), [
-            'dcd' => $user->id,
-        ]);
+        // Create QR code data - URL that clients can scan using DCD ID
+        $qrData = route('dds.campaign.submit') . '?dcd_id=' . $user->id;
 
         // Generate PNG QR code
         $renderer = new GDLibRenderer(400, 4, 'png');
@@ -115,9 +113,9 @@ class QRCodeService
                                 </div>';
                     }
 
-                    $html .= '<h1 class="title">Scan to Discover</h1>';
-                    $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="DCD QR" /></div>';
-                    $html .= '<p class="caption">Scan for Active Campaigns</p>';
+                    $html .= '<h1 class="title">Discover with Daya</h1>';
+                    $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
+                    $html .= '<p class="caption">Scan to register</p>';
                     $html .= '<div class="footer">&nbsp;</div>';
                     $html .= '
                 </div>
@@ -144,7 +142,6 @@ class QRCodeService
     /**
      * Generate a campaign-specific QR code for a DCD and campaign.
      * Returns base64-encoded PDF content.
-     * @deprecated This method is deprecated. Use DCD-specific QR codes instead.
      */
     public function generateDcdCampaignQr(User $dcd, \App\Models\Campaign $campaign): string
     {

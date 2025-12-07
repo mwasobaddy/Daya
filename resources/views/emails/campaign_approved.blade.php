@@ -36,7 +36,7 @@
                 <li>Begin executing the campaign according to the specifications</li>
             </ul>
 
-            <p><strong>Important:</strong> Your DCD QR code will automatically direct users to the most appropriate active campaign. When customers scan your QR code during this campaign period ({{ $campaign->metadata['start_date'] ?? 'TBD' }} to {{ $campaign->metadata['end_date'] ?? 'TBD' }}), they will be taken to the client's digital product ({{ $campaign->digital_product_link }}) and you'll earn commissions from verified scans.</p>
+            <p><strong>Important:</strong> The attached QR code PDF contains a scannable code that will direct users directly to the client's digital product ({{ $campaign->digital_product_link }}). Print this QR code and display it in your business location or share it digitally to earn commissions from verified scans.</p>
 
             <p><strong>Potential Earnings:</strong> You can earn up to 20% commission (${{ number_format($campaign->budget * 0.20, 2) }}) from this campaign.</p>
 
