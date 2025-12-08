@@ -82,6 +82,14 @@ class QRCodeService
                         width: 400px;
                         height: 400px;
                     }
+                    .qr_1 {
+                        margin-top: 20px;
+                        text-align: center;
+                    }
+                    .qr_1 img {
+                        width: 600px;
+                        height: 600px;
+                    }
                     p.caption {
                         font-size: 36px;
                         font-weight: bold;
@@ -123,6 +131,9 @@ class QRCodeService
                     $html .= '<div class="footer">&nbsp;</div>';
                     $html .= '
                 </div>
+                <div>';
+                    $html .= '<div class="qr_1"><img src="data:image/png;base64,' . $b64Png . '" alt="Campaign QR" /></div>';
+                '</div>
             </body>
         </html>';
 
@@ -307,6 +318,14 @@ class QRCodeService
                                     width: 400px;
                                     height: 400px;
                                 }
+                                .qr_1 {
+                                    margin-top: 20px;
+                                    text-align: center;
+                                }
+                                .qr_1 img {
+                                    width: 600px;
+                                    height: 600px;
+                                }
                                 p.caption {
                                     font-size: 36px;
                                     font-weight: bold;
@@ -334,7 +353,9 @@ class QRCodeService
                                 $html .= '<p class="caption">Scan to register</p>';
                                 $html .= '<div class="footer">&nbsp;</div>';
                                 $html .= '
-                            </div>
+                            <div>';
+                                $html .= '<div class="qr_1"><img src="data:image/png;base64,' . $b64Png . '" alt="Campaign QR" /></div>';
+                            '</div>
                         </body>
                     </html>';
 
