@@ -47,6 +47,97 @@ test('assigns a dcd matching business name', function () {
     expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
 });
 
+test('assigns a dcd matching campaign objective to campaign types', function () {
+    // Create a Country/County/Subcounty/Ward since users require ward_id
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    // Create DCD with mobile_apps in campaign_types (should match app_downloads campaigns)
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'AppDistributor',
+        'account_type' => 'business',
+        'ward_id' => $ward->id,
+        'profile' => [
+            'campaign_types' => ['mobile_apps', 'games']
+        ]
+    ]);
+
+    // Create a campaign with app_downloads objective
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'App Download Campaign',
+        'description' => 'Promote our new mobile app',
+        'budget' => 200,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Increase app downloads',
+        'campaign_objective' => 'app_downloads',
+        'digital_product_link' => 'https://play.google.com/store/apps/details?id=com.example.app',
+        'status' => 'submitted',
+        'metadata' => ['business_types' => ['startup']],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->not->toBeNull();
+    expect($assigned->id)->toBe($dcd->id);
+    expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
+});
+
+test('assigns a dcd matching music promotion to music campaign types', function () {
+    // Create a Country/County/Subcounty/Ward since users require ward_id
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    // Create DCD with music in campaign_types
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'MusicHub',
+        'account_type' => 'business', 
+        'ward_id' => $ward->id,
+        'profile' => [
+            'campaign_types' => ['music', 'events'],
+            'music_genres' => ['Hip Hop', 'Afrobeats']
+        ]
+    ]);
+
+    // Create a campaign with music_promotion objective
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'Music Promotion Campaign',
+        'description' => 'Promote new music releases',
+        'budget' => 150,
+        'county' => 'Example County',
+        'target_audience' => 'Music Lovers',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Increase music streams',
+        'campaign_objective' => 'music_promotion',
+        'digital_product_link' => 'https://music.example.com/artist/song',
+        'status' => 'submitted',
+        'metadata' => ['business_types' => ['artist']],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->not->toBeNull();
+    expect($assigned->id)->toBe($dcd->id);
+    expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
+});
+
 test('does not select dcd with an active campaign', function () {
     // Create Country/County/Subcounty/Ward and client (same as first test)
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
