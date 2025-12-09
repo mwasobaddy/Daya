@@ -22,7 +22,7 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
     $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
 
     $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
-    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'ShopsRUs', 'account_type' => 'business', 'ward_id' => $ward->id]);
+    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'ShopsRUs', 'account_type' => 'business', 'ward_id' => $ward->id, 'qr_code' => 'qr-codes/existing-dcd-qr.svg']);
 
     $campaign = Campaign::create([
         'client_id' => $client->id,
@@ -50,10 +50,7 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
         'expires_at' => now()->addHour(),
     ]);
 
-    // Mock QRCodeService to avoid file generation complexity.
-    $mockQr = $this->mock(QRCodeService::class, function ($mock) use ($dcd, $campaign) {
-        $mock->shouldReceive('generateDcdQr')->andReturn('qr-codes/test.svg');
-    });
+    // No need to mock QRCodeService since we use existing QR code
 
     $svc = app(\App\Services\AdminActionService::class);
     $result = $svc->executeAction($token, 'approve_campaign');
@@ -63,7 +60,7 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
     $campaign->refresh();
     expect($campaign->dcd_id)->toBe($dcd->id);
     
-    // Verify DCD has QR code generated 
+    // Verify DCD retains existing QR code 
     $dcd->refresh();
-    expect($dcd->qr_code)->not->toBeNull();
+    expect($dcd->qr_code)->toBe('qr-codes/existing-dcd-qr.svg');
 });
