@@ -39,8 +39,11 @@ class AdminCampaignPending extends Mailable
      */
     public function envelope(): Envelope
     {
+        $budget = number_format($this->campaign->budget, 0);
+        $objective = ucwords(str_replace('_', ' ', $this->campaign->campaign_objective));
+        
         return new Envelope(
-            subject: 'Campaign Pending Approval - ' . $this->campaign->title,
+            subject: "🚀 Campaign Approval Required: {$this->campaign->title} (\${$budget} {$objective})",
         );
     }
 

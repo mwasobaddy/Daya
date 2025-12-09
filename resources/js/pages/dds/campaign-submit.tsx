@@ -992,7 +992,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         </div>
 
                         <div className="space-y-6">
-                            <div>
+                            {/* <div>
                                 <Label htmlFor="budget" className="text-sm font-medium mb-2 block">
                                     Budget ({getCurrencySymbol(data.country)}) <span className='text-red-500 dark:text-red-400'>*</span>
                                 </Label>
@@ -1011,7 +1011,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                     1 Credit = $1 = 10 verified clicks/scans
                                 </p>
                                 <InputError message={errors.budget} />
-                            </div>
+                            </div> */}
 
                             <div>
                                 <Label className="text-sm font-medium mb-2 block">
