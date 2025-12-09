@@ -237,23 +237,12 @@ class ClientController extends Controller
                 \Log::warning('Failed to notify admins: ' . $e->getMessage());
             }
 
-            // Send admin notification email to all admin users about new campaign submission
-            $adminUsers = User::where('role', 'admin')->get();
-            if ($adminUsers->count() > 0) {
-                \Log::info('Sending admin notifications for campaign submission', [
-                    'admin_count' => $adminUsers->count(),
-                    'campaign_id' => $campaign->id,
-                    'client_id' => $client->id,
-                    'referrer_info' => $request->referral_code ? ['referral_code' => $request->referral_code] : null
-                ]);
-                foreach ($adminUsers as $admin) {
-                    try {
-                        \Mail::to($admin->email)->send(new \App\Mail\AdminCampaignSubmission($campaign, $client, null));
-                    } catch (\Exception $e) {
-                        \Log::warning('Failed to send admin notification email: ' . $e->getMessage());
-                    }
-                }
-            }
+            // Admin notification email will be sent via AdminCampaignPending when campaign is created in pending status
+            \Log::info('Campaign submitted successfully - AdminCampaignPending email will be triggered', [
+                'campaign_id' => $campaign->id,
+                'client_id' => $client->id,
+                'referrer_info' => $request->referral_code ? ['referral_code' => $request->referral_code] : null
+            ]);
 
             \Log::info('Campaign submitted successfully', [
                 'campaign_id' => $campaign->id,
