@@ -62,7 +62,6 @@ class DcdController extends Controller
             // Music Preferences
             'music_genres' => 'required_if:campaign_types.*,music|array',
             'music_genres.*' => 'string',
-            'other_music_genre' => 'required_if:music_genres.*,other|string|nullable',
 
             // Content Safety
             'safe_for_kids' => 'boolean',
@@ -153,7 +152,6 @@ class DcdController extends Controller
 
                 // Music Preferences
                 'music_genres' => $request->music_genres,
-                'other_music_genre' => $request->other_music_genre,
 
                 // Content Safety
                 'safe_for_kids' => $request->safe_for_kids,

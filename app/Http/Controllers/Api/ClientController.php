@@ -70,7 +70,6 @@ class ClientController extends Controller
                 // Music genres for labels/artists
                 'music_genres' => 'required_if:account_type,artist,label|array',
                 'music_genres.*' => 'string|max:50',
-                'other_music_genre' => 'nullable|string|max:100',
 
                 // Additional
                 'target_audience' => 'nullable|string|max:1000',
@@ -169,15 +168,7 @@ class ClientController extends Controller
             }
 
             // Create campaign with enhanced details
-            // Validate other_music_genre if 'Other' selected in music_genres
-            if (($request->account_type === 'label' || $request->account_type === 'artist') && is_array($request->music_genres ?? null)) {
-                if (in_array('Other', $request->music_genres) && empty($request->other_music_genre)) {
-                    return response()->json([
-                        'message' => 'Please specify other music genre',
-                        'errors' => ['other_music_genre' => ['Please specify other music genre when Other is selected']]
-                    ], 422);
-                }
-            }
+
             $campaign = Campaign::create([
                 'client_id' => $client->id,
                 'dcd_id' => $dcdId, // From QR scan or null for admin assignment
@@ -204,7 +195,6 @@ class ClientController extends Controller
                     'target_ward' => $request->target_ward,
                     'business_types' => $request->business_types,
                     'music_genres' => $request->music_genres ?? [],
-                    'other_music_genre' => $request->other_music_genre ?? null,
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
                     'account_type' => $request->account_type,
