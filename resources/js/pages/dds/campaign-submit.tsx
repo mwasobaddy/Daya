@@ -242,7 +242,6 @@ export default function CampaignSubmit({ flash }: Props) {
         // allow custom 'other' business type from targeting UI
         other_business_type: '',
         music_genres: [] as string[],
-        other_music_genre: '',
     });
 
     const steps = [
@@ -260,9 +259,10 @@ export default function CampaignSubmit({ flash }: Props) {
     ];
 
     const musicGenres = [
-        'Afrobeat', 'Benga', 'Blues', 'Classical', 'Country', 'Electronic',
-        'Folk', 'Funk', 'Gospel', 'Hip Hop', 'Jazz', 'Kwaito', 'Pop', 'R&B',
-        'Reggae', 'Rock', 'Soul', 'Traditional', 'Other'
+        'Afrobeat', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
+        'Country', 'Dancehall', 'Electronic', 'Folk', 'Funk', 'Gengetone', 
+        'Gospel', 'Hip Hop', 'House', 'Jazz', 'Kapuka', 'Kwaito', 'Lingala',
+        'Ohangla', 'Pop', 'R&B', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional'
     ];
 
     const currentStepIndex = steps.findIndex(step => step.id === currentStep);
@@ -285,9 +285,6 @@ export default function CampaignSubmit({ flash }: Props) {
         }
         // clear potential errors
         clearErrors('music_genres');
-        if (genre === 'Other') {
-            clearErrors('other_music_genre');
-        }
     };
 
     // Validation functions
@@ -383,10 +380,7 @@ export default function CampaignSubmit({ flash }: Props) {
                     setError('music_genres', 'Please select at least one music genre');
                     hasErrors = true;
                 }
-                if (data.music_genres?.includes('Other') && !data.other_music_genre?.trim()) {
-                    setError('other_music_genre', 'Please specify other music genre');
-                    hasErrors = true;
-                }
+
             }
         } else if (step === 'targeting') {
             if (!data.budget || parseFloat(data.budget) < 50) {
@@ -831,13 +825,6 @@ export default function CampaignSubmit({ flash }: Props) {
                                         ))}
                                     </div>
                                     <InputError message={errors.music_genres} />
-                                    { (data.music_genres || []).includes('Other') && (
-                                        <div className="mt-2">
-                                            <Label htmlFor="other_music_genre" className="text-sm font-medium mb-2 block">Specify Other Genre</Label>
-                                            <Input id="other_music_genre" value={data.other_music_genre} onChange={(e) => updateData('other_music_genre', e.target.value)} placeholder="Enter genre" />
-                                            <InputError message={errors.other_music_genre} />
-                                        </div>
-                                    )}
                                 </div>
                             )}
 

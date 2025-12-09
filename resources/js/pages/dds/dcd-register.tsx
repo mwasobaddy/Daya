@@ -119,7 +119,6 @@ export default function DcdRegister() {
         operating_days: [] as string[],
         campaign_types: [] as string[],
         music_genres: [] as string[],
-        other_music_genre: '',
         safe_for_kids: false,
         wallet_type: '',
         wallet_pin: '',
@@ -971,9 +970,10 @@ export default function DcdRegister() {
     ];
 
     const musicGenres = [
-        'Afrobeat', 'Benga', 'Blues', 'Classical', 'Country', 'Electronic',
-        'Folk', 'Funk', 'Gospel', 'Hip Hop', 'Jazz', 'Kwaito', 'Pop', 'R&B',
-        'Reggae', 'Rock', 'Soul', 'Traditional', 'Other'
+        'Afrobeat', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
+        'Country', 'Dancehall', 'Electronic', 'Folk', 'Funk', 'Gengetone', 
+        'Gospel', 'Hip Hop', 'House', 'Jazz', 'Kapuka', 'Kwaito', 'Lingala',
+        'Ohangla', 'Pop', 'R&B', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional'
     ];
 
     const operatingDays = [
@@ -1566,15 +1566,6 @@ export default function DcdRegister() {
                                             </div>
                                         ))}
                                     </div>
-                                    {data.music_genres.includes('Other') && (
-                                        <Input
-                                            type="text"
-                                            value={data.other_music_genre}
-                                            onChange={(e) => updateData('other_music_genre', e.target.value)}
-                                            placeholder="Please specify other music genre"
-                                            className="mt-2"
-                                        />
-                                    )}
                                     <InputError message={errors.music_genres} />
                                 </div>
                             )}
