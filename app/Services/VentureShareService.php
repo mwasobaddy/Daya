@@ -9,25 +9,74 @@ use App\Models\Referral;
 class VentureShareService
 {
     /**
-     * Allocate venture shares when a DA refers a DCD
+     * Allocate venture shares based on referral type and new reward structure
      */
     public function allocateSharesForReferral(Referral $referral): void
     {
-        // Allocate shares to the DA who made the referral
-        $this->allocateShares(
-            $referral->referrer,
-            100, // 100 KeDDS tokens for referring a DCD
-            'KeDDS',
-            'Referral bonus for registering DCD: ' . $referral->referred->name
-        );
-
-        // Allocate shares to the new DCD
-        $this->allocateShares(
-            $referral->referred,
-            50, // 50 KeDDS tokens for joining as DCD
-            'KeDDS',
-            'Welcome bonus for joining Daya'
-        );
+        $referrer = $referral->referrer;
+        $referred = $referral->referred;
+        
+        // Get country-specific token prefixes
+        $referrerTokens = $this->getTokenNamesForUser($referrer);
+        $referredTokens = $this->getTokenNamesForUser($referred);
+        
+        switch ($referral->type) {
+            case 'da_to_da':
+                // DA to DA Referral: 200KeDWS + 200KeDDS to referring DA
+                $this->allocateShares(
+                    $referrer,
+                    200,
+                    $referrerTokens['dws'],
+                    'DA referral bonus for registering DA: ' . $referred->name
+                );
+                $this->allocateShares(
+                    $referrer,
+                    200,
+                    $referrerTokens['dds'],
+                    'DA referral bonus for registering DA: ' . $referred->name
+                );
+                break;
+                
+            case 'da_to_dcd':
+                // DA to DCD Referral: 500KeDWS + 500KeDDS to referring DA
+                $this->allocateShares(
+                    $referrer,
+                    500,
+                    $referrerTokens['dws'],
+                    'DCD referral bonus for registering DCD: ' . $referred->name
+                );
+                $this->allocateShares(
+                    $referrer,
+                    500,
+                    $referrerTokens['dds'],
+                    'DCD referral bonus for registering DCD: ' . $referred->name
+                );
+                
+                // DCD Reward: 1,000KeDWS + 1,000KeDDS to new DCD
+                $this->allocateShares(
+                    $referred,
+                    1000,
+                    $referredTokens['dws'],
+                    'Welcome bonus for joining Daya as DCD'
+                );
+                $this->allocateShares(
+                    $referred,
+                    1000,
+                    $referredTokens['dds'],
+                    'Welcome bonus for joining Daya as DCD'
+                );
+                break;
+                
+            case 'admin_to_da':
+                // Admin to DA referral - no specific reward structure defined, keep minimal
+                $this->allocateShares(
+                    $referred,
+                    100,
+                    $referredTokens['dws'],
+                    'Welcome bonus for joining Daya as DA'
+                );
+                break;
+        }
     }
 
     /**
@@ -35,13 +84,14 @@ class VentureShareService
      */
     public function allocateSharesForCampaignCompletion(User $dcd, float $campaignBudget): void
     {
-        // DCD gets 20% of campaign budget as KeDDS tokens
+        // DCD gets 20% of campaign budget as DDS tokens
         $dcdShares = $campaignBudget * 0.20;
+        $dcdTokens = $this->getTokenNamesForUser($dcd);
 
         $this->allocateShares(
             $dcd,
             $dcdShares,
-            'KeDDS',
+            $dcdTokens['dds'],
             'Campaign completion bonus'
         );
 
@@ -53,11 +103,12 @@ class VentureShareService
         if ($referral) {
             // DA gets 10% commission of DCD's earnings
             $daCommission = $dcdShares * 0.10;
+            $daTokens = $this->getTokenNamesForUser($referral->referrer);
 
             $this->allocateShares(
                 $referral->referrer,
                 $daCommission,
-                'KeDDS',
+                $daTokens['dds'],
                 'Commission from DCD campaign completion: ' . $dcd->name
             );
         }
@@ -68,24 +119,47 @@ class VentureShareService
      */
     public function allocateSharesForCampaignSubmission(User $client, float $campaignBudget): void
     {
-        // Client gets 5 KeDWS tokens for submitting a campaign
+        // Client gets 5 DWS tokens for submitting a campaign
+        $clientTokens = $this->getTokenNamesForUser($client);
         $this->allocateShares(
             $client,
             5,
-            'KeDWS',
+            $clientTokens['dws'],
             'Campaign submission bonus'
         );
     }
 
     /**
+     * Get country-specific token names for a user
+     */
+    private function getTokenNamesForUser(User $user): array
+    {
+        // Load country relationship if not already loaded
+        if (!$user->relationLoaded('country')) {
+            $user->load('country');
+        }
+        
+        $countryCode = $user->country ? strtoupper($user->country->code) : 'KE'; // Default to Kenya
+        
+        return [
+            'dds' => $countryCode === 'NG' ? 'NgDDS' : 'KeDDS',
+            'dws' => $countryCode === 'NG' ? 'NgDWS' : 'KeDWS',
+        ];
+    }
+    
+    /**
      * Generic method to allocate venture shares
      */
     private function allocateShares(User $user, float $amount, string $type, string $reason): void
     {
+        // Determine if this is a DDS or DWS token based on the type
+        $isDDS = str_contains($type, 'DDS');
+        $isDWS = str_contains($type, 'DWS');
+        
         VentureShare::create([
             'user_id' => $user->id,
-            'kedds_amount' => $type === 'KeDDS' ? $amount : 0,
-            'kedws_amount' => $type === 'KeDWS' ? $amount : 0,
+            'kedds_amount' => $isDDS ? $amount : 0,
+            'kedws_amount' => $isDWS ? $amount : 0,
             'reason' => $reason,
             'allocated_at' => now(),
         ]);
