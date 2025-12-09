@@ -83,12 +83,12 @@ class QRCodeService
                         height: 400px;
                     }
                     .qr_1 {
-                        margin-top: 20px;
+                        margin-top: 100px;
                         text-align: center;
                     }
                     .qr_1 img {
-                        width: 600px;
-                        height: 600px;
+                        width: 200px;
+                        height: 200px;
                     }
                     p.caption {
                         font-size: 36px;
@@ -319,12 +319,12 @@ class QRCodeService
                                     height: 400px;
                                 }
                                 .qr_1 {
-                                    margin-top: 20px;
+                                    margin-top: 100px;
                                     text-align: center;
                                 }
                                 .qr_1 img {
-                                    width: 600px;
-                                    height: 600px;
+                                    width: 200px;
+                                    height: 200px;
                                 }
                                 p.caption {
                                     font-size: 36px;
