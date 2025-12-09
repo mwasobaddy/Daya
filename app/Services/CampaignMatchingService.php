@@ -92,6 +92,44 @@ class CampaignMatchingService
                 }
             }
 
+            // Strategy 3: Match by campaign objective against DCD campaign_types
+            if ($campaign->campaign_objective && $campaign->campaign_objective !== '-') {
+                // Map campaign objectives to DCD campaign types
+                $objectiveToTypeMap = [
+                    'app_downloads' => 'mobile_apps',
+                    'music_promotion' => 'music',
+                    'product_launch' => 'product_launch', 
+                    'event_promotion' => 'events',
+                    'brand_awareness' => ['movies', 'games', 'mobile_apps'], // Brand awareness can work with multiple content types
+                    'social_cause' => 'education', // Social causes often educational
+                ];
+
+                $targetCampaignTypes = $objectiveToTypeMap[$campaign->campaign_objective] ?? null;
+                
+                if ($targetCampaignTypes) {
+                    // Ensure it's an array for consistent processing
+                    if (!is_array($targetCampaignTypes)) {
+                        $targetCampaignTypes = [$targetCampaignTypes];
+                    }
+
+                    // Get DCDs and check their campaign_types in profile
+                    $candidates = (clone $baseQuery)->orderBy('created_at', 'asc')->get();
+                    
+                    foreach ($candidates as $candidateUser) {
+                        $profile = is_string($candidateUser->profile) ? 
+                            json_decode($candidateUser->profile, true) : (array) $candidateUser->profile;
+                        $dcdCampaignTypes = $profile['campaign_types'] ?? [];
+                        
+                        // Check if DCD's campaign types match any of the target types
+                        if (!empty($dcdCampaignTypes) && array_intersect($targetCampaignTypes, $dcdCampaignTypes)) {
+                            $campaign->dcd_id = $candidateUser->id;
+                            $campaign->save();
+                            return $candidateUser;
+                        }
+                    }
+                }
+            }
+
             // Next fallback: match by music genres (if provided)
             if (!empty($musicGenres) && is_array($musicGenres)) {
                 // Try DB-powered JSON query first (efficient on MySQL/Postgres)
