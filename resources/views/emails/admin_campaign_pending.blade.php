@@ -116,9 +116,7 @@
                             @foreach($campaign->metadata['music_genres'] as $genre)
                                 <span style="background: #fed7d7; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $genre }}</span>
                             @endforeach
-                            @if(isset($campaign->metadata['other_music_genre']))
-                                <span style="background: #fed7d7; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $campaign->metadata['other_music_genre'] }}</span>
-                            @endif
+
                         </p>
                     @endif
                 </div>
