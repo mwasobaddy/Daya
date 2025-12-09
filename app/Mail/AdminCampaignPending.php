@@ -18,6 +18,11 @@ class AdminCampaignPending extends Mailable
     public $rejectUrl;
     public $clientName;
     public $clientEmail;
+    public $countryName;
+    public $countyName;
+    public $subcountyName;
+    public $wardName;
+    public $currencySymbol;
 
     /**
      * Create a new message instance.
@@ -29,9 +34,64 @@ class AdminCampaignPending extends Mailable
         $this->clientName = optional($this->campaign->client)->name ?? null;
         $this->clientEmail = optional($this->campaign->client)->email ?? null;
 
+        // Load geographic data for display
+        $this->loadGeographicData();
+        
+        // Set currency symbol
+        $this->setCurrencySymbol();
+
         $adminActionService = app(\App\Services\AdminActionService::class);
         $this->approveUrl = $adminActionService->generateActionLink('approve_campaign', $campaign->id);
         $this->rejectUrl = $adminActionService->generateActionLink('reject_campaign', $campaign->id);
+    }
+
+    /**
+     * Load geographic names from IDs stored in metadata
+     */
+    private function loadGeographicData()
+    {
+        $metadata = $this->campaign->metadata ?? [];
+        
+        // Get country name from target_country code
+        if (isset($metadata['target_country'])) {
+            $country = \App\Models\Country::where('code', $metadata['target_country'])->first();
+            $this->countryName = $country ? $country->name : strtoupper($metadata['target_country']);
+        }
+        
+        // Get county name from target_county ID
+        if (isset($metadata['target_county'])) {
+            $county = \App\Models\County::find($metadata['target_county']);
+            $this->countyName = $county ? $county->name : 'County ID: ' . $metadata['target_county'];
+        }
+        
+        // Get subcounty name from target_subcounty ID
+        if (isset($metadata['target_subcounty'])) {
+            $subcounty = \App\Models\Subcounty::find($metadata['target_subcounty']);
+            $this->subcountyName = $subcounty ? $subcounty->name : 'Subcounty ID: ' . $metadata['target_subcounty'];
+        }
+        
+        // Get ward name from target_ward ID
+        if (isset($metadata['target_ward'])) {
+            $ward = \App\Models\Ward::find($metadata['target_ward']);
+            $this->wardName = $ward ? $ward->name : 'Ward ID: ' . $metadata['target_ward'];
+        }
+    }
+    
+    /**
+     * Set currency symbol based on country code
+     */
+    private function setCurrencySymbol()
+    {
+        $metadata = $this->campaign->metadata ?? [];
+        $countryCode = $metadata['target_country'] ?? 'KE';
+        
+        $currencyMap = [
+            'KE' => 'KSh',
+            'NG' => '₦',
+            // Add more countries as needed
+        ];
+        
+        $this->currencySymbol = $currencyMap[strtoupper($countryCode)] ?? '$';
     }
 
     /**
@@ -43,7 +103,7 @@ class AdminCampaignPending extends Mailable
         $objective = ucwords(str_replace('_', ' ', $this->campaign->campaign_objective));
         
         return new Envelope(
-            subject: "🚀 Campaign Approval Required: {$this->campaign->title} (\${$budget} {$objective})",
+            subject: "🚀 Campaign Approval Required: {$this->campaign->title} ({$this->currencySymbol}{$budget} {$objective})",
         );
     }
 

@@ -60,7 +60,7 @@
                     <h4 style="margin-top: 0; color: #92400e;">📊 Campaign Details</h4>
                     <p><strong>Description:</strong> {{ $campaign->description }}</p>
                     <p><strong>Campaign Objective:</strong> {{ ucwords(str_replace('_', ' ', $campaign->campaign_objective)) }}</p>
-                    <p><strong>Budget:</strong> <span style="font-size: 18px; color: #059669; font-weight: bold;">${{ number_format($campaign->budget, 2) }}</span></p>
+                    <p><strong>Budget:</strong> <span style="font-size: 18px; color: #059669; font-weight: bold;">{{ $currencySymbol }}{{ number_format($campaign->budget, 0) }}</span></p>
                     <p><strong>Target Audience:</strong> {{ $campaign->target_audience ?? 'N/A' }}</p>
                     <p><strong>Objectives:</strong> {{ $campaign->objectives ?? 'N/A' }}</p>
                     <p><strong>Digital Product Link:</strong> <a href="{{ $campaign->digital_product_link }}" target="_blank" style="color: #2563eb;">{{ $campaign->digital_product_link }}</a></p>
@@ -78,19 +78,19 @@
                         </p>
                     @endif
                     
-                    @if(isset($campaign->metadata['target_country']) || isset($campaign->metadata['target_county']) || isset($campaign->metadata['target_subcounty']) || isset($campaign->metadata['target_ward']))
+                    @if($countryName || $countyName || $subcountyName || $wardName)
                         <p><strong>Geographic Targeting:</strong>
-                            @if(isset($campaign->metadata['target_country']))
-                                {{ strtoupper($campaign->metadata['target_country']) }}
+                            @if($countryName)
+                                <span style="background: #e0f2fe; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $countryName }}</span>
                             @endif
-                            @if(isset($campaign->metadata['target_county']))
-                                {{ isset($campaign->metadata['target_country']) ? ' > ' : '' }}County: {{ $campaign->metadata['target_county'] }}
+                            @if($countyName)
+                                @if($countryName) > @endif<span style="background: #e8f5e8; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $countyName }}</span>
                             @endif
-                            @if(isset($campaign->metadata['target_subcounty']))
-                                > Subcounty: {{ $campaign->metadata['target_subcounty'] }}
+                            @if($subcountyName)
+                                > <span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $subcountyName }}</span>
                             @endif
-                            @if(isset($campaign->metadata['target_ward']))
-                                > Ward: {{ $campaign->metadata['target_ward'] }}
+                            @if($wardName)
+                                > <span style="background: #f8d7da; padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 12px;">{{ $wardName }}</span>
                             @endif
                         </p>
                     @endif
