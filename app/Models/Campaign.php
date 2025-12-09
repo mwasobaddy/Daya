@@ -28,7 +28,7 @@ class Campaign extends Model
     {
         return [
             'metadata' => 'array',
-            'budget' => 'decimal:2',
+            'budget' => 'decimal:4',  // Allow up to 4 decimal places for precise budget values
             'completed_at' => 'datetime',
         ];
     }

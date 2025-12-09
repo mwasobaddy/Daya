@@ -913,7 +913,6 @@ export default function CampaignSubmit({ flash }: Props) {
                                         id="budget"
                                         type="number"
                                         min="0"
-                                        step="0.01"
                                         value={data.budget}
                                         onChange={(e) => setData('budget', e.target.value)}
                                         required
