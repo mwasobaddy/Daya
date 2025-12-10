@@ -89,18 +89,24 @@ class ClientController extends Controller
             $client = null;
 
             if ($existingUser) {
-                // Check if existing user details match
-                $phoneMatches = $existingUser->phone === $request->phone;
-
-                if (!$phoneMatches) {
-                    // Details don't match - return error
-                    return response()->json([
-                        'message' => 'The email address you entered is already registered with different account details. Please verify your information and try again.',
-                        'error' => 'account_mismatch'
-                    ], 422);
+                // Use existing user and allow phone number updates
+                // This allows users to update their contact information when creating campaigns
+                
+                // Check if the new phone number is already used by another user
+                if ($existingUser->phone !== $request->phone) {
+                    $phoneInUse = User::where('phone', $request->phone)
+                                     ->where('id', '!=', $existingUser->id)
+                                     ->exists();
+                    
+                    if ($phoneInUse) {
+                        return response()->json([
+                            'message' => 'This phone number is already registered with another account.',
+                            'error' => 'phone_in_use'
+                        ], 422);
+                    }
                 }
 
-                // Details match - use existing user and update info
+                // Use existing user and update info
                 $client = $existingUser;
                 $client->update([
                     'name' => $request->name,
@@ -115,6 +121,15 @@ class ClientController extends Controller
                     'ward_id' => $request->target_ward, // Update ward_id (nullable)
                 ]);
             } else {
+                // Check if phone number is already in use by another user
+                $phoneInUse = User::where('phone', $request->phone)->exists();
+                if ($phoneInUse) {
+                    return response()->json([
+                        'message' => 'This phone number is already registered with another account.',
+                        'error' => 'phone_in_use'
+                    ], 422);
+                }
+
                 // Generate unique referral code for new client
                 $referralCode = null;
                 if ($request->referral_code) {
