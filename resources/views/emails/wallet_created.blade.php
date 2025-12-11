@@ -36,14 +36,15 @@
             </div>
 
             <div class="wallet-pin">
-                🔐 Your Wallet PIN: {{ $user->wallet_pin ? '****' : 'Not set' }}
+                🔐 Your Wallet PIN: {{ $user->wallet_pin ? $user->wallet_pin : 'Not set' }}
                 <br><small style="font-size: 12px; color: #666;">(Keep this PIN secure and confidential)</small>
             </div>
 
             <div class="warning">
-                <strong>⚠️ Important Security Notice:</strong><br>
-                Your wallet PIN is crucial for accessing your earnings and managing transactions.
-                Never share your PIN with anyone and store it securely.
+                <strong>⚠️ Critical Security Notice:</strong><br>
+                Your wallet PIN above is your ACTUAL PIN number for accessing your earnings and managing transactions.
+                <strong>Never share this PIN with anyone</strong> - store it securely and delete this email after noting down your PIN.
+                This PIN cannot be recovered if lost.
             </div>
 
             <h3>💰 How to Start Earning</h3>
