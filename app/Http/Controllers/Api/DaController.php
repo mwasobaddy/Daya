@@ -9,6 +9,7 @@ use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Mail\ReferralBonusNotification;
 use App\Mail\DaReferralCommissionNotification;
+use App\Mail\DcdReferralBonusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -176,25 +177,38 @@ class DaController extends Controller
                 // Allocate venture shares for the referral
                 $this->ventureShareService->allocateSharesForReferral($referral);
 
-                // Notify referrer of venture share update if they are a DA
+                // Notify referrer of venture share update based on their role
                 if ($referrer->role === 'da') {
                     try {
                         \Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusNotification($referrer, $this->ventureShareService));
                     } catch (\Exception $e) {
                         \Log::warning('Failed to send referral bonus notification to DA: ' . $e->getMessage());
                     }
-                }
 
-                // Send commission notification to referrer about 5% campaign budget earnings
-                try {
-                    \Mail::to($referrer->email)->send(new \App\Mail\DaReferralCommissionNotification($referrer, $user));
-                    \Log::info('DA referral commission notification sent', [
-                        'referrer_id' => $referrer->id,
-                        'new_da_id' => $user->id,
-                        'referrer_email' => $referrer->email
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to send DA referral commission notification: ' . $e->getMessage());
+                    // Send commission notification to DA referrer about 5% campaign budget earnings
+                    try {
+                        \Mail::to($referrer->email)->send(new \App\Mail\DaReferralCommissionNotification($referrer, $user));
+                        \Log::info('DA referral commission notification sent', [
+                            'referrer_id' => $referrer->id,
+                            'new_da_id' => $user->id,
+                            'referrer_email' => $referrer->email
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to send DA referral commission notification: ' . $e->getMessage());
+                    }
+                } elseif ($referrer->role === 'dcd') {
+                    // Send DCD-specific referral bonus notification (1,000 + 1,000 tokens)
+                    try {
+                        \Mail::to($referrer->email)->send(new DcdReferralBonusNotification($referrer, $user, $this->ventureShareService));
+                        \Log::info('DCD referral bonus notification sent', [
+                            'referrer_id' => $referrer->id,
+                            'new_da_id' => $user->id,
+                            'referrer_email' => $referrer->email,
+                            'tokens_awarded' => '1000 DDS + 1000 DWS'
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to send DCD referral bonus notification: ' . $e->getMessage());
+                    }
                 }
             }
 

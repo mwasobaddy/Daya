@@ -67,6 +67,22 @@ class VentureShareService
                 );
                 break;
                 
+            case 'dcd_to_da':
+                // DCD to DA Referral: 1,000KeDWS + 1,000KeDDS to referring DCD
+                $this->allocateShares(
+                    $referrer,
+                    1000,
+                    $referrerTokens['dws'],
+                    'DA referral bonus for registering DA: ' . $referred->name
+                );
+                $this->allocateShares(
+                    $referrer,
+                    1000,
+                    $referrerTokens['dds'],
+                    'DA referral bonus for registering DA: ' . $referred->name
+                );
+                break;
+                
             case 'admin_to_da':
                 // Admin to DA referral - no specific reward structure defined, keep minimal
                 $this->allocateShares(

@@ -62,10 +62,6 @@
                 <li>Withdraw funds once minimum thresholds are met</li>
             </ul>
 
-            <p style="text-align: center; margin: 30px 0;">
-                <a href="{{ url('/login') }}" class="button">Access Your Dashboard</a>
-            </p>
-
             <p>If you have any questions about your wallet or how to start earning, please don't hesitate to contact our support team.</p>
 
             <p>Happy earning!<br>

@@ -65,7 +65,7 @@ export default function Welcome() {
                                 <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:scale-105 dark:bg-slate-800/50 dark:border-slate-600 dark:hover:bg-slate-700/50">
                                     <CardHeader className="text-center">
                                         <Users className="mx-auto h-12 w-12 text-blue-300 mb-2" />
-                                        <CardTitle className="text-lg text-white">Digital Affiliate</CardTitle>
+                                        <CardTitle className="text-lg text-white">Digital Ambassador</CardTitle>
                                         <CardDescription className="text-blue-100">
                                             Earn commissions by referring Digital Content Distributors
                                         </CardDescription>
