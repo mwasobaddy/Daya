@@ -8,6 +8,7 @@ use App\Models\Referral;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Mail\ReferralBonusNotification;
+use App\Mail\DaReferralCommissionNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -182,6 +183,18 @@ class DaController extends Controller
                     } catch (\Exception $e) {
                         \Log::warning('Failed to send referral bonus notification to DA: ' . $e->getMessage());
                     }
+                }
+
+                // Send commission notification to referrer about 5% campaign budget earnings
+                try {
+                    \Mail::to($referrer->email)->send(new \App\Mail\DaReferralCommissionNotification($referrer, $user));
+                    \Log::info('DA referral commission notification sent', [
+                        'referrer_id' => $referrer->id,
+                        'new_da_id' => $user->id,
+                        'referrer_email' => $referrer->email
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to send DA referral commission notification: ' . $e->getMessage());
                 }
             }
 
