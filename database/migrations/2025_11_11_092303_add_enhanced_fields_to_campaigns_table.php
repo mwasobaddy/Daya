@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('campaigns', function (Blueprint $table) {
             $table->foreignId('dcd_id')->nullable()->after('client_id')->constrained('users')->onDelete('cascade');
             $table->string('campaign_type')->after('title');
-            $table->text('target_audience')->after('description');
+            $table->text('target_audience')->after('campaign_type');
             $table->string('duration')->after('target_audience');
             $table->string('objectives')->after('duration');
             $table->json('metadata')->nullable()->after('objectives');
