@@ -83,10 +83,6 @@
                 </ul>
             </div>
 
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{ url('/dashboard') }}" class="cta-button">View Your Dashboard</a>
-            </div>
-
             <p>Keep up the great work with referrals! The more Digital Ambassadors you bring to the platform, the more commission opportunities you create.</p>
 
             <p style="margin-top: 30px;">
