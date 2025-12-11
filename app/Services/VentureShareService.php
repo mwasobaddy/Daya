@@ -52,16 +52,16 @@ class VentureShareService
                     'DCD referral bonus for registering DCD: ' . $referred->name
                 );
                 
-                // DCD Reward: 1,000KeDWS + 1,000KeDDS to new DCD
+                // DCD Reward: 500KeDWS + 500KeDDS to new DCD
                 $this->allocateShares(
                     $referred,
-                    1000,
+                    500,
                     $referredTokens['dws'],
                     'Welcome bonus for joining Daya as DCD'
                 );
                 $this->allocateShares(
                     $referred,
-                    1000,
+                    500,
                     $referredTokens['dds'],
                     'Welcome bonus for joining Daya as DCD'
                 );
@@ -77,6 +77,30 @@ class VentureShareService
                 );
                 break;
         }
+    }
+
+    /**
+     * Allocate initial registration tokens to new DCD users
+     */
+    public function allocateInitialDcdTokens(User $dcd): void
+    {
+        $dcdTokens = $this->getTokenNamesForUser($dcd);
+
+        // Allocate 500 DDS tokens
+        $this->allocateShares(
+            $dcd,
+            500,
+            $dcdTokens['dds'],
+            'Initial registration bonus for joining Daya as DCD'
+        );
+
+        // Allocate 500 DWS tokens  
+        $this->allocateShares(
+            $dcd,
+            500,
+            $dcdTokens['dws'],
+            'Initial registration bonus for joining Daya as DCD'
+        );
     }
 
     /**

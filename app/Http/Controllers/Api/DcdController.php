@@ -8,6 +8,7 @@ use App\Models\Referral;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Mail\ReferralBonusNotification;
+use App\Mail\DcdTokenAllocationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -210,6 +211,25 @@ class DcdController extends Controller
     } catch (\Exception $e) {
         \Log::warning('Failed to send wallet creation email to DCD: ' . $e->getMessage());
     }
+
+        // Allocate initial DCD registration tokens (500 DDS + 500 DWS)
+        try {
+            $this->ventureShareService->allocateInitialDcdTokens($user);
+            \Log::info('Initial DCD tokens allocated', [
+                'user_id' => $user->id,
+                'dds_tokens' => 500,
+                'dws_tokens' => 500
+            ]);
+
+            // Send token allocation notification email
+            Mail::to($user->email)->send(new \App\Mail\DcdTokenAllocationNotification($user, $this->ventureShareService));
+            \Log::info('DCD token allocation notification sent', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to allocate initial DCD tokens or send notification: ' . $e->getMessage());
+        }
 
         // Send admin notification email to all admin users
         $adminUsers = User::where('role', 'admin')->get();
