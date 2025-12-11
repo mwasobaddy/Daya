@@ -162,7 +162,8 @@ class DaController extends Controller
                 $referralType = match($referrer->role) {
                     'admin' => 'admin_to_da',
                     'da' => 'da_to_da',
-                    default => 'user_to_da'
+                    'dcd' => 'dcd_to_da',
+                    default => 'da_to_da'  // fallback for any other role
                 };
                 
                 $referral = \App\Models\Referral::create([
