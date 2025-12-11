@@ -9,6 +9,9 @@ use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Mail\ReferralBonusNotification;
 use App\Mail\DcdTokenAllocationNotification;
+use App\Mail\WalletCreated;
+use App\Mail\DcdWelcome;
+use App\Mail\AdminDcdRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -191,7 +194,7 @@ class DcdController extends Controller
 
             // Notify referrer of venture share update
             try {
-                \Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusNotification($referrer, $this->ventureShareService));
+                \Mail::to($referrer->email)->send(new ReferralBonusNotification($referrer, $this->ventureShareService));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send referral bonus notification to DA: ' . $e->getMessage());
             }
@@ -203,11 +206,11 @@ class DcdController extends Controller
             'referrer_id' => $referrer ? $referrer->id : null,
             'referrer_name' => $referrer ? $referrer->name : 'None'
         ]);
-        Mail::to($user->email)->send(new \App\Mail\DcdWelcome($user, $referrer, $qrFilename));
+        Mail::to($user->email)->send(new DcdWelcome($user, $referrer, $qrFilename));
 
     // Send wallet creation notification
     try {
-        Mail::to($user->email)->send(new \App\Mail\WalletCreated($user));
+        Mail::to($user->email)->send(new WalletCreated($user));
     } catch (\Exception $e) {
         \Log::warning('Failed to send wallet creation email to DCD: ' . $e->getMessage());
     }
@@ -222,7 +225,7 @@ class DcdController extends Controller
             ]);
 
             // Send token allocation notification email
-            Mail::to($user->email)->send(new \App\Mail\DcdTokenAllocationNotification($user, $this->ventureShareService));
+            Mail::to($user->email)->send(new DcdTokenAllocationNotification($user, $this->ventureShareService));
             \Log::info('DCD token allocation notification sent', [
                 'user_id' => $user->id,
                 'email' => $user->email
@@ -239,7 +242,7 @@ class DcdController extends Controller
                 'referrer_info' => $referrer ? ['id' => $referrer->id, 'name' => $referrer->name, 'role' => $referrer->role] : null
             ]);
             foreach ($adminUsers as $admin) {
-                Mail::to($admin->email)->send(new \App\Mail\AdminDcdRegistration($user, $referrer));
+                Mail::to($admin->email)->send(new AdminDcdRegistration($user, $referrer));
             }
         }
 
