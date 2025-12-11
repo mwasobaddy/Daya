@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Country;
+use App\Mail\DaReferralCommissionNotification;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Services\CampaignMatchingService;
@@ -45,6 +46,7 @@ class ClientController extends Controller
 
                 'country' => 'required|string|max:10',
                 'referral_code' => 'nullable|string|max:50',
+                'referred_by_code' => 'nullable|string|max:50', // DA referral code
                 'dcd_id' => 'nullable|integer|exists:users,id', // For QR code scans
 
                 // Campaign Information
@@ -179,6 +181,33 @@ class ClientController extends Controller
                 if ($dcd) {
                     $dcdId = $dcd->id;
                     \Log::info('Campaign assigned to DCD from QR scan', ['dcd_id' => $dcdId, 'dcd_name' => $dcd->name]);
+                }
+            }
+
+            // Process referral if client was referred by a DA
+            if ($request->referred_by_code) {
+                $referrer = User::where('referral_code', strtoupper($request->referred_by_code))->first();
+                
+                if ($referrer && $referrer->role === 'da') {
+                    // Create referral record
+                    \App\Models\Referral::create([
+                        'referrer_id' => $referrer->id,
+                        'referred_id' => $client->id,
+                        'type' => 'da_to_client'
+                    ]);
+
+                    // Send commission notification to DA about 5% campaign budget earnings
+                    try {
+                        \Mail::to($referrer->email)->send(new DaReferralCommissionNotification($referrer, $client));
+                        \Log::info('DA referral commission notification sent for client signup', [
+                            'referrer_id' => $referrer->id,
+                            'client_id' => $client->id,
+                            'referrer_email' => $referrer->email,
+                            'campaign_budget' => $request->budget
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to send DA referral commission notification for client: ' . $e->getMessage());
+                    }
                 }
             }
 

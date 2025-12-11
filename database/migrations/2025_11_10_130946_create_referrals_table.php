@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('referrals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('referrer_id')->constrained('users')->onDelete('cascade'); // DA
-            $table->foreignId('referred_id')->constrained('users')->onDelete('cascade'); // DCD or DA
-            $table->enum('type', ['admin_to_da', 'da_to_da', 'da_to_dcd', 'dcd_to_da']);
+            $table->foreignId('referred_id')->constrained('users')->onDelete('cascade'); // DCD, DA, or Client
+            $table->enum('type', ['admin_to_da', 'da_to_da', 'da_to_dcd', 'dcd_to_da', 'da_to_client']);
             $table->timestamps();
         });
     }
