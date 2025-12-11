@@ -25,7 +25,7 @@ test('dcd scan redirect finds active campaign and redirects to product', functio
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Live Campaign',
-        'description' => 'Live campaign description',
+
         'budget' => 50,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -93,7 +93,7 @@ test('dcd scan redirect shows no active campaigns when campaign is expired', fun
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Expired Campaign',
-        'description' => 'Expired campaign description',
+
         'budget' => 50,
         'county' => 'Example County',
         'target_audience' => 'General Audience',

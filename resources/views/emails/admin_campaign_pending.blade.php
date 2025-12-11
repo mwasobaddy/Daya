@@ -58,7 +58,7 @@
                 <!-- Campaign Details -->
                 <div style="background: #fef3c7; padding: 15px; margin: 15px 0; border-radius: 4px;">
                     <h4 style="margin-top: 0; color: #92400e;">📊 Campaign Details</h4>
-                    <p><strong>Description:</strong> {{ $campaign->description }}</p>
+
                     <p><strong>Campaign Objective:</strong> {{ ucwords(str_replace('_', ' ', $campaign->campaign_objective)) }}</p>
                     <p><strong>Budget:</strong> <span style="font-size: 18px; color: #059669; font-weight: bold;">{{ $currencySymbol }}{{ number_format($campaign->budget, 0) }}</span></p>
                     <p><strong>Target Audience:</strong> {{ $campaign->target_audience ?? 'N/A' }}</p>

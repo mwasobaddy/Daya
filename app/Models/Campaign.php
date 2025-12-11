@@ -10,7 +10,6 @@ class Campaign extends Model
         'client_id',
         'dcd_id',
         'title',
-        'description',
         'budget',
         'county',
         'status',

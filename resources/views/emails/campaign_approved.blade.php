@@ -24,7 +24,7 @@
             <h2>Campaign Details</h2>
             <div class="campaign-details">
                 <p><strong>Title:</strong> {{ $campaign->title }}</p>
-                <p><strong>Description:</strong> {{ $campaign->description }}</p>
+
                 <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
                 <p><strong>Client:</strong> {{ $client->name }}</p>
                 <p><strong>Status:</strong> {{ ucfirst($campaign->status) }}</p>

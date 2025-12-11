@@ -22,7 +22,7 @@ test('scan redirect records a scan and redirects to product', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Live Campaign',
-        'description' => 'Live campaign description',
+
         'budget' => 50,
         'county' => 'Example County',
         'target_audience' => 'General Audience',

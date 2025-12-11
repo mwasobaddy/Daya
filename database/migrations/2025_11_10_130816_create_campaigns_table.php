@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
             $table->string('title');
-            $table->text('description');
             $table->decimal('budget', 10, 2);
             $table->string('county');
             $table->enum('status', ['draft', 'submitted', 'under_review', 'approved', 'paid', 'live', 'completed', 'rejected'])->default('submitted');

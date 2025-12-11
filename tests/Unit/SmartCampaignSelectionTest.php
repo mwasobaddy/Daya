@@ -23,7 +23,7 @@ test('smart campaign selection finds active campaign for dcd', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Active Campaign',
-        'description' => 'Active test campaign',
+
         'budget' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -77,7 +77,7 @@ test('smart campaign selection prioritizes oldest campaigns first', function () 
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Newer Campaign',
-        'description' => 'Newer test campaign',
+
         'budget' => 200,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -99,7 +99,7 @@ test('smart campaign selection prioritizes oldest campaigns first', function () 
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Older Campaign',
-        'description' => 'Older test campaign',
+
         'budget' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',

@@ -369,10 +369,7 @@ export default function CampaignSubmit({ flash }: Props) {
                 setError('budget', 'Budget must be greater than $0');
                 hasErrors = true;
             }
-            if (!data.description.trim()) {
-                setError('description', 'Campaign description is required');
-                hasErrors = true;
-            }
+
 
             // If 'label' or 'artist', require music_genres
             if (data.account_type === 'label' || data.account_type === 'artist') {
@@ -910,23 +907,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                 </div>
                             </div>
 
-                            <div>
-                                <Label htmlFor="description" className="text-sm font-medium mb-2 block">
-                                    Campaign Description <span className='text-red-500 dark:text-red-400'>*</span>
-                                </Label>
-                                <textarea
-                                    id="description"
-                                    value={data.description}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setData('description', e.target.value)}
-                                    required
-                                    placeholder="Describe your campaign objectives, target audience, and specific requirements..."
-                                    rows={4}
-                                    className="flex min-h-[80px] w-full rounded-lg px-4 py-3 text-sm placeholder:text-muted-foreground transition-all duration-200 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
-                                />
-                                {errors.description && (
-                                    <p className="mt-1.5 text-sm text-red-600 animate-in slide-in-from-top-1">{errors.description}</p>
-                                )}
-                            </div>
+
                         </div>
 
                         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl border-2 border-blue-100">
@@ -1409,10 +1390,7 @@ export default function CampaignSubmit({ flash }: Props) {
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-xl border-2 border-gray-100">
-                            <h3 className="font-semibold text-base mb-3 text-gray-900">Campaign Description</h3>
-                            <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">{data.description}</p>
-                        </div>
+
 
                         {data.target_audience && (
                             <div className="bg-white p-5 rounded-xl border-2 border-gray-100">

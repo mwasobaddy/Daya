@@ -159,7 +159,7 @@ test('does not select dcd with an active campaign', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Existing Active Campaign',
-        'description' => 'Existing active campaign',
+
         'budget' => 200,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -174,7 +174,7 @@ test('does not select dcd with an active campaign', function () {
     $campaign = Campaign::create([
         'client_id' => $client->id,
         'title' => 'New Campaign',
-        'description' => 'New campaign description',
+
         'budget' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',

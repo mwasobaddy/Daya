@@ -26,7 +26,7 @@
             <div class="campaign-details">
                 <h3>Campaign Details</h3>
                 <p><strong>Title:</strong> {{ $campaign->title }}</p>
-                <p><strong>Description:</strong> {{ $campaign->description }}</p>
+
                 <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
                 <p><strong>Submitted:</strong> {{ $campaign->created_at->format('M j, Y g:i A') }}</p>
             </div>

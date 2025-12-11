@@ -26,7 +26,6 @@ test('campaign matching prevents overlapping date ranges', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Existing Campaign',
-        'description' => 'Existing campaign',
         'budget' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -47,7 +46,7 @@ test('campaign matching prevents overlapping date ranges', function () {
     $newCampaign = Campaign::create([
         'client_id' => $client->id,
         'title' => 'New Overlapping Campaign',
-        'description' => 'New campaign that overlaps',
+
         'budget' => 150,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -91,7 +90,6 @@ test('campaign matching allows non-overlapping date ranges', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Existing Campaign',
-        'description' => 'Existing campaign',
         'budget' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
@@ -112,7 +110,7 @@ test('campaign matching allows non-overlapping date ranges', function () {
     $newCampaign = Campaign::create([
         'client_id' => $client->id,
         'title' => 'New Non-overlapping Campaign',
-        'description' => 'New campaign that does not overlap',
+
         'budget' => 150,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
