@@ -16,11 +16,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Referral Bonus Update</h1>
+            <h1>Referral Bonus Update - Your Venture Share Balances</h1>
         </div>
 
         <div class="content">
-            <p>Dear {{ $referrer->name }},</p>
+            <p>Hi {{ $referrer->name }},</p>
 
             <p>Congratulations! You have successfully referred a new member to the Daya platform. As a token of appreciation, your venture share balances have been updated.</p>
 
@@ -30,9 +30,9 @@
                 <p><strong>{{ $tokenNames['dws'] }} Tokens:</strong> {{ number_format($balances['kedws'], 2) }}</p>
             </div>
 
-            <p>These tokens represent your earnings and can be redeemed for various benefits on the platform. Keep referring more members to increase your balances!</p>
+            <p>These venture shares represent your earned participation on the platform and can be redeemed for various benefits within the Daya ecosystem. Keep referring more members to grow your balances and unlock additional value.</p>
 
-            <p>If you have any questions about your venture shares, please contact our support team.</p>
+            <p>If you have any questions regarding your venture shares or referrals, please reach out to us at ambassadorsupport@daya.africa.</p>
 
             <p>Best regards,<br>
             The Daya Team</p>
