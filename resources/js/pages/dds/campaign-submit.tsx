@@ -11,10 +11,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 
+
+declare global {
+    interface Window {
+        turnstile: {
+            render: (element: string | HTMLElement, config: { sitekey: string; callback: (token: string) => void }) => void;
+            remove: (element: string | HTMLElement) => void;
+        };
+    }
+}
 
 interface Props {
     flash?: {
@@ -93,6 +102,76 @@ export default function CampaignSubmit({ flash }: Props) {
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const turnstileRef = useRef(null);
+
+
+
+    const { data, setData, processing, errors, reset, clearErrors, setError } = useForm({
+        account_type: '',
+        business_name: '',
+        name: '',
+        email: '',
+        phone: '',
+        country: '',
+        referral_code: '',
+        campaign_title: '',
+        digital_product_link: '',
+        explainer_video_url: '',
+        campaign_objective: '',
+        budget: '',
+        target_country: '',
+        target_county: '',
+        target_subcounty: '',
+        target_ward: '',
+        business_types: [] as string[],
+        content_safety_preferences: [] as string[],
+        start_date: '',
+        end_date: '',
+        description: '',
+        target_audience: '',
+        objectives: '',
+        // allow custom 'other' business type from targeting UI
+        other_business_type: '',
+        music_genres: [] as string[],
+        turnstile_token: '',
+    });
+
+    // Initialize Turnstile when component mounts
+    useEffect(() => {
+        // Check if Turnstile script is already loaded
+        if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+            const script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        // Capture the element reference for cleanup
+        const turnstileElement = turnstileRef.current;
+
+        // Wait for Turnstile to be available and render the widget
+        const renderTurnstile = () => {
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.render(turnstileElement, {
+                    sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
+                    callback: (token: string) => {
+                        setData('turnstile_token', token);
+                    },
+                });
+            } else {
+                setTimeout(renderTurnstile, 100);
+            }
+        };
+
+        renderTurnstile();
+
+        return () => {
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.remove(turnstileElement);
+            }
+        };
+    }, [setData]);
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -215,35 +294,6 @@ export default function CampaignSubmit({ flash }: Props) {
         }
     };
 
-    const { data, setData, processing, errors, reset, clearErrors, setError } = useForm({
-        account_type: '',
-        business_name: '',
-        name: '',
-        email: '',
-        phone: '',
-        country: '',
-        referral_code: '',
-        campaign_title: '',
-        digital_product_link: '',
-        explainer_video_url: '',
-        campaign_objective: '',
-        budget: '',
-        target_country: '',
-        target_county: '',
-        target_subcounty: '',
-        target_ward: '',
-        business_types: [] as string[],
-        content_safety_preferences: [] as string[],
-        start_date: '',
-        end_date: '',
-        description: '',
-        target_audience: '',
-        objectives: '',
-        // allow custom 'other' business type from targeting UI
-        other_business_type: '',
-        music_genres: [] as string[],
-    });
-
     const steps = [
         { id: 'account', title: 'Account Setup', icon: User, description: 'Create your client profile', color: 'from-blue-500 to-cyan-500' },
         { id: 'campaign', title: 'Campaign Details', icon: Briefcase, description: 'Basic campaign information', color: 'from-purple-500 to-pink-500' },
@@ -259,10 +309,10 @@ export default function CampaignSubmit({ flash }: Props) {
     ];
 
     const musicGenres = [
-        'Afrobeat', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
+        'Afrobeat', 'Afrobeats', 'Afro-rave', 'African hip-hop', 'Afro fusion', 'Alté', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
         'Country', 'Dancehall', 'Electronic', 'Folk', 'Funk', 'Gengetone', 
         'Gospel', 'Hip Hop', 'House', 'Jazz', 'Kapuka', 'Kwaito', 'Lingala',
-        'Ohangla', 'Pop', 'R&B', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional'
+        'Ohangla', 'Pop', 'R&B', 'Rap', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional', 'Trap'
     ];
 
     const currentStepIndex = steps.findIndex(step => step.id === currentStep);
@@ -414,6 +464,11 @@ export default function CampaignSubmit({ flash }: Props) {
                 hasErrors = true;
             } else if (data.start_date && new Date(data.end_date) <= new Date(data.start_date)) {
                 setError('end_date', 'End date must be after start date');
+                hasErrors = true;
+            }
+        } else if (step === 'review') {
+            if (!data.turnstile_token) {
+                setError('turnstile_token', 'Please complete the security verification');
                 hasErrors = true;
             }
         }
@@ -1412,6 +1467,15 @@ export default function CampaignSubmit({ flash }: Props) {
                                     </p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="bg-amber-50 p-5 rounded-xl border-2 border-amber-100">
+                            <h3 className="text-lg font-semibold text-amber-700 mb-3">🔒 Security Verification</h3>
+                            <p className="text-amber-600 mb-3">Please complete the security check to submit your campaign.</p>
+                            <div ref={turnstileRef}></div>
+                            {errors.turnstile_token && (
+                                <p className="text-red-600 text-sm mt-2">{errors.turnstile_token}</p>
+                            )}
                         </div>
                     </div>
                 );
