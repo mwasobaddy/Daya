@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,15 @@ interface Ward {
     id: number;
     name: string;
     subcounty_id: number;
+}
+
+declare global {
+    interface Window {
+        turnstile: {
+            render: (element: string | HTMLElement, config: { sitekey: string; callback: (token: string) => void }) => void;
+            remove: (element: string | HTMLElement) => void;
+        };
+    }
 }
 
 interface LocationData {
@@ -94,6 +103,7 @@ export default function DcdRegister() {
     const [phoneValid, setPhoneValid] = useState<boolean | null>(null);
     const [phoneMessage, setPhoneMessage] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const turnstileRef = useRef(null);
 
     const [data, setData] = useState({
         referral_code: '',
@@ -124,11 +134,47 @@ export default function DcdRegister() {
         wallet_pin: '',
         confirm_pin: '',
         terms: false,
+        turnstile_token: '',
     });
 
     // APP_URL is no longer used for redirects; constant removed to avoid linter errors
 
+    // Initialize Turnstile when component mounts
+    useEffect(() => {
+        // Check if Turnstile script is already loaded
+        if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+            const script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
 
+        // Capture the element reference for cleanup
+        const turnstileElement = turnstileRef.current;
+
+        // Wait for Turnstile to be available and render the widget
+        const renderTurnstile = () => {
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.render(turnstileElement, {
+                    sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
+                    callback: (token: string) => {
+                        updateData('turnstile_token', token);
+                    },
+                });
+            } else {
+                setTimeout(renderTurnstile, 100);
+            }
+        };
+
+        renderTurnstile();
+
+        return () => {
+            if (window.turnstile && turnstileElement) {
+                window.turnstile.remove(turnstileElement);
+            }
+        };
+    }, [setData]);
 
     // Fetch countries on component mount
     useEffect(() => {
@@ -649,7 +695,7 @@ export default function DcdRegister() {
         return nationalIdRegex.test(nationalId.trim());
     };
 
-    const clearFieldError = (field: string) => {
+    const clearFieldError = useCallback((field: string) => {
         if (errors[field]) {
             setErrors(prev => {
                 const newErrors = { ...prev };
@@ -657,13 +703,13 @@ export default function DcdRegister() {
                 return newErrors;
             });
         }
-    };
+    }, [errors]);
 
-    const updateData = (field: string, value: string | string[] | boolean) => {
+    const updateData = useCallback((field: string, value: string | string[] | boolean) => {
         console.log(`Updating field ${field} with value:`, value, typeof value);
         setData(prev => ({ ...prev, [field]: value }));
         clearFieldError(field);
-    };
+    }, [clearFieldError]);
 
     const validateStep = (step: Step): boolean => {
         const newErrors: Record<string, string> = {};
@@ -762,6 +808,9 @@ export default function DcdRegister() {
             }
             if (!data.terms) {
                 newErrors.terms = 'You must accept the terms and conditions';
+            }
+            if (!data.turnstile_token) {
+                newErrors.turnstile_token = 'Please complete the security verification';
             }
         }
 
@@ -948,6 +997,7 @@ export default function DcdRegister() {
         { value: 'betting_shop', label: 'Betting Shop', category: 'financial' },
         { value: 'boda_boda', label: 'Boda Boda', category: 'transport' },
         { value: 'matatu_sacco', label: 'Matatu', category: 'transport' },
+        { value: 'taxi_airport', label: 'Taxi (Airport)', category: 'transport' },
         { value: 'fuel_station', label: 'Fuel Station', category: 'transport' },
         { value: 'car_wash', label: 'Car Wash', category: 'transport' },
         { value: 'church', label: 'Church', category: 'community' },
@@ -964,16 +1014,16 @@ export default function DcdRegister() {
         { value: 'games', label: 'Games' },
         { value: 'mobile_apps', label: 'Mobile Apps' },
         { value: 'product_launch', label: 'Product Launch' },
-        { value: 'product_activation', label: 'Product Activation' },
+        { value: 'surveys', label: 'Surveys' },
         { value: 'events', label: 'Events & Promotions' },
         { value: 'education', label: 'Education & Learning' },
     ];
 
     const musicGenres = [
-        'Afrobeat', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
+        'Afrobeat', 'Afrobeats', 'Afro-rave', 'African hip-hop', 'Afro fusion', 'Alté', 'Amapiano', 'Benga', 'Bongo Flava', 'Blues', 'Classical', 
         'Country', 'Dancehall', 'Electronic', 'Folk', 'Funk', 'Gengetone', 
         'Gospel', 'Hip Hop', 'House', 'Jazz', 'Kapuka', 'Kwaito', 'Lingala',
-        'Ohangla', 'Pop', 'R&B', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional'
+        'Ohangla', 'Pop', 'R&B', 'Rap', 'Reggae', 'Rock', 'Rumba', 'Soul', 'Taarab', 'Traditional', 'Trap'
     ];
 
     const operatingDays = [
@@ -1689,6 +1739,14 @@ export default function DcdRegister() {
                                         <InputError message={errors.terms} />
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="bg-amber-50 dark:bg-slate-700 border-l-4 border-amber-400 dark:border-amber-600 p-4 rounded-r-lg">
+                                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">🔒 Security Verification</h4>
+                                <div ref={turnstileRef}></div>
+                                {errors.turnstile_token && (
+                                    <p className="text-red-600 dark:text-red-400 text-sm mt-2">{errors.turnstile_token}</p>
+                                )}
                             </div>
 
 
