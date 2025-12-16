@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
-import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle, Shield } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
@@ -133,7 +133,7 @@ export default function DaRegister() {
         const renderTurnstile = () => {
             if (window.turnstile && turnstileElement) {
                 window.turnstile.render(turnstileElement, {
-                    sitekey: '1x00000000000000000000AA',
+                    sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
                     callback: (token: string) => {
                         setData('turnstile_token', token);
                     },
@@ -786,11 +786,10 @@ interface LocationData {
                 setError('terms', 'You must accept the terms and conditions');
                 hasErrors = true;
             }
-            // Turnstile token is now optional for development/demo
-            // if (!data.turnstile_token) {
-            //     setError('turnstile_token', 'Please complete the security verification');
-            //     hasErrors = true;
-            // }
+            if (!data.turnstile_token) {
+                setError('turnstile_token', 'Please complete the security verification');
+                hasErrors = true;
+            }
         }
 
         return !hasErrors;
@@ -1505,6 +1504,21 @@ interface LocationData {
                             <p className="text-sm text-emerald-800 dark:text-emerald-300">
                                 <strong>Important:</strong> Keep your PIN secure and do not share it with anyone. You'll need it to access your earnings and manage your account.
                             </p>
+                        </div>
+
+                        {/* Security Verification */}
+                        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-slate-700 dark:to-slate-800 p-6 rounded-xl border-2 border-amber-100 dark:border-amber-600">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Shield className="w-5 h-5 text-amber-600" />
+                                <div>
+                                    <h4 className="font-medium text-amber-900 dark:text-amber-300">Security Verification</h4>
+                                    <p className="text-sm text-amber-700 dark:text-amber-400">Complete the security check below to verify you're human</p>
+                                </div>
+                            </div>
+                            <div className="flex justify-center">
+                                <div ref={turnstileRef}></div>
+                            </div>
+                            <InputError message={errors.turnstile_token} />
                         </div>
 
                         <div className="bg-gradient-to-r from-green-50 to-purple-50 dark:from-slate-700 dark:to-slate-800 p-6 rounded-xl border-2 border-green-100 dark:border-green-600">
