@@ -159,7 +159,7 @@ export default function DcdRegister() {
                 window.turnstile.render(turnstileElement, {
                     sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
                     callback: (token: string) => {
-                        updateData('turnstile_token', token);
+                        setData(prev => ({ ...prev, turnstile_token: token }));
                     },
                 });
             } else {
@@ -174,7 +174,7 @@ export default function DcdRegister() {
                 window.turnstile.remove(turnstileElement);
             }
         };
-    }, [setData]);
+    }, []);
 
     // Fetch countries on component mount
     useEffect(() => {
@@ -696,14 +696,15 @@ export default function DcdRegister() {
     };
 
     const clearFieldError = useCallback((field: string) => {
-        if (errors[field]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    }, [errors]);
+        setErrors(prev => {
+            if (!prev[field]) {
+                return prev;
+            }
+            const newErrors = { ...prev };
+            delete newErrors[field];
+            return newErrors;
+        });
+    }, []);
 
     const updateData = useCallback((field: string, value: string | string[] | boolean) => {
         console.log(`Updating field ${field} with value:`, value, typeof value);
