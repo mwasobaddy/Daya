@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,19 +8,33 @@ import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
+import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church, Shield, AlertCircle } from 'lucide-react';
+import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState, useEffect, useRef } from 'react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
+
+const { toast, ToastContainer } = ReactToastify;
 
 
 
 declare global {
     interface Window {
         turnstile: {
-            render: (element: string | HTMLElement, config: { sitekey: string; callback: (token: string) => void }) => void;
-            remove: (element: string | HTMLElement) => void;
+            render: (element: string | HTMLElement, config: {
+                sitekey: string;
+                callback?: (token: string) => void;
+                'error-callback'?: (error: string) => void;
+                'expired-callback'?: () => void;
+                'timeout-callback'?: () => void;
+                theme?: 'light' | 'dark' | 'auto';
+                size?: 'normal' | 'compact' | 'flexible';
+                execution?: 'render' | 'execute';
+                appearance?: 'always' | 'execute' | 'interaction-only';
+            }) => string; // Returns widget ID
+            remove: (widgetId: string) => void;
+            reset: (widgetId: string) => void;
+            getResponse: (widgetId: string) => string | null;
+            isExpired: (widgetId: string) => boolean;
         };
     }
 }
@@ -103,6 +117,9 @@ export default function CampaignSubmit({ flash }: Props) {
     const [referralMessage, setReferralMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const turnstileRef = useRef(null);
+    const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+    const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+    const [turnstileError, setTurnstileError] = useState<string | null>(null);
 
 
 
@@ -136,42 +153,148 @@ export default function CampaignSubmit({ flash }: Props) {
         turnstile_token: '',
     });
 
+    const clearFieldError = useCallback((field: string) => {
+        if (errors[field as keyof typeof errors]) {
+            clearErrors(field as keyof typeof errors);
+        }
+    }, [errors, clearErrors]);
+
+    const updateData = (field: string, value: string | string[]) => {
+        setData(field as keyof typeof data, value);
+        clearFieldError(field);
+    };
+
     // Initialize Turnstile when component mounts
     useEffect(() => {
-        // Check if Turnstile script is already loaded
-        if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+        let timeoutId: NodeJS.Timeout;
+        let scriptLoadListener: (() => void) | null = null;
+
+        const loadTurnstileScript = () => {
+            // Add performance optimization with resource hints
+            if (!document.querySelector('link[href="https://challenges.cloudflare.com"]')) {
+                const preconnect = document.createElement('link');
+                preconnect.rel = 'preconnect';
+                preconnect.href = 'https://challenges.cloudflare.com';
+                document.head.appendChild(preconnect);
+            }
+
+            // Check if Turnstile script is already loaded
+            const existingScript = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+            if (existingScript) {
+                // Script already exists, check if Turnstile is available
+                if (window.turnstile) {
+                    setTurnstileLoaded(true);
+                } else {
+                    // Wait for script to load
+                    scriptLoadListener = () => setTurnstileLoaded(true);
+                    existingScript.addEventListener('load', scriptLoadListener);
+                }
+                return;
+            }
+
+            // Load Turnstile script with explicit rendering
             const script = document.createElement('script');
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
             script.async = true;
             script.defer = true;
+            
+            scriptLoadListener = () => {
+                setTurnstileLoaded(true);
+                setTurnstileError(null);
+            };
+            
+            script.addEventListener('load', scriptLoadListener);
+            script.addEventListener('error', () => {
+                setTurnstileError('Failed to load Turnstile script');
+                console.error('Failed to load Turnstile script');
+            });
+            
             document.head.appendChild(script);
-        }
-
-        // Capture the element reference for cleanup
-        const turnstileElement = turnstileRef.current;
-
-        // Wait for Turnstile to be available and render the widget
-        const renderTurnstile = () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.render(turnstileElement, {
-                    sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
-                    callback: (token: string) => {
-                        setData('turnstile_token', token);
-                    },
-                });
-            } else {
-                setTimeout(renderTurnstile, 100);
-            }
         };
 
-        renderTurnstile();
+        loadTurnstileScript();
 
         return () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.remove(turnstileElement);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (scriptLoadListener) {
+                const script = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+                if (script) {
+                    script.removeEventListener('load', scriptLoadListener);
+                }
             }
         };
-    }, [setData]);
+    }, []);
+
+    // Render Turnstile widget when script is loaded and we're on review step
+    useEffect(() => {
+        if (!turnstileLoaded || !window.turnstile || currentStep !== 'review') {
+            return;
+        }
+
+        const turnstileElement = turnstileRef.current;
+        if (!turnstileElement || turnstileWidgetId) {
+            return; // Already rendered or no container
+        }
+
+        try {
+            const widgetId = window.turnstile.render(turnstileElement, {
+                sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
+                theme: 'auto',
+                size: 'normal',
+                callback: (token: string) => {
+                    console.log('Turnstile success callback triggered');
+                    setData('turnstile_token', token);
+                    setTurnstileError(null);
+                    clearFieldError('turnstile_token');
+                },
+                'error-callback': (error: string) => {
+                    console.error('Turnstile error callback:', error);
+                    setTurnstileError(`Verification failed: ${error}`);
+                    setData('turnstile_token', '');
+                },
+                'expired-callback': () => {
+                    console.log('Turnstile expired callback');
+                    setTurnstileError('Verification expired. Please try again.');
+                    setData('turnstile_token', '');
+                },
+                'timeout-callback': () => {
+                    console.log('Turnstile timeout callback');
+                    setTurnstileError('Verification timed out. Please try again.');
+                    setData('turnstile_token', '');
+                }
+            });
+            
+            setTurnstileWidgetId(widgetId);
+            setTurnstileError(null);
+        } catch (error) {
+            console.error('Error rendering Turnstile widget:', error);
+            setTurnstileError('Failed to initialize security verification');
+        }
+
+        return () => {
+            if (turnstileWidgetId && window.turnstile) {
+                try {
+                    window.turnstile.remove(turnstileWidgetId);
+                } catch (error) {
+                    console.error('Error removing Turnstile widget:', error);
+                }
+                setTurnstileWidgetId(null);
+            }
+        };
+    }, [turnstileLoaded, currentStep, turnstileWidgetId, setData, clearFieldError]);
+
+    // Reset Turnstile widget if needed
+    const resetTurnstile = () => {
+        if (turnstileWidgetId && window.turnstile) {
+            try {
+                window.turnstile.reset(turnstileWidgetId);
+                setData('turnstile_token', '');
+                setTurnstileError(null);
+            } catch (error) {
+                console.error('Error resetting Turnstile widget:', error);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -475,16 +598,6 @@ export default function CampaignSubmit({ flash }: Props) {
 
         return !hasErrors;
     };
-    const clearFieldError = (field: string) => {
-        if (errors[field as keyof typeof errors]) {
-            clearErrors(field as keyof typeof errors);
-        }
-    };
-
-    const updateData = (field: string, value: string | string[]) => {
-        setData(field as keyof typeof data, value);
-        clearFieldError(field);
-    };
 
     const handleContentSafetyPreferenceChange = (type: string, checked: boolean | "indeterminate") => {
         if (checked === true) {
@@ -596,7 +709,7 @@ export default function CampaignSubmit({ flash }: Props) {
             emoji: <HandPlatter />,
             cardClass: '',
             titleClass: 'font-semibold text-sm mb-3 text-orange-500 flex items-center gap-2',
-            types: ['salon', 'barber_shop', 'beauty_parlour', 'tailor', 'shoe_repair', 'photography_studio', 'printing_cyber', 'laundry'],
+            types: ['salon', 'barber_shop', 'beauty_parlour', 'tailor', 'uber', 'shoe_repair', 'photography_studio', 'printing_cyber', 'laundry'],
         },
         {
             id: 'food',
@@ -667,7 +780,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:bg-gradient-to-br dark:from-slate-700 dark:to-slate-600 p-6 rounded-xl border-2 border-blue-100 dark:border-blue-600">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
-                                    <User className="w-5 h-5 text-white" />
+                                    <User className="w-5 h-5  text-slate-900" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-blue-900 dark:text-blue-300">Let's Get Started</h3>
@@ -812,7 +925,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:bg-gradient-to-br dark:from-slate-700 dark:to-slate-600 p-6 rounded-xl border-2 border-purple-100 dark:border-purple-600">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
-                                    <Briefcase className="w-5 h-5 text-white" />
+                                    <Briefcase className="w-5 h-5  text-slate-900" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-purple-900 dark:text-purple-300">Campaign Information</h3>
@@ -1004,7 +1117,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:bg-gradient-to-br dark:from-slate-700 dark:to-slate-600 p-6 rounded-xl border-2 border-orange-100 dark:border-orange-600">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
-                                    <Target className="w-5 h-5 text-white" />
+                                    <Target className="w-5 h-5  text-slate-900" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-orange-900 dark:text-orange-300">Account Setup</h3>
@@ -1332,7 +1445,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-100">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg">
-                                    <CheckSquare className="w-5 h-5 text-white" />
+                                    <CheckSquare className="w-5 h-5  text-slate-900" />
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-900">Review Your Campaign</h3>
                             </div>
@@ -1470,11 +1583,43 @@ export default function CampaignSubmit({ flash }: Props) {
                         </div>
 
                         <div className="bg-amber-50 p-5 rounded-xl border-2 border-amber-100">
-                            <h3 className="text-lg font-semibold text-amber-700 mb-3">🔒 Security Verification</h3>
+                            <h3 className="text-lg font-semibold text-amber-700 mb-3 flex items-center gap-2">
+                                <Shield className="w-5 h-5" />
+                                Security Verification
+                            </h3>
                             <p className="text-amber-600 mb-3">Please complete the security check to submit your campaign.</p>
-                            <div ref={turnstileRef}></div>
-                            {errors.turnstile_token && (
-                                <p className="text-red-600 text-sm mt-2">{errors.turnstile_token}</p>
+                            
+                            {!turnstileLoaded ? (
+                                <div className="flex items-center gap-2 p-4 bg-amber-100 rounded-lg">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                                    <span className="text-amber-700">Loading security verification...</span>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div ref={turnstileRef} className="mb-3"></div>
+                                    {turnstileError && (
+                                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                            <p className="text-red-700 text-sm flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {turnstileError}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={resetTurnstile}
+                                                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                                            >
+                                                Try again
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {(errors.turnstile_token || (!data.turnstile_token && currentStep === 'review')) && !turnstileError && (
+                                <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                                    <AlertCircle className="w-4 h-4" />
+                                    {errors.turnstile_token || 'Please complete the security verification'}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -1489,11 +1634,11 @@ export default function CampaignSubmit({ flash }: Props) {
         <>
             <Head title="Submit Campaign" />
 
-            <div className="h-screen bg-background text-foreground overflow-y-auto bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-300 text-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700 campaign-page">
-                {/* Appearance Toggle */}
+            <div className="h-screen bg-background text-foreground overflow-y-auto bg-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700 campaign-page">
+                {/* Appearance Toggle
                 <div className="absolute top-4 right-4 z-50">
                     <AppearanceToggleDropdown />
-                </div>
+                </div> */}
 
                 <div className="absolute inset-0 bg-black opacity-10"></div>
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div>
@@ -1510,12 +1655,12 @@ export default function CampaignSubmit({ flash }: Props) {
                     {/* Page-specific overrides to ensure good input contrast on glass background */}
                     <div className="text-center mb-12 animate-in fade-in-50 duration-700">
                         {/* <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
-                            <Rocket className="w-8 h-8 text-white" />
+                            <Rocket className="w-8 h-8  text-slate-900" />
                         </div>
-                        <h1 className="text-4xl font-bold text-white mb-3">
+                        <h1 className="text-4xl font-bold  text-slate-900 mb-3">
                             Launch Your Campaign
                         </h1>
-                        <p className="text-base text-white/90 max-w-2xl mx-auto">
+                        <p className="text-base  text-slate-900/90 max-w-2xl mx-auto">
                             Create your account and launch your first campaign in one simple process
                         </p> */}
 
@@ -1533,7 +1678,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         </h1>
                     </div>
 
-                    <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-12 dark:text-slate-300">
+                    <p className="text-xl md:text-2xl  text-slate-900 max-w-3xl mx-auto mb-12 dark:text-slate-300">
                         Join our community of influencers and earn rewards while promoting Daya across Africa
                     </p>
 
@@ -1554,8 +1699,8 @@ export default function CampaignSubmit({ flash }: Props) {
                                     return (
                                         <div key={step.id} className="flex flex-col items-center" style={{ width: `${100 / steps.length}%` }}>
                                             <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shadow-lg transition-all duration-300 ${
-                                                isCompleted ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white scale-110' :
-                                                isActive ? `bg-gradient-to-br ${step.color} text-white scale-110 shadow-xl` : 
+                                                isCompleted ? 'bg-gradient-to-br from-green-500 to-emerald-500  text-slate-900 scale-110' :
+                                                isActive ? `bg-gradient-to-br ${step.color}  text-slate-900 scale-110 shadow-xl` : 
                                                 'bg-white text-gray-400 border-gray-300'
                                             }`}>
                                                 {isCompleted ? <CheckCircle className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
@@ -1576,12 +1721,12 @@ export default function CampaignSubmit({ flash }: Props) {
                     </div>
 
                     <Card className="text-card-foreground flex flex-col gap-6 rounded-xl border shadow-xl border-none animate-in zoom-in-95 duration-500 bg-gray-100/50 dark:bg-gray-950 backdrop-blur-md border-gray-200 dark:border-slate-600 py-0">
-                        <CardHeader className={`flex flex-col gap-1.5 px-6 py-6 bg-gradient-to-br ${steps[currentStepIndex].color} text-white rounded-t-lg`}>
+                        <CardHeader className={`flex flex-col gap-1.5 px-6 py-6 bg-gradient-to-br ${steps[currentStepIndex].color}  text-slate-900 rounded-t-lg`}>
                             <CardTitle className="flex items-center text-xl">
                                 {React.createElement(steps[currentStepIndex].icon, { className: "w-6 h-6 mr-3" })}
                                 {steps[currentStepIndex].title}
                             </CardTitle>
-                            <CardDescription className="text-white/90 text-sm">
+                            <CardDescription className=" text-slate-900/90 text-sm">
                                 {steps[currentStepIndex].description}
                             </CardDescription>
                         </CardHeader>
@@ -1616,7 +1761,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                     <Button 
                                         type="submit"
                                         disabled={processing || isSubmitting}
-                                        className={`px-6 py-2.5 bg-gradient-to-br ${steps[currentStepIndex].color} text-white hover:shadow-lg transition-all duration-200 disabled:opacity-60`}
+                                        className={`px-6 py-2.5 bg-gradient-to-br ${steps[currentStepIndex].color}  text-slate-900 hover:shadow-lg transition-all duration-200 disabled:opacity-60`}
                                     >
                                         {(processing || isSubmitting) ? (
                                             <>
@@ -1651,7 +1796,7 @@ export default function CampaignSubmit({ flash }: Props) {
                         </CardContent>
                     </Card>
 
-                    <div className="mt-8 grid grid-cols-3 gap-4 animate-in fade-in-50 duration-700 delay-300">
+                    {/* <div className="mt-8 grid grid-cols-3 gap-4 animate-in fade-in-50 duration-700 delay-300">
                         <div className="text-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                             <div className="text-2xl font-bold text-blue-600">24/7</div>
                             <div className="text-xs text-gray-600 mt-1">Support Available</div>
@@ -1664,7 +1809,7 @@ export default function CampaignSubmit({ flash }: Props) {
                             <div className="text-2xl font-bold text-green-600">100%</div>
                             <div className="text-xs text-gray-600 mt-1">Success Rate</div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <ToastContainer
