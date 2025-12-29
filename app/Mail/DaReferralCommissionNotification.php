@@ -14,15 +14,17 @@ class DaReferralCommissionNotification extends Mailable
     use Queueable, SerializesModels;
 
     public User $referrer;
-    public User $newDa;
+    public User $referredUser;
+    public string $referralType;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(User $referrer, User $newDa)
+    public function __construct(User $referrer, User $referredUser)
     {
         $this->referrer = $referrer;
-        $this->newDa = $newDa;
+        $this->referredUser = $referredUser;
+        $this->referralType = $referredUser->role; // 'da' or 'client'
     }
 
     /**
@@ -30,8 +32,12 @@ class DaReferralCommissionNotification extends Mailable
      */
     public function envelope(): Envelope
     {
+        $subject = $this->referralType === 'da' 
+            ? 'Great News! You\'ll Earn 5% Commission from Your DA Referral'
+            : 'Great News! You\'ll Earn 5% Commission from Your Client Referral';
+            
         return new Envelope(
-            subject: 'Great News! You\'ll Earn 5% Commission from Your DA Referral',
+            subject: $subject,
         );
     }
 
@@ -44,7 +50,8 @@ class DaReferralCommissionNotification extends Mailable
             view: 'emails.da_referral_commission_notification',
             with: [
                 'referrer' => $this->referrer,
-                'newDa' => $this->newDa,
+                'referredUser' => $this->referredUser,
+                'referralType' => $this->referralType,
             ],
         );
     }

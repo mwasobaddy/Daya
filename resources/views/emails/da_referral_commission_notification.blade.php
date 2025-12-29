@@ -27,35 +27,68 @@
     <div class="container">
         <div class="header">
             <h1>🎉 Congratulations!</h1>
-            <p style="margin: 10px 0; font-size: 18px;">Your referral just became a Digital Ambassador</p>
+            <p style="margin: 10px 0; font-size: 18px;">
+                @if($referralType === 'da')
+                    Your referral just became a Digital Ambassador
+                @else
+                    Your referral just became a Client
+                @endif
+            </p>
         </div>
 
         <div class="content">
             <p>Dear {{ $referrer->name }},</p>
 
-            <p>Excellent news! Someone you referred has successfully signed up as a <strong>Digital Ambassador (DA)</strong> on the Daya platform, and this means more earnings for you!</p>
+            <p>
+                @if($referralType === 'da')
+                    Excellent news! Someone you referred has successfully signed up as a <strong>Digital Ambassador (DA)</strong> on the Daya platform, and this means more earnings for you!
+                @else
+                    Excellent news! Someone you referred has successfully signed up as a <strong>Client</strong> on the Daya platform, and this means more earnings for you!
+                @endif
+            </p>
 
             <div class="commission-highlight">
                 <div style="text-align: center;">
                     <h2 style="margin: 0 0 10px 0; color: #d97706;">💰 Commission Earnings</h2>
                     <div class="commission-rate">5%</div>
-                    <p style="margin: 0; font-size: 16px; color: #92400e;"><strong>of every campaign budget</strong> from this DA's campaigns</p>
+                    <p style="margin: 0; font-size: 16px; color: #92400e;">
+                        <strong>
+                            @if($referralType === 'da')
+                                of every campaign budget from this DA's campaigns
+                            @else
+                                of every campaign budget from this client's campaigns
+                            @endif
+                        </strong>
+                    </p>
                 </div>
             </div>
 
             <div class="da-details">
-                <h3 style="margin-top: 0;"><span class="icon">👤</span>New Digital Ambassador Details</h3>
+                <h3 style="margin-top: 0;">
+                    <span class="icon">
+                        @if($referralType === 'da')
+                            👤
+                        @else
+                            🏢
+                        @endif
+                    </span>
+                    @if($referralType === 'da')
+                        New Digital Ambassador Details
+                    @else
+                        New Client Details
+                    @endif
+                </h3>
                 <div class="detail-row">
                     <span class="label">Name:</span>
-                    <span class="value">{{ $newDa->name }}</span>
+                    <span class="value">{{ $referredUser->name }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Email:</span>
-                    <span class="value">{{ $newDa->email }}</span>
+                    <span class="value">{{ $referredUser->email }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Registration Date:</span>
-                    <span class="value">{{ $newDa->created_at->format('M j, Y g:i A') }}</span>
+                    <span class="value">{{ $referredUser->created_at->format('M j, Y g:i A') }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Referral Code Used:</span>
@@ -66,24 +99,48 @@
             <div class="earnings-info">
                 <h3 style="margin-top: 0; color: #065f46;"><span class="icon">💚</span>How Your Earnings Work</h3>
                 <ul style="color: #047857;">
-                    <li><strong>Automatic Commission:</strong> You'll earn 5% of every campaign budget that {{ $newDa->name }} manages</li>
+                    <li><strong>Automatic Commission:</strong> You'll earn 5% of every campaign budget that {{ $referredUser->name }} 
+                        @if($referralType === 'da')
+                            manages
+                        @else
+                            creates
+                        @endif
+                    </li>
                     <li><strong>Passive Income:</strong> No additional work required - earnings are calculated automatically</li>
-                    <li><strong>Long-term Benefits:</strong> As long as {{ $newDa->name }} is active, you keep earning</li>
+                    <li><strong>Long-term Benefits:</strong> As long as {{ $referredUser->name }} is active, you keep earning</li>
                     <li><strong>Track Earnings:</strong> Monitor your commissions in your dashboard</li>
                 </ul>
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
                 <h3 style="color: #374151;">💡 Maximize Your Earnings</h3>
-                <p>The more active your referred DA becomes with campaigns, the more you earn! Encourage {{ $newDa->name }} to:</p>
+                <p>
+                    @if($referralType === 'da')
+                        The more active your referred DA becomes with campaigns, the more you earn! Encourage {{ $referredUser->name }} to:
+                    @else
+                        The more campaigns your referred client creates, the more you earn! Encourage {{ $referredUser->name }} to:
+                    @endif
+                </p>
                 <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
-                    <li>Connect with high-budget clients</li>
-                    <li>Manage multiple campaigns</li>
-                    <li>Build long-term client relationships</li>
+                    @if($referralType === 'da')
+                        <li>Connect with high-budget clients</li>
+                        <li>Manage multiple campaigns</li>
+                        <li>Build long-term client relationships</li>
+                    @else
+                        <li>Create high-budget campaigns</li>
+                        <li>Run multiple campaigns</li>
+                        <li>Work with successful DCDs</li>
+                    @endif
                 </ul>
             </div>
 
-            <p>Keep up the great work with referrals! The more Digital Ambassadors you bring to the platform, the more commission opportunities you create.</p>
+            <p>
+                @if($referralType === 'da')
+                    Keep up the great work with referrals! The more Digital Ambassadors you bring to the platform, the more commission opportunities you create.
+                @else
+                    Keep up the great work with referrals! The more clients you bring to the platform, the more commission opportunities you create.
+                @endif
+            </p>
 
             <p style="margin-top: 30px;">
                 Best regards,<br>
@@ -92,7 +149,13 @@
         </div>
 
         <div class="footer">
-            <p>This is an automated notification. You'll receive updates when your referred DA starts managing campaigns.</p>
+            <p>
+                @if($referralType === 'da')
+                    This is an automated notification. You'll receive updates when your referred DA starts managing campaigns.
+                @else
+                    This is an automated notification. You'll receive updates when your referred client starts creating campaigns.
+                @endif
+            </p>
             <p>© {{ date('Y') }} Daya. All rights reserved.</p>
         </div>
     </div>
