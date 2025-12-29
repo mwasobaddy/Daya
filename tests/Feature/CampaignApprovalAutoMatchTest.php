@@ -29,6 +29,7 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
         'ward_id' => $ward->id,
         'country_id' => $country->id,
         'profile' => ['music_genres' => ['Afrobeats']],
+        'qr_code' => 'qr-codes/test-dcd-qr.pdf',
     ]);
 
     // Create campaign in under_review state, with music genres that match the DCD
