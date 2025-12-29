@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +7,31 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
-import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle, Shield } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
+import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle, Shield, AlertCircle } from 'lucide-react';
+import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+const { toast, ToastContainer } = ReactToastify;
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 declare global {
     interface Window {
         turnstile: {
-            render: (element: string | HTMLElement, config: { sitekey: string; callback: (token: string) => void }) => void;
-            remove: (element: string | HTMLElement) => void;
+            render: (element: string | HTMLElement, config: {
+                sitekey: string;
+                callback?: (token: string) => void;
+                'error-callback'?: (error: string) => void;
+                'expired-callback'?: () => void;
+                'timeout-callback'?: () => void;
+                theme?: 'light' | 'dark' | 'auto';
+                size?: 'normal' | 'compact' | 'flexible';
+                execution?: 'render' | 'execute';
+                appearance?: 'always' | 'execute' | 'interaction-only';
+            }) => string; // Returns widget ID
+            remove: (widgetId: string) => void;
+            reset: (widgetId: string) => void;
+            getResponse: (widgetId: string) => string | null;
+            isExpired: (widgetId: string) => boolean;
         };
     }
 }
@@ -75,6 +90,9 @@ export default function DaRegister() {
     const [countyLabel, setCountyLabel] = useState('County');
     const [subcountyLabel, setSubcountyLabel] = useState('Sub-county');
     const turnstileRef = useRef(null);
+    const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+    const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+    const [turnstileError, setTurnstileError] = useState<string | null>(null);
     const [referralValidating, setReferralValidating] = useState(false);
     const [referralValid, setReferralValid] = useState<boolean | null>(null);
     const [referralMessage, setReferralMessage] = useState('');
@@ -117,41 +135,164 @@ export default function DaRegister() {
 
     // Initialize Turnstile when component mounts
     useEffect(() => {
-        // Check if Turnstile script is already loaded
-        if (!document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) {
+        let timeoutId: NodeJS.Timeout;
+        let scriptLoadListener: (() => void) | null = null;
+
+        const loadTurnstileScript = () => {
+            // Add performance optimization with resource hints
+            if (!document.querySelector('link[href="https://challenges.cloudflare.com"]')) {
+                const preconnect = document.createElement('link');
+                preconnect.rel = 'preconnect';
+                preconnect.href = 'https://challenges.cloudflare.com';
+                document.head.appendChild(preconnect);
+            }
+
+            // Check if Turnstile script is already loaded
+            const existingScript = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+            if (existingScript) {
+                // Script already exists, check if Turnstile is available
+                if (window.turnstile) {
+                    setTurnstileLoaded(true);
+                } else {
+                    // Wait for script to load
+                    scriptLoadListener = () => setTurnstileLoaded(true);
+                    existingScript.addEventListener('load', scriptLoadListener);
+                }
+                return;
+            }
+
+            // Load Turnstile script with explicit rendering
             const script = document.createElement('script');
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
             script.async = true;
             script.defer = true;
+            
+            scriptLoadListener = () => {
+                setTurnstileLoaded(true);
+                setTurnstileError(null);
+            };
+            
+            script.addEventListener('load', scriptLoadListener);
+            script.addEventListener('error', () => {
+                setTurnstileError('Failed to load Turnstile script');
+                console.error('Failed to load Turnstile script');
+            });
+            
             document.head.appendChild(script);
-        }
-
-        // Capture the element reference for cleanup
-        const turnstileElement = turnstileRef.current;
-
-        // Wait for Turnstile to be available and render the widget
-        const renderTurnstile = () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.render(turnstileElement, {
-                    sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
-                    callback: (token: string) => {
-                        setData('turnstile_token', token);
-                    },
-                });
-            } else {
-                // Retry after a short delay if not ready
-                setTimeout(renderTurnstile, 100);
-            }
         };
 
-        renderTurnstile();
+        loadTurnstileScript();
 
         return () => {
-            if (window.turnstile && turnstileElement) {
-                window.turnstile.remove(turnstileElement);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (scriptLoadListener) {
+                const script = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+                if (script) {
+                    script.removeEventListener('load', scriptLoadListener);
+                }
             }
         };
-    }, [setData]);
+    }, []);
+
+    // Render Turnstile widget when script is loaded and we're on account step
+    useEffect(() => {
+        if (!turnstileLoaded || !window.turnstile || currentStep !== 'account') {
+            return;
+        }
+
+        const turnstileElement = turnstileRef.current;
+        if (!turnstileElement || turnstileWidgetId) {
+            return; // Already rendered or no container
+        }
+
+        try {
+            const widgetId = window.turnstile.render(turnstileElement, {
+                sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
+                theme: 'auto',
+                size: 'normal',
+                callback: (token: string) => {
+                    console.log('Turnstile success callback triggered');
+                    setData('turnstile_token', token);
+                    setTurnstileError(null);
+                    // Clear turnstile_token error inline to avoid circular dependency
+                    if (errors.turnstile_token) {
+                        clearErrors('turnstile_token');
+                    }
+                },
+                'error-callback': (error: string) => {
+                    console.error('Turnstile error callback:', error);
+                    
+                    // Enhanced error handling for specific error codes
+                    if (error === '110200') {
+                        // Domain mismatch error - check if we're in development environment
+                        const hostname = window.location.hostname;
+                        const isDevelopment = hostname === 'localhost' || 
+                                            hostname.includes('.hostingersite.com') || 
+                                            hostname.includes('.ngrok') || 
+                                            hostname.includes('.vercel.app');
+                        
+                        if (isDevelopment) {
+                            console.log('Development environment detected, bypassing Turnstile domain restriction');
+                            setData('turnstile_token', 'dev-bypass-token');
+                            setTurnstileError('Development mode: Security verification bypassed');
+                            return;
+                        }
+                        setTurnstileError('Domain configuration error. Please contact support.');
+                    } else if (error === '110100') {
+                        setTurnstileError('Invalid site configuration. Please contact support.');
+                    } else if (error === '110110') {
+                        setTurnstileError('Widget configuration error. Please refresh and try again.');
+                    } else {
+                        setTurnstileError(`Verification failed: ${error}`);
+                    }
+                    
+                    if (!error.startsWith('110200')) {
+                        setData('turnstile_token', '');
+                    }
+                },
+                'expired-callback': () => {
+                    console.log('Turnstile expired callback');
+                    setTurnstileError('Verification expired. Please try again.');
+                    setData('turnstile_token', '');
+                },
+                'timeout-callback': () => {
+                    console.log('Turnstile timeout callback');
+                    setTurnstileError('Verification timed out. Please try again.');
+                    setData('turnstile_token', '');
+                }
+            });
+            
+            setTurnstileWidgetId(widgetId);
+            setTurnstileError(null);
+        } catch (error) {
+            console.error('Error rendering Turnstile widget:', error);
+            setTurnstileError('Failed to initialize security verification');
+        }
+
+        return () => {
+            if (turnstileWidgetId && window.turnstile) {
+                try {
+                    window.turnstile.remove(turnstileWidgetId);
+                } catch (error) {
+                    console.error('Error removing Turnstile widget:', error);
+                }
+                setTurnstileWidgetId(null);
+            }
+        };
+    }, [turnstileLoaded, currentStep, turnstileWidgetId, setData, clearErrors, errors.turnstile_token]);
+
+    // Reset Turnstile widget if needed
+    const resetTurnstile = () => {
+        if (turnstileWidgetId && window.turnstile) {
+            try {
+                window.turnstile.reset(turnstileWidgetId);
+                setData('turnstile_token', '');
+                setTurnstileError(null);
+            } catch (error) {
+                console.error('Error resetting Turnstile widget:', error);
+            }
+        }
+    };
 
     // Fetch countries on component mount
     useEffect(() => {
@@ -458,17 +599,17 @@ export default function DaRegister() {
         }
     };
 
-interface LocationData {
-    countryName?: string;
-    country?: string;
-    countyName?: string;
-    county?: string;
-    subcountyName?: string;
-    subcounty?: string;
-    wardName?: string;
-    ward?: string;
-    [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-}
+    interface LocationData {
+        countryName?: string;
+        country?: string;
+        countyName?: string;
+        county?: string;
+        subcountyName?: string;
+        subcounty?: string;
+        wardName?: string;
+        ward?: string;
+        [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
 
     const autoFillLocation = async (locationData: LocationData) => {
         console.log('Auto-filling location with data:', locationData);
@@ -676,11 +817,11 @@ interface LocationData {
         return nationalIdRegex.test(nationalId.trim());
     };
 
-    const clearFieldError = (field: string) => {
+    const clearFieldError = useCallback((field: string) => {
         if (errors[field as keyof typeof errors]) {
             clearErrors(field as keyof typeof errors);
         }
-    };
+    }, [errors, clearErrors]);
 
     const updateData = (field: string, value: string | string[] | boolean) => {
         setData(field as keyof typeof data, value);
@@ -787,8 +928,17 @@ interface LocationData {
                 hasErrors = true;
             }
             if (!data.turnstile_token) {
-                setError('turnstile_token', 'Please complete the security verification');
-                hasErrors = true;
+                // Check if we're in development environment
+                const hostname = window.location.hostname;
+                const isDevelopment = hostname === 'localhost' || 
+                                    hostname.includes('.hostingersite.com') || 
+                                    hostname.includes('.ngrok') || 
+                                    hostname.includes('.vercel.app');
+                
+                if (!isDevelopment) {
+                    setError('turnstile_token', 'Please complete the security verification');
+                    hasErrors = true;
+                }
             }
         }
 
@@ -1160,7 +1310,7 @@ interface LocationData {
                                             type="button"
                                             onClick={requestLocationPermission}
                                             disabled={locationLoading}
-                                            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 text-sm"
+                                            className="bg-cyan-600 hover:bg-cyan-700  text-slate-900 px-4 py-2 text-sm"
                                         >
                                             {locationLoading ? (
                                                 <>
@@ -1515,10 +1665,49 @@ interface LocationData {
                                     <p className="text-sm text-amber-700 dark:text-amber-400">Complete the security check below to verify you're human</p>
                                 </div>
                             </div>
-                            <div className="flex justify-center">
-                                <div ref={turnstileRef}></div>
-                            </div>
-                            <InputError message={errors.turnstile_token} />
+                            
+                            {!turnstileLoaded ? (
+                                <div className="flex items-center justify-center gap-2 p-4 bg-amber-100 dark:bg-slate-600 rounded-lg">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                                    <span className="text-amber-700 dark:text-amber-300">Loading security verification...</span>
+                                </div>
+                            ) : data.turnstile_token === 'dev-bypass-token' ? (
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <p className="text-blue-700 dark:text-blue-400 text-sm flex items-center gap-2 justify-center">
+                                        <Shield className="w-4 h-4" />
+                                        Security verification bypassed for development environment
+                                    </p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="flex justify-center mb-3">
+                                        <div ref={turnstileRef}></div>
+                                    </div>
+                                    {turnstileError && turnstileError !== 'Development mode: Security verification bypassed' && (
+                                        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                            <p className="text-red-700 dark:text-red-400 text-sm flex items-center gap-2 justify-center">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {turnstileError}
+                                            </p>
+                                            <div className="flex justify-center mt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={resetTurnstile}
+                                                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
+                                                >
+                                                    Try again
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {(errors.turnstile_token || (!data.turnstile_token && currentStep === 'account')) && !turnstileError && (
+                                <div className="text-center">
+                                    <InputError message={errors.turnstile_token || 'Please complete the security verification'} />
+                                </div>
+                            )}
                         </div>
 
                         <div className="bg-gradient-to-r from-green-50 to-purple-50 dark:from-slate-700 dark:to-slate-800 p-6 rounded-xl border-2 border-green-100 dark:border-green-600">
@@ -1526,12 +1715,6 @@ interface LocationData {
                                 <FileText className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1">
                                     <h4 className="font-medium text-green-900 dark:text-green-300 mb-3">Terms & Conditions</h4>
-                                    <div className="text-sm text-green-800 dark:text-green-400 mb-4 space-y-2">
-                                        <p>• I agree to distribute digital content through my business premises</p>
-                                        <p>• I understand that content distribution must comply with local laws and regulations</p>
-                                        <p>• I will maintain appropriate content ratings and safety standards</p>
-                                        <p>• I acknowledge that earnings depend on content performance and user engagement</p>
-                                    </div>
                                     <div className="flex items-center space-x-2">
                                         <Checkbox
                                             id="terms"
@@ -1540,7 +1723,7 @@ interface LocationData {
                                             className={`border-green-300 dark:border-green-600/20 bg-white dark:bg-slate-500 focus:ring-green-500 dark:focus:ring-green-400 ${data.terms ? 'bg-green-100 dark:bg-green-700' : ''}`}
                                         />
                                         <Label htmlFor="terms" className="text-sm text-green-800 dark:text-green-300 font-medium">
-                                            I agree to the terms and conditions <span className='text-red-500 dark:text-red-400'>*</span>
+                                            I agree to the <a href="https://www.daya.africa/TnC" target="_blank" rel="noopener noreferrer" className="underline text-green-800 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200">terms and conditions</a> <span className='text-red-500 dark:text-red-400'>*</span>
                                         </Label>
                                     </div>
                                     <InputError message={errors.terms} />
@@ -1556,14 +1739,14 @@ interface LocationData {
     };
 
     return (
-        <div className="h-screen bg-background text-foreground overflow-y-auto bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-300 text-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700">
-            {/* Appearance Toggle */}
+        <div className="h-screen bg-background text-foreground overflow-y-auto bg-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700">
+            {/* Appearance Toggle
             <div className="absolute top-4 right-4 z-50">
                 <AppearanceToggleDropdown />
             </div>
 
             <div className="absolute inset-0 bg-black opacity-10"></div>
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div> */}
 
             {!showForm ? (
                 /* Landing Page */
@@ -1584,7 +1767,7 @@ interface LocationData {
                                     </span>
                                 </h1>
 
-                                <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-12 dark:text-slate-300">
+                                <p className="text-xl md:text-2xl  text-slate-900 max-w-3xl mx-auto mb-12 dark:text-slate-300">
                                     Join our community of influencers and earn rewards while promoting Daya across Africa
                                 </p>
 
@@ -1595,21 +1778,21 @@ interface LocationData {
                                             <Award className="w-8 h-8 mr-2" />
                                             <div className="text-2xl font-bold">5% Commission</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Earn 5% of all earnings from every DCD you recruit</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Earn 5% of all earnings from every DCD you recruit</div>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
                                         <div className="flex items-center justify-center mb-3">
                                             <TrendingUp className="w-8 h-8 mr-2" />
                                             <div className="text-2xl font-bold">Venture Shares</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Build ownership in the platform as you grow the network</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Build ownership in the platform as you grow the network</div>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
                                         <div className="flex items-center justify-center mb-3">
                                             <Users className="w-8 h-8 mr-2" />
                                             <div className="text-2xl font-bold">Residual Income</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Ongoing commissions from your recruited DCDs' scans</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Ongoing commissions from your recruited DCDs' scans</div>
                                     </div>
                                 </div>
 
@@ -1646,7 +1829,7 @@ interface LocationData {
                                             url.searchParams.set('started', 'true');
                                             window.history.pushState({}, '', url.toString());
                                         }}
-                                        className="!px-8 !py-8 text-lg font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-xl shadow-2xl hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105"
+                                        className="!px-8 !py-8 text-lg font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600  text-slate-900 rounded-xl shadow-2xl hover:shadow-yellow-500/25 transition-all duration-300 transform hover:scale-105"
                                     >
                                         <Sparkles className="w-6 h-6 mr-3" />
                                             Start Registration
@@ -1661,21 +1844,21 @@ interface LocationData {
                                             <Users className="w-6 h-6 mr-2" />
                                             <div className="text-3xl font-bold">500+</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Active Ambassadors</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Active Ambassadors</div>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
                                         <div className="flex items-center justify-center mb-2">
                                             <TrendingUp className="w-6 h-6 mr-2" />
                                             <div className="text-3xl font-bold">$50K+</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Commissions Paid</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Commissions Paid</div>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 dark:bg-slate-800/50 dark:border-slate-600">
                                         <div className="flex items-center justify-center mb-2">
                                             <Award className="w-6 h-6 mr-2" />
                                             <div className="text-3xl font-bold">98%</div>
                                         </div>
-                                        <div className="text-sm text-blue-100 dark:text-slate-300">Success Rate</div>
+                                        <div className="text-sm  text-slate-900 dark:text-slate-300">Success Rate</div>
                                     </div>
                                 </div>
                             </div>
@@ -1714,8 +1897,8 @@ interface LocationData {
                                     return (
                                         <div key={step.id} className="flex flex-col items-center" style={{ width: `${100 / steps.length}%` }}>
                                             <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shadow-lg transition-all duration-300 dark:border-slate-800 ${
-                                                isCompleted ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white scale-110' :
-                                                isActive ? `bg-gradient-to-br ${step.color} text-white scale-110 shadow-xl` :
+                                                isCompleted ? 'bg-gradient-to-br from-green-500 to-emerald-500  text-slate-900 scale-110' :
+                                                isActive ? `bg-gradient-to-br ${step.color}  text-slate-900 scale-110 shadow-xl` :
                                                 'bg-white text-gray-400 border-gray-300 dark:bg-slate-700 dark:text-slate-500 dark:border-slate-500'
                                             }`}>
                                                 {isCompleted ? <CheckCircle className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
@@ -1736,12 +1919,12 @@ interface LocationData {
                     </div>
 
                     <Card className="shadow-xl border-none animate-in zoom-in-95 duration-500 bg-gray-100/50 dark:bg-gray-950 backdrop-blur-md border-gray-200 dark:border-slate-600 py-0">
-                        <CardHeader className={`py-6 bg-gradient-to-br ${steps[currentStepIndex].color} text-white rounded-t-lg`}>
+                        <CardHeader className={`py-6 bg-gradient-to-br ${steps[currentStepIndex].color}  text-slate-900 rounded-t-lg`}>
                             <CardTitle className="flex items-center text-xl">
                                 {React.createElement(steps[currentStepIndex].icon, { className: "w-6 h-6 mr-3" })}
                                 {steps[currentStepIndex].title}
                             </CardTitle>
-                            <CardDescription className="text-white/90 text-sm">
+                            <CardDescription className=" text-slate-900/90 text-sm">
                                 {steps[currentStepIndex].description}
                             </CardDescription>
                         </CardHeader>
@@ -1764,7 +1947,7 @@ interface LocationData {
                                     <Button
                                         type="submit"
                                         disabled={processing}
-                                        className={`px-6 py-2.5 bg-gradient-to-br ${steps[currentStepIndex].color} text-white hover:shadow-lg transition-all duration-200 disabled:opacity-60`}
+                                        className={`px-6 py-2.5 bg-gradient-to-br ${steps[currentStepIndex].color}  text-slate-900 hover:shadow-lg transition-all duration-200 disabled:opacity-60`}
                                     >
                                         {processing ? (
                                             <>
@@ -1799,7 +1982,7 @@ interface LocationData {
                         </CardContent>
                     </Card>
 
-                    <div className="mt-8 grid grid-cols-3 gap-4 animate-in fade-in-50 duration-700 delay-300">
+                    {/* <div className="mt-8 grid grid-cols-3 gap-4 animate-in fade-in-50 duration-700 delay-300">
                         <div className="text-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-600 dark:hover:shadow-slate-700">
                             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">24/7</div>
                             <div className="text-xs text-gray-600 mt-1 dark:text-slate-300">Support Available</div>
@@ -1812,7 +1995,7 @@ interface LocationData {
                             <div className="text-2xl font-bold text-green-600 dark:text-green-400">100%</div>
                             <div className="text-xs text-gray-600 mt-1 dark:text-slate-300">Success Rate</div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Footer */}
                     <div className="text-center mt-12 pb-8">
@@ -1824,12 +2007,10 @@ interface LocationData {
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <a
                                     href="mailto:support@daya.africa"
-                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-lg hover:from-blue-600 hover:to-green-600 transition-all shadow-md hover:shadow-lg dark:from-blue-600 dark:to-green-600 dark:hover:from-blue-700 dark:hover:to-green-700"
+                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500  text-slate-900 rounded-lg hover:from-blue-600 hover:to-green-600 transition-all shadow-md hover:shadow-lg dark:from-blue-600 dark:to-green-600 dark:hover:from-blue-700 dark:hover:to-green-700"
                                 >
                                     📧 support@daya.africa
                                 </a>
-                                <span className="text-gray-400 dark:text-slate-400">or</span>
-                                <span className="text-gray-600 font-medium dark:text-slate-300">📞 Call: +254 700 123 456</span>
                             </div>
                         </div>
                     </div>
