@@ -136,6 +136,17 @@ class AdminActionService
             } catch (\Exception $e) {
                 \Log::warning('Failed to send CampaignApproved email to DCD: ' . $e->getMessage());
             }
+
+            // Notify the DA who referred this DCD
+            $referral = $dcd->referralsReceived()->where('type', 'da_to_dcd')->first();
+            if ($referral && $referral->referrer) {
+                $da = $referral->referrer;
+                try {
+                    \Mail::to($da->email)->send(new \App\Mail\DaCampaignNotification($da, $dcd, $campaign));
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to send DaCampaignNotification email to DA: ' . $e->getMessage());
+                }
+            }
         } else {
             // No matched DCD - notify client and admins about the unassigned campaign
             try {

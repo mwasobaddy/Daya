@@ -215,13 +215,13 @@ class DcdController extends Controller
         \Log::warning('Failed to send wallet creation email to DCD: ' . $e->getMessage());
     }
 
-        // Allocate initial DCD registration tokens (500 DDS + 500 DWS)
+        // Allocate initial DCD registration tokens (1000 DDS + 1000 DWS)
         try {
             $this->ventureShareService->allocateInitialDcdTokens($user);
             \Log::info('Initial DCD tokens allocated', [
                 'user_id' => $user->id,
-                'dds_tokens' => 500,
-                'dws_tokens' => 500
+                'dds_tokens' => 1000,
+                'dws_tokens' => 1000
             ]);
 
             // Send token allocation notification email
