@@ -55,7 +55,7 @@ class ClientController extends Controller
                 'explainer_video_url' => 'nullable|url|max:500',
                 'campaign_objective' => 'required|in:music_promotion,app_downloads,brand_awareness,product_launch,event_promotion,social_cause',
                 'budget' => 'required|numeric|min:50',
-                'description' => 'required|string|max:2000',
+                'description' => 'nullable|string|max:2000',
 
                 // Targeting & Budget
                 'content_safety_preferences' => 'required|array|min:1',
@@ -217,7 +217,7 @@ class ClientController extends Controller
                 'client_id' => $client->id,
                 'dcd_id' => $dcdId, // From QR scan or null for admin assignment
                 'title' => $request->campaign_title,
-                'description' => $request->description,
+                'description' => $request->description ?? 'No description provided',
                 'budget' => $request->budget,
                 'county' => $request->target_county ?? 'Not specified',
                 'status' => 'submitted',

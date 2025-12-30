@@ -144,7 +144,6 @@ export default function CampaignSubmit({ flash }: Props) {
         content_safety_preferences: [] as string[],
         start_date: '',
         end_date: '',
-        description: '',
         target_audience: '',
         objectives: '',
         // allow custom 'other' business type from targeting UI
@@ -621,11 +620,6 @@ export default function CampaignSubmit({ flash }: Props) {
             } else if (data.start_date && new Date(data.end_date) <= new Date(data.start_date)) {
                 console.log('Validation failed: end date is not after start date', data.end_date, data.start_date);
                 setError('end_date', 'End date must be after start date');
-                hasErrors = true;
-            }
-            if (!data.description.trim()) {
-                console.log('Validation failed: description is empty or whitespace');
-                setError('description', 'Description is required');
                 hasErrors = true;
             }
         } else if (step === 'review') {
