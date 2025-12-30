@@ -1103,37 +1103,6 @@ export default function CampaignSubmit({ flash }: Props) {
 
 
                         </div>
-
-                        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl border-2 border-blue-100">
-                            <div className="flex items-start gap-3">
-                                <Sparkles className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-semibold text-blue-900 mb-2">How it works:</h4>
-                                    <ul className="text-sm text-blue-800 space-y-2">
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">•</span>
-                                            <span>Find a DCD and get their QR code</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">•</span>
-                                            <span>Submit your campaign details</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">•</span>
-                                            <span>DCD will handle campaign execution</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">•</span>
-                                            <span>Track progress via email updates</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">•</span>
-                                            <span>Earn from successful campaign outcomes</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 );
 
