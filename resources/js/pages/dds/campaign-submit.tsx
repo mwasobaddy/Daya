@@ -580,23 +580,28 @@ export default function CampaignSubmit({ flash }: Props) {
             }
         } else if (step === 'targeting') {
             if (!data.budget || parseFloat(data.budget) < 50) {
+                console.log('Validation failed: budget is', data.budget, 'must be >= 50');
                 setError('budget', 'Minimum budget is $50');
                 hasErrors = true;
             }
             if (data.content_safety_preferences.length === 0) {
+                console.log('Validation failed: no content safety preferences selected');
                 setError('content_safety_preferences', 'Content safety preference is required');
                 hasErrors = true;
             }
             if (!data.target_country) {
+                console.log('Validation failed: no target country selected');
                 setError('target_country', 'Target country is required');
                 hasErrors = true;
             }
             // County, subcounty, and ward are now optional
             if (data.business_types.length === 0) {
+                console.log('Validation failed: no business types selected');
                 setError('business_types', 'Please select at least one business type');
                 hasErrors = true;
             }
             if (!data.start_date) {
+                console.log('Validation failed: no start date selected');
                 setError('start_date', 'Start date is required');
                 hasErrors = true;
             } else {
@@ -604,18 +609,22 @@ export default function CampaignSubmit({ flash }: Props) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 if (startDate < today) {
+                    console.log('Validation failed: start date is in the past', data.start_date);
                     setError('start_date', 'Start date cannot be in the past');
                     hasErrors = true;
                 }
             }
             if (!data.end_date) {
+                console.log('Validation failed: no end date selected');
                 setError('end_date', 'End date is required');
                 hasErrors = true;
             } else if (data.start_date && new Date(data.end_date) <= new Date(data.start_date)) {
+                console.log('Validation failed: end date is not after start date', data.end_date, data.start_date);
                 setError('end_date', 'End date must be after start date');
                 hasErrors = true;
             }
             if (!data.description.trim()) {
+                console.log('Validation failed: description is empty or whitespace');
                 setError('description', 'Description is required');
                 hasErrors = true;
             }
