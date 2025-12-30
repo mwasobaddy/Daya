@@ -249,8 +249,34 @@ export default function CampaignSubmit({ flash }: Props) {
                 },
                 'error-callback': (error: string) => {
                     console.error('Turnstile error callback:', error);
-                    setTurnstileError(`Verification failed: ${error}`);
-                    setData('turnstile_token', '');
+                    
+                    // Enhanced error handling for specific error codes
+                    if (error === '110200') {
+                        // Domain mismatch error - check if we're in development environment
+                        const hostname = window.location.hostname;
+                        const isDevelopment = hostname === 'localhost' || 
+                                            hostname.includes('.hostingersite.com') || 
+                                            hostname.includes('.ngrok') || 
+                                            hostname.includes('.vercel.app');
+                        
+                        if (isDevelopment) {
+                            console.log('Development environment detected, bypassing Turnstile domain restriction');
+                            setData('turnstile_token', 'dev-bypass-token');
+                            setTurnstileError('Development mode: Security verification bypassed');
+                            return;
+                        }
+                        setTurnstileError('Domain configuration error. Please contact support.');
+                    } else if (error === '110100') {
+                        setTurnstileError('Invalid site configuration. Please contact support.');
+                    } else if (error === '110110') {
+                        setTurnstileError('Widget configuration error. Please refresh and try again.');
+                    } else {
+                        setTurnstileError(`Verification failed: ${error}`);
+                    }
+                    
+                    if (!error.startsWith('110200')) {
+                        setData('turnstile_token', '');
+                    }
                 },
                 'expired-callback': () => {
                     console.log('Turnstile expired callback');
@@ -1594,10 +1620,17 @@ export default function CampaignSubmit({ flash }: Props) {
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
                                     <span className="text-amber-700">Loading security verification...</span>
                                 </div>
+                            ) : data.turnstile_token === 'dev-bypass-token' ? (
+                                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-blue-700 text-sm flex items-center gap-2">
+                                        <Shield className="w-4 h-4" />
+                                        Security verification bypassed for development environment
+                                    </p>
+                                </div>
                             ) : (
                                 <div>
                                     <div ref={turnstileRef} className="mb-3"></div>
-                                    {turnstileError && (
+                                    {turnstileError && turnstileError !== 'Development mode: Security verification bypassed' && (
                                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                                             <p className="text-red-700 text-sm flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4" />

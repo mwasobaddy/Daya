@@ -248,35 +248,34 @@ export default function DcdRegister() {
                 },
                 'error-callback': (error: string) => {
                     console.error('Turnstile error callback:', error);
-                    let errorMessage = 'Verification failed';
                     
-                    // Handle specific Turnstile error codes
-                    switch (error) {
-                        case '110200':
-                            errorMessage = 'Security verification is temporarily unavailable. Please continue without verification.';
-                            // For domain mismatch, allow bypassing verification in development
-                            if (window.location.hostname.includes('localhost') || 
-                                window.location.hostname.includes('.hostingersite.com') ||
-                                window.location.hostname.includes('ngrok') ||
-                                window.location.hostname.includes('vercel.app')) {
-                                console.warn('Turnstile domain mismatch detected, allowing bypass for development');
-                                setData(prev => ({ ...prev, turnstile_token: 'dev-bypass-token' }));
-                                setTurnstileError(null);
-                                return;
-                            }
-                            break;
-                        case '110100':
-                            errorMessage = 'Security verification timed out. Please try again.';
-                            break;
-                        case '110110':
-                            errorMessage = 'Invalid security configuration. Please try refreshing the page.';
-                            break;
-                        default:
-                            errorMessage = `Verification failed (Code: ${error}). Please try again.`;
+                    // Enhanced error handling for specific error codes
+                    if (error === '110200') {
+                        // Domain mismatch error - check if we're in development environment
+                        const hostname = window.location.hostname;
+                        const isDevelopment = hostname === 'localhost' || 
+                                            hostname.includes('.hostingersite.com') || 
+                                            hostname.includes('.ngrok') || 
+                                            hostname.includes('.vercel.app');
+                        
+                        if (isDevelopment) {
+                            console.log('Development environment detected, bypassing Turnstile domain restriction');
+                            setData(prev => ({ ...prev, turnstile_token: 'dev-bypass-token' }));
+                            setTurnstileError('Development mode: Security verification bypassed');
+                            return;
+                        }
+                        setTurnstileError('Domain configuration error. Please contact support.');
+                    } else if (error === '110100') {
+                        setTurnstileError('Invalid site configuration. Please contact support.');
+                    } else if (error === '110110') {
+                        setTurnstileError('Widget configuration error. Please refresh and try again.');
+                    } else {
+                        setTurnstileError(`Verification failed: ${error}`);
                     }
                     
-                    setTurnstileError(errorMessage);
-                    setData(prev => ({ ...prev, turnstile_token: '' }));
+                    if (!error.startsWith('110200')) {
+                        setData(prev => ({ ...prev, turnstile_token: '' }));
+                    }
                 },
                 'expired-callback': () => {
                     console.log('Turnstile expired callback');
@@ -1920,7 +1919,7 @@ export default function DcdRegister() {
                                 ) : (
                                     <div>
                                         <div ref={turnstileRef} className="mb-3"></div>
-                                        {turnstileError && (
+                                        {turnstileError && turnstileError !== 'Development mode: Security verification bypassed' && (
                                             <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                                                 <p className="text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
                                                     <AlertCircle className="w-4 h-4" />
