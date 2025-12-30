@@ -123,48 +123,81 @@ class ClientController extends Controller
                     'ward_id' => $request->target_ward, // Update ward_id (nullable)
                 ]);
             } else {
-                // Check if phone number is already in use by another user
-                $phoneInUse = User::where('phone', $request->phone)->exists();
-                if ($phoneInUse) {
-                    return response()->json([
-                        'message' => 'This phone number is already registered with another account.',
-                        'error' => 'phone_in_use'
-                    ], 422);
-                }
-
-                // Generate unique referral code for new client
-                $referralCode = null;
-                if ($request->referral_code) {
-                    // Use provided code if it's unique
-                    $existingCode = User::where('referral_code', strtoupper($request->referral_code))->first();
-                    if (!$existingCode) {
-                        $referralCode = strtoupper($request->referral_code);
+                // Check if phone number is already in use
+                $existingUserByPhone = User::where('phone', $request->phone)->first();
+                if ($existingUserByPhone) {
+                    // Use existing user by phone, update email and other info
+                    $client = $existingUserByPhone;
+                    // Check if the new email is already used by another user
+                    if ($existingUserByPhone->email !== $request->email) {
+                        $emailInUse = User::where('email', $request->email)
+                                         ->where('id', '!=', $existingUserByPhone->id)
+                                         ->exists();
+                        
+                        if ($emailInUse) {
+                            return response()->json([
+                                'message' => 'This email address is already registered with another account.',
+                                'error' => 'email_in_use'
+                            ], 422);
+                        }
                     }
-                }
-                
-                // If no valid code provided, generate a unique one
-                if (!$referralCode) {
-                    do {
-                        $referralCode = Str::upper(Str::random(8));
-                    } while (User::where('referral_code', $referralCode)->exists());
-                }
 
-                // Create new client user
-                $client = User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'role' => 'client',
-                    'phone' => $request->phone,
-                    'country' => $request->country,
-                    'business_name' => $request->business_name,
-                    'account_type' => $request->account_type,
-                    'referral_code' => $referralCode,
-                    'country_id' => $request->target_country ? \App\Models\Country::where('code', strtoupper($request->target_country))->first()?->id : null,
-                    'county_id' => $request->target_county,
-                    'subcounty_id' => $request->target_subcounty,
-                    'ward_id' => $request->target_ward, // Convert target_ward to ward_id (nullable)
-                    'password' => bcrypt('temporary_password_' . time()), // Temporary password for client accounts
-                ]);
+                    $client->update([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'country' => $request->country,
+                        'business_name' => $request->business_name,
+                        'account_type' => $request->account_type,
+                        'referral_code' => $request->referral_code,
+                        'country_id' => $request->target_country ? \App\Models\Country::where('code', strtoupper($request->target_country))->first()?->id : null,
+                        'county_id' => $request->target_county,
+                        'subcounty_id' => $request->target_subcounty,
+                        'ward_id' => $request->target_ward,
+                    ]);
+                } else {
+                    // Check if email is already in use
+                    $emailInUse = User::where('email', $request->email)->exists();
+                    if ($emailInUse) {
+                        return response()->json([
+                            'message' => 'This email address is already registered with another account.',
+                            'error' => 'email_in_use'
+                        ], 422);
+                    }
+
+                    // Generate unique referral code for new client
+                    $referralCode = null;
+                    if ($request->referral_code) {
+                        // Use provided code if it's unique
+                        $existingCode = User::where('referral_code', strtoupper($request->referral_code))->first();
+                        if (!$existingCode) {
+                            $referralCode = strtoupper($request->referral_code);
+                        }
+                    }
+                    
+                    // If no valid code provided, generate a unique one
+                    if (!$referralCode) {
+                        do {
+                            $referralCode = Str::upper(Str::random(8));
+                        } while (User::where('referral_code', $referralCode)->exists());
+                    }
+
+                    // Create new client user
+                    $client = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'role' => 'client',
+                        'phone' => $request->phone,
+                        'country' => $request->country,
+                        'business_name' => $request->business_name,
+                        'account_type' => $request->account_type,
+                        'referral_code' => $referralCode,
+                        'country_id' => $request->target_country ? \App\Models\Country::where('code', strtoupper($request->target_country))->first()?->id : null,
+                        'county_id' => $request->target_county,
+                        'subcounty_id' => $request->target_subcounty,
+                        'ward_id' => $request->target_ward,
+                        'password' => bcrypt('temporary_password_' . time()), // Temporary password for client accounts
+                    ]);
+                }
             }
 
             // Convert content safety preferences to single value for storage
