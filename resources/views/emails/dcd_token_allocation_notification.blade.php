@@ -61,7 +61,6 @@
                     <li><strong>{{ $tokenNames['dds'] }} Tokens:</strong> Digital Distribution Share - represents your earnings from successful campaign completions</li>
                     <li><strong>{{ $tokenNames['dws'] }} Tokens:</strong> Digital Wallet Share - accumulates value and can be redeemed for various platform benefits</li>
                     <li><strong>Automatic Earning:</strong> Tokens increase as you participate in campaigns and customer interactions</li>
-                    <li><strong>Monthly Rewards:</strong> Convert tokens to real earnings through our monthly payment system</li>
                 </ul>
             </div>
 
