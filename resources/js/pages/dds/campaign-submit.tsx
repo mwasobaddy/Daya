@@ -615,6 +615,10 @@ export default function CampaignSubmit({ flash }: Props) {
                 setError('end_date', 'End date must be after start date');
                 hasErrors = true;
             }
+            if (!data.description.trim()) {
+                setError('description', 'Description is required');
+                hasErrors = true;
+            }
         } else if (step === 'review') {
             if (!data.turnstile_token) {
                 setError('turnstile_token', 'Please complete the security verification');
