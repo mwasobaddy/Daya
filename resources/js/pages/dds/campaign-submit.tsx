@@ -638,6 +638,18 @@ export default function CampaignSubmit({ flash }: Props) {
         e.preventDefault();
         if (isSubmitting) return; // prevent duplicate submissions
         if (currentStep === 'review') {
+            // Validate all steps before submission
+            let allValid = true;
+            ['account', 'campaign', 'targeting', 'review'].forEach(step => {
+                if (!validateStep(step as Step)) {
+                    allValid = false;
+                }
+            });
+            if (!allValid) {
+                toast.error('Please fill in all required fields correctly before submitting.');
+                return;
+            }
+
             setIsSubmitting(true);
             try {
                 const response = await fetch('/api/client/campaign/submit', {
