@@ -229,11 +229,11 @@
                     </div>
                     <div class="earnings-item">
                         <span>Your Digital Ambassador (DA):</span>
-                        <span class="earnings-percentage">20%</span>
+                        <span class="earnings-percentage">10%</span>
                     </div>
                     <div class="earnings-item">
                         <span>Daya Platform:</span>
-                        <span class="earnings-percentage">20%</span>
+                        <span class="earnings-percentage">30%</span>
                     </div>
                 </div>
                 <p>This means you earn the largest share for the work you do on the ground.</p>

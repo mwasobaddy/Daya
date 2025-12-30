@@ -59,7 +59,7 @@
         @if(isset($result['dcd']) && $result['dcd'])
             <p><strong>DCD Assigned:</strong> {{ $result['dcd']['name'] }} ({{ $result['dcd']['email'] }})</p>
         @else
-            <p><strong>Assignment:</strong> No DCD was automatically matched. Please assign a DCD manually from the admin dashboard.</p>
+            <p><strong>Assignment:</strong> No DCD was automatically matched. Please assign a DCD manually.</p>
         @endif
         <p style="color: #9ca3af; font-size: 0.875rem;">
             This action has been processed and recorded in the system.

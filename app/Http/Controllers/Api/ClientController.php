@@ -125,25 +125,11 @@ class ClientController extends Controller
                 // Check if phone number is already in use
                 $existingUserByPhone = User::where('phone', $request->phone)->first();
                 if ($existingUserByPhone) {
-                    // Use existing user by phone, update email and other info
+                    // Use existing user by phone, keep their email, update other info
                     $client = $existingUserByPhone;
-                    // Check if the new email is already used by another user
-                    if ($existingUserByPhone->email !== $request->email) {
-                        $emailInUse = User::where('email', $request->email)
-                                         ->where('id', '!=', $existingUserByPhone->id)
-                                         ->exists();
-                        
-                        if ($emailInUse) {
-                            return response()->json([
-                                'message' => 'This email address is already registered with another account.',
-                                'error' => 'email_in_use'
-                            ], 422);
-                        }
-                    }
 
                     $client->update([
                         'name' => $request->name,
-                        'email' => $request->email,
                         'country' => $request->country,
                         'business_name' => $request->business_name,
                         'account_type' => $request->account_type,
@@ -153,11 +139,11 @@ class ClientController extends Controller
                         'ward_id' => $request->target_ward,
                     ]);
                 } else {
-                    // Check if email is already in use
-                    $emailInUse = User::where('email', $request->email)->exists();
+                    // Check if email is already in use for client role
+                    $emailInUse = User::where('email', $request->email)->where('role', 'client')->exists();
                     if ($emailInUse) {
                         return response()->json([
-                            'message' => 'This email address is already registered with another account.',
+                            'message' => 'This email address is already registered with another client account.',
                             'error' => 'email_in_use'
                         ], 422);
                     }
