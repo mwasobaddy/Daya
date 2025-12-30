@@ -65,16 +65,6 @@
                 </ul>
             </div>
 
-            <div class="highlight-box">
-                <h3 style="margin-top: 0; color: #856404;"><span class="icon">💡</span>How to Maximize Your Tokens</h3>
-                <ul style="color: #856404;">
-                    <li><strong>Accept Campaign Assignments:</strong> Earn 20% of campaign budgets as DDS tokens</li>
-                    <li><strong>Display Content Effectively:</strong> Better customer engagement = higher earnings</li>
-                    <li><strong>Maintain QR Code Visibility:</strong> Easy scanning leads to more interactions</li>
-                    <li><strong>Track Performance:</strong> Monitor your dashboard for earning opportunities</li>
-                </ul>
-            </div>
-
             <p>Your tokens are now active and ready to grow! Start accepting campaign assignments and watch your balance increase with every successful customer interaction.</p>
 
             <p>If you have any questions about your tokens or how to maximize your earnings, our support team is here to help.</p>

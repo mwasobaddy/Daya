@@ -51,20 +51,6 @@ class VentureShareService
                     $referrerTokens['dds'],
                     'DCD referral bonus for registering DCD: ' . $referred->name
                 );
-                
-                // DCD Reward: 1000KeDWS + 1000KeDDS to new DCD
-                $this->allocateShares(
-                    $referred,
-                    1000,
-                    $referredTokens['dws'],
-                    'Welcome bonus for joining Daya as DCD'
-                );
-                $this->allocateShares(
-                    $referred,
-                    1000,
-                    $referredTokens['dds'],
-                    'Welcome bonus for joining Daya as DCD'
-                );
                 break;
                 
             case 'dcd_to_da':
@@ -113,7 +99,7 @@ class VentureShareService
             $dcd,
             1000,
             $dcdTokens['dds'],
-            'Initial registration bonus for joining Daya as DCD'
+            'Welcome bonus for joining Daya as DCD'
         );
 
         // Allocate 1000 DWS tokens  
@@ -121,7 +107,7 @@ class VentureShareService
             $dcd,
             1000,
             $dcdTokens['dws'],
-            'Initial registration bonus for joining Daya as DCD'
+            'Welcome bonus for joining Daya as DCD'
         );
     }
 
