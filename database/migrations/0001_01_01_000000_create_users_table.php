@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phone')->nullable()->unique();
+            $table->string('email');
+            $table->string('phone')->nullable();
             $table->string('national_id')->nullable()->unique();
             $table->enum('role', ['da', 'dcd', 'client', 'admin'])->nullable();
             $table->string('referral_code')->unique()->nullable();
@@ -34,6 +34,10 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            // Composite unique constraints to allow same email/phone for different roles
+            $table->unique(['email', 'role']);
+            $table->unique(['phone', 'role']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
