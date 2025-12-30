@@ -707,6 +707,10 @@ export default function CampaignSubmit({ flash }: Props) {
             // Validate current step before proceeding
             if (validateStep(currentStep)) {
                 nextStep();
+            } else {
+                toast.error('Please fill in all required fields correctly before continuing.', {
+                    autoClose: 3000
+                });
             }
         }
     };
@@ -720,11 +724,6 @@ export default function CampaignSubmit({ flash }: Props) {
                 // Clear any previous errors when successfully moving to next step
                 clearErrors();
             }
-        } else {
-            // Show toast error for validation failures
-            toast.error('Please fill in all required fields correctly before continuing.', {
-                autoClose: 3000
-            });
         }
     };
 
