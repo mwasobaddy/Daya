@@ -2112,7 +2112,7 @@ export default function DcdRegister() {
                                                 }`}>
                                                     {step.title}
                                                 </p>
-                                                <p className="text-xs text-gray-200 mt-0.5 max-w-[120px] dark:text-slate-400">{step.description}</p>
+                                                <p className="text-xs text-gray-900 mt-0.5 max-w-[120px] dark:text-slate-400">{step.description}</p>
                                             </div>
                                         </div>
                                     );

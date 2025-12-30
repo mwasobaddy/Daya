@@ -33,7 +33,7 @@ class DaReferralCommissionNotification extends Mailable
     public function envelope(): Envelope
     {
         $subject = $this->referralType === 'da' 
-            ? 'Great News! You\'ll Earn 5% Commission from Your DA Referral'
+            ? 'Great News! Your DA Referral Joined the Network'
             : 'Great News! You\'ll Earn 5% Commission from Your Client Referral';
             
         return new Envelope(

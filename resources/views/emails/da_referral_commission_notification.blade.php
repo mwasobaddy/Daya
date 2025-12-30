@@ -26,7 +26,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎉 Congratulations!</h1>
+            <h1>
+                @if($referralType === 'da')
+                    🎉 Great Job!
+                @else
+                    🎉 Congratulations!
+                @endif
+            </h1>
             <p style="margin: 10px 0; font-size: 18px;">
                 @if($referralType === 'da')
                     Your referral just became a Digital Ambassador
@@ -41,27 +47,25 @@
 
             <p>
                 @if($referralType === 'da')
-                    Excellent news! Someone you referred has successfully signed up as a <strong>Digital Ambassador (DA)</strong> on the Daya platform, and this means more earnings for you!
+                    Excellent news! Someone you referred has successfully signed up as a <strong>Digital Ambassador (DA)</strong> on the Daya platform. While you don't earn commission from DA referrals, you're helping grow our network of ambassadors!
                 @else
                     Excellent news! Someone you referred has successfully signed up as a <strong>Client</strong> on the Daya platform, and this means more earnings for you!
                 @endif
             </p>
 
+            @if($referralType !== 'da')
             <div class="commission-highlight">
                 <div style="text-align: center;">
                     <h2 style="margin: 0 0 10px 0; color: #d97706;">💰 Commission Earnings</h2>
                     <div class="commission-rate">5%</div>
                     <p style="margin: 0; font-size: 16px; color: #92400e;">
                         <strong>
-                            @if($referralType === 'da')
-                                of every campaign budget from this DA's campaigns
-                            @else
-                                of every campaign budget from this client's campaigns
-                            @endif
+                            of every campaign budget from this client's campaigns
                         </strong>
                     </p>
                 </div>
             </div>
+            @endif
 
             <div class="da-details">
                 <h3 style="margin-top: 0;">
@@ -96,47 +100,33 @@
                 </div>
             </div>
 
+            @if($referralType !== 'da')
             <div class="earnings-info">
                 <h3 style="margin-top: 0; color: #065f46;"><span class="icon">💚</span>How Your Earnings Work</h3>
                 <ul style="color: #047857;">
-                    <li><strong>Automatic Commission:</strong> You'll earn 5% of every campaign budget that {{ $referredUser->name }} 
-                        @if($referralType === 'da')
-                            manages
-                        @else
-                            creates
-                        @endif
-                    </li>
+                    <li><strong>Automatic Commission:</strong> You'll earn 5% of every campaign budget that {{ $referredUser->name }} creates</li>
                     <li><strong>Passive Income:</strong> No additional work required - earnings are calculated automatically</li>
                     <li><strong>Long-term Benefits:</strong> As long as {{ $referredUser->name }} is active, you keep earning</li>
                     <li><strong>Track Earnings:</strong> Monitor your commissions in your dashboard</li>
                 </ul>
             </div>
+            @endif
 
+            @if($referralType !== 'da')
             <div style="text-align: center; margin: 30px 0;">
                 <h3 style="color: #374151;">💡 Maximize Your Earnings</h3>
-                <p>
-                    @if($referralType === 'da')
-                        The more active your referred DA becomes with campaigns, the more you earn! Encourage {{ $referredUser->name }} to:
-                    @else
-                        The more campaigns your referred client creates, the more you earn! Encourage {{ $referredUser->name }} to:
-                    @endif
-                </p>
+                <p>The more campaigns your referred client creates, the more you earn! Encourage {{ $referredUser->name }} to:</p>
                 <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
-                    @if($referralType === 'da')
-                        <li>Connect with high-budget clients</li>
-                        <li>Manage multiple campaigns</li>
-                        <li>Build long-term client relationships</li>
-                    @else
-                        <li>Create high-budget campaigns</li>
-                        <li>Run multiple campaigns</li>
-                        <li>Work with successful DCDs</li>
-                    @endif
+                    <li>Create high-budget campaigns</li>
+                    <li>Run multiple campaigns</li>
+                    <li>Work with successful DCDs</li>
                 </ul>
             </div>
+            @endif
 
             <p>
                 @if($referralType === 'da')
-                    Keep up the great work with referrals! The more Digital Ambassadors you bring to the platform, the more commission opportunities you create.
+                    Keep up the great work with referrals! While DA referrals don't earn commission, they help expand our network and create more opportunities for client referrals in the future.
                 @else
                     Keep up the great work with referrals! The more clients you bring to the platform, the more commission opportunities you create.
                 @endif
@@ -151,7 +141,7 @@
         <div class="footer">
             <p>
                 @if($referralType === 'da')
-                    This is an automated notification. You'll receive updates when your referred DA starts managing campaigns.
+                    This is an automated notification for your DA referral. While no commission is earned from DA referrals, you're helping build our ambassador network.
                 @else
                     This is an automated notification. You'll receive updates when your referred client starts creating campaigns.
                 @endif
