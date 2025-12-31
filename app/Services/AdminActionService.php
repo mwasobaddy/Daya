@@ -132,7 +132,7 @@ class AdminActionService
             $qrFilename = $dcd->qr_code;
 
             try {
-                \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client, $qrFilename));
+                \Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send CampaignApproved email to DCD: ' . $e->getMessage());
             }

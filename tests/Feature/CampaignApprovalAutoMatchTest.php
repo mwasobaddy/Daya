@@ -68,9 +68,9 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
     expect($campaign->status)->toBe('approved');
     expect($campaign->dcd_id)->not->toBeNull();
 
-    // Check that a CampaignApproved mail was sent to the matched DCD and contains QR PDF
+    // Check that a CampaignApproved mail was sent to the matched DCD
     Mail::assertSent(\App\Mail\CampaignApproved::class, function ($mail) use ($dcd) {
-        return $mail->hasTo($dcd->email) && count($mail->attachments()) > 0;
+        return $mail->hasTo($dcd->email);
     });
 
     // Now simulate a scan redirect (client scans the QR) and assert an Earning is created  
