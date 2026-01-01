@@ -39,6 +39,9 @@ distribution.html
 scripts/run_generate_da_pdf.php
 scripts/debug_genre_query.php
 scripts/debug_scan_earning.php
+id_rsa
+id_rsa_daya.pub
+id_rsa_daya
 
 # Ignore zip files
 *.zip
