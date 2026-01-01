@@ -679,9 +679,9 @@ export default function CampaignSubmit({ flash }: Props) {
 
                     // Show success toast
                     toast.success(result.message || 'Campaign submitted successfully!');
-                    // Redirect to the Daya homepage after a brief delay
+                    // Redirect to the home page after a brief delay
                     setTimeout(() => {
-                        window.location.href = 'https://www.daya.africa';
+                        window.location.href = '/';
                     }, 2000);
                 } else {
                     console.error('Campaign submission error:', result);

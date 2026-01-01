@@ -977,9 +977,9 @@ export default function DaRegister() {
             toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
                 autoClose: 3000
             });
-                    // Redirect to the Daya homepage after a short delay
+                    // Redirect to the home page after a short delay
                     setTimeout(() => {
-                        window.location.href = 'https://www.daya.africa';
+                        window.location.href = '/';
                     }, 3000);
             return;
         }
@@ -1087,9 +1087,9 @@ export default function DaRegister() {
                     toast.success('🎉 Registration successful! Welcome to Daya!\nCheck your email for your referral link.', {
                         autoClose: 3000
                     });
-                    // Redirect to the Daya homepage after a short delay
+                    // Redirect to the home page after a short delay
                     setTimeout(() => {
-                        window.location.href = 'https://www.daya.africa';
+                        window.location.href = '/';
                     }, 3000);
                 } else {
                     console.log('Error response:', result);
