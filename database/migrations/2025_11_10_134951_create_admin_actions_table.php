@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('admin_actions', function (Blueprint $table) {
             $table->id();
-            $table->string('action'); // approve_campaign, reject_campaign, complete_campaign, mark_payment_complete
-            $table->string('resource_type'); // campaign, earning, user
+            $table->string('action', 50); // approve_campaign, reject_campaign, complete_campaign, mark_payment_complete
+            $table->string('resource_type', 50); // campaign, earning, user
             $table->unsignedBigInteger('resource_id');
             $table->string('token', 64)->unique();
             $table->json('metadata')->nullable();
