@@ -52,3 +52,6 @@ id_rsa_daya
 
 # Ignore demo graphics
 demo-graphics.js
+
+# Ignore implementation documentation
+TURNSTILE_IMPLEMENTATION.md
