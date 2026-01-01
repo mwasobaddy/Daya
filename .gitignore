@@ -35,6 +35,17 @@ ventures.md
 index-client.html
 index-dcd.html
 index-da.html
+distribution.html
 scripts/run_generate_da_pdf.php
 scripts/debug_genre_query.php
 scripts/debug_scan_earning.php
+
+# Ignore zip files
+*.zip
+
+# Ignore build files
+/build
+/public/build
+
+# Ignore demo graphics
+demo-graphics.js

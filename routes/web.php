@@ -5,10 +5,15 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('welcome', [
+    return Inertia::render('home');
+})->name('home');
+
+// Legacy welcome page redirect
+Route::get('/welcome', function () {
+    return Inertia::render('dds/welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
-})->name('home');
+})->name('welcome');
 
 Route::redirect('/login', '/');
 Route::redirect('/register', '/');

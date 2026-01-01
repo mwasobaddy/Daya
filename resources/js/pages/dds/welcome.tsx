@@ -25,39 +25,29 @@ export default function Welcome() {
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div> */}
 
                 <div className="flex min-h-screen flex-col items-center bg-transparent p-6  text-slate-900 lg:justify-center lg:p-8 relative z-10">
-                    {/* <header className="mb-6 w-full max-w-[335px] not-has-[nav]:hidden lg:max-w-4xl">
-                        <nav className="flex items-center justify-end gap-4">
-                            {auth.user ? (
-                                <Link
-                                    href={dashboard()}
-                                    className="inline-block rounded-sm border border-white/20 px-5 py-1.5 text-sm leading-normal  text-slate-900 hover:border-white/40 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-200"
-                                >
-                                    Dashboard
-                                </Link>
-                            ) : (
-                                <>
-                                    <Link
-                                        href={login()}
-                                        className="inline-block rounded-sm border border-white/20 px-5 py-1.5 text-sm leading-normal  text-slate-900 hover:border-white/40 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-200"
-                                    >
-                                        Log in
-                                    </Link>
-                                    {canRegister && (
-                                        <Link
-                                            href={register()}
-                                            className="inline-block rounded-sm border border-white/20 px-5 py-1.5 text-sm leading-normal  text-slate-900 hover:border-white/40 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-200"
-                                        >
-                                            Register
-                                        </Link>
-                                    )}
-                                </>
-                            )}
-                        </nav>
-                    </header> */}
+                    {/* Logo Header */}
+                    <header className="mb-8 w-full max-w-4xl flex justify-center">
+                        <div className="flex items-center gap-3">
+                            <img 
+                                src="/logo.png" 
+                                alt="Daya Logo" 
+                                className="h-12 w-12 object-contain"
+                            />
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                                Daya
+                            </h1>
+                        </div>
+                    </header>
+
+                    {/* Appearance Toggle */}
+                    <div className="absolute top-4 right-4 z-50">
+                        <AppearanceToggleDropdown />
+                    </div>
+
                     <main className="w-full max-w-4xl">
                         <div className="w-full">
-                            <h1 className="mb-4 text-2xl font-semibold text-slate-900">Welcome to Daya</h1>
-                            <p className="mb-6 text-sm  text-slate-900 dark:text-slate-300">
+                            <h2 className="mb-4 text-2xl font-semibold text-slate-900 dark:text-white text-center">Welcome</h2>
+                            <p className="mb-6 text-sm text-slate-900 dark:text-slate-300 text-center">
                                 Join our Digital Distribution System - Choose your role to get started
                             </p>
 
@@ -66,13 +56,13 @@ export default function Welcome() {
                                     <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:scale-105 dark:bg-slate-800/50 dark:border-slate-600 dark:hover:bg-slate-700/50">
                                         <CardHeader className="text-center">
                                             <Users className="mx-auto h-12 w-12 text-blue-300 mb-2" />
-                                            <CardTitle className="text-lg  text-slate-900">Digital Ambassador</CardTitle>
-                                            <CardDescription className=" text-slate-900">
+                                            <CardTitle className="text-lg text-slate-900 dark:text-white">Digital Ambassador</CardTitle>
+                                            <CardDescription className="text-slate-900 dark:text-slate-300">
                                                 Earn commissions by referring Digital Content Distributors
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent className="text-center">
-                                            <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600  text-slate-900 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                                            <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                                                 Register as DA
                                             </Button>
                                         </CardContent>
@@ -83,13 +73,13 @@ export default function Welcome() {
                                     <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:scale-105 dark:bg-slate-800/50 dark:border-slate-600 dark:hover:bg-slate-700/50">
                                         <CardHeader className="text-center">
                                             <UserCheck className="mx-auto h-12 w-12 text-green-300 mb-2" />
-                                            <CardTitle className="text-lg  text-slate-900">Digital Content Distributor</CardTitle>
-                                            <CardDescription className=" text-slate-900">
+                                            <CardTitle className="text-lg text-slate-900 dark:text-white">Digital Content Distributor</CardTitle>
+                                            <CardDescription className="text-slate-900 dark:text-slate-300">
                                                 Execute campaigns and earn from client projects
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent className="text-center">
-                                            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600  text-slate-900 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                                            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                                                 Register as DCD
                                             </Button>
                                         </CardContent>
@@ -100,13 +90,13 @@ export default function Welcome() {
                                     <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:scale-105 dark:bg-slate-800/50 dark:border-slate-600 dark:hover:bg-slate-700/50">
                                         <CardHeader className="text-center">
                                             <FileText className="mx-auto h-12 w-12 text-purple-300 mb-2" />
-                                            <CardTitle className="text-lg  text-slate-900">Submit Campaign</CardTitle>
-                                            <CardDescription className=" text-slate-900">
+                                            <CardTitle className="text-lg text-slate-900 dark:text-white">Submit Campaign</CardTitle>
+                                            <CardDescription className="text-slate-900 dark:text-slate-300">
                                                 Launch your campaign with our network of distributors
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent className="text-center">
-                                            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600  text-slate-900 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                                            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                                                 Submit Campaign
                                             </Button>
                                         </CardContent>
