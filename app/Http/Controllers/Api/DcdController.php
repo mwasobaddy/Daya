@@ -12,6 +12,7 @@ use App\Mail\DcdTokenAllocationNotification;
 use App\Mail\WalletCreated;
 use App\Mail\DcdWelcome;
 use App\Mail\AdminDcdRegistration;
+use App\Rules\TurnstileToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -77,6 +78,7 @@ class DcdController extends Controller
 
             // Agreement
             'terms' => 'required|accepted',
+            'turnstile_token' => ['required', new TurnstileToken],
         ]);
 
         \Log::info('Validation passed, proceeding with user creation');

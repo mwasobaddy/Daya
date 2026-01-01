@@ -10,6 +10,7 @@ use App\Mail\DaReferralCommissionNotification;
 use App\Services\VentureShareService;
 use App\Services\QRCodeService;
 use App\Services\CampaignMatchingService;
+use App\Rules\TurnstileToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -76,6 +77,7 @@ class ClientController extends Controller
                 // Additional
                 'target_audience' => 'nullable|string|max:1000',
                 'objectives' => 'nullable|string|max:500',
+                'turnstile_token' => ['required', new TurnstileToken],
             ]);
 
             \Log::info('Campaign submission validation passed', [

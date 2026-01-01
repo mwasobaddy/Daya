@@ -237,7 +237,7 @@ export default function CampaignSubmit({ flash }: Props) {
 
         try {
             const widgetId = window.turnstile.render(turnstileElement, {
-                sitekey: '0x4AAAAAAB-B75vxDokCNJk_',
+                sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
                 theme: 'auto',
                 size: 'normal',
                 callback: (token: string) => {

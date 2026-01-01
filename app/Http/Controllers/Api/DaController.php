@@ -10,6 +10,7 @@ use App\Services\QRCodeService;
 use App\Mail\ReferralBonusNotification;
 use App\Mail\DaReferralCommissionNotification;
 use App\Mail\DcdReferralBonusNotification;
+use App\Rules\TurnstileToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Mail;
@@ -50,7 +51,7 @@ class DaController extends Controller
                 'wallet_pin' => 'required|string|size:4|regex:/^[0-9]+$/',
                 'confirm_pin' => 'required|string|same:wallet_pin',
                 'terms' => 'required|accepted',
-                'turnstile_token' => 'nullable|string',
+                'turnstile_token' => ['required', new TurnstileToken],
             ]);
 
             \Log::info('Validation passed, proceeding with user creation');
