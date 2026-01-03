@@ -708,6 +708,21 @@ export default function DDSHome() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [scrollY, setScrollY] = useState(0);
 
+    // Get referral code from URL if it exists
+    const getRefLink = (basePath: string) => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                return `${basePath}?started=true&ref=${encodeURIComponent(ref)}`;
+            }
+            if (basePath === '/welcome') {
+                return `${basePath}?started=true`;
+            }
+        }
+        return basePath;
+    };
+
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY);
         window.addEventListener('scroll', handleScroll);
@@ -760,7 +775,7 @@ export default function DDSHome() {
                     <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
                         <a href="#who-its-for" onClick={() => setMenuOpen(false)}>Who it's for</a>
                         <a href="#testimonials" onClick={() => setMenuOpen(false)}>Testimonials</a>
-                        <a href="/welcome" className="btn-primary nav-btn" onClick={() => setMenuOpen(false)}>
+                        <a href={getRefLink('/welcome')} className="btn-primary nav-btn" onClick={() => setMenuOpen(false)}>
                             Get Started <ArrowRight size={20} />
                         </a>
                     </nav>
@@ -776,7 +791,7 @@ export default function DDSHome() {
                     <p>Community-led distribution across Kenya — from hyperlocal to national. Connect with real people where they are.</p>
 
                     <div className="hero-buttons">
-                        <a href="/welcome" className="btn-primary">
+                        <a href={getRefLink('/welcome')} className="btn-primary">
                             Get Started <Rocket size={20} />
                         </a>
                     </div>
@@ -966,7 +981,7 @@ export default function DDSHome() {
                 <div className="container fade-in">
                     <h2>Ready to find your first users?</h2>
                     <p>Join hundreds of innovators who have found authentic adoption through community-led distribution.</p>
-                    <a href="/campaign/submit" className="btn-primary">
+                    <a href={getRefLink('/campaign/submit')} className="btn-primary">
                         Start Your Campaign <ArrowRight size={20} />
                     </a>
                 </div>

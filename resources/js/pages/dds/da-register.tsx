@@ -1802,7 +1802,7 @@ export default function DaRegister() {
                                         <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden relative">
                                             <iframe
                                                 className="w-full h-full"
-                                                src="https://www.youtube.com/embed/MiQ45k5rx1Q"
+                                                src="https://www.youtube.com/shorts/KBSQg6WPxtU"
                                                 title="Digital Ambassador Program Explained"
                                                 frameBorder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
