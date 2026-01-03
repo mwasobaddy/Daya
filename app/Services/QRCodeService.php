@@ -127,7 +127,7 @@ class QRCodeService
 
                     $html .= '<h1 class="title">Discover With Daya</h1>';
                     $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Campaign QR" /></div>';
-                    $html .= '<p class="caption">www.daya.com</p>';
+                    $html .= '<p class="caption">https://dayadistribution.com</p>';
                     $html .= '<div class="footer">&nbsp;</div>';
                     $html .= '
                 </div>
@@ -350,7 +350,7 @@ class QRCodeService
 
                                 $html .= '<h1 class="title">Discover with Daya</h1>';
                                 $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
-                                $html .= '<p class="caption">www.daya.com</p>';
+                                $html .= '<p class="caption">https://dayadistribution.com</p>';
                                 $html .= '<div class="footer">&nbsp;</div>';
                                 $html .= '
                             <div>';
