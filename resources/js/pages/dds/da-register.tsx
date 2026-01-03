@@ -323,8 +323,9 @@ export default function DaRegister() {
                     try {
                         await requestLocationPermission();
                     } catch (_error) { // eslint-disable-line @typescript-eslint/no-unused-vars
-                        // If location permission is denied, redirect back to landing page
-                        window.location.href = '/da/register';
+                        // If location permission is denied, redirect back while preserving URL parameters
+                        const currentParams = new URLSearchParams(window.location.search);
+                        window.location.href = `/da/register?${currentParams.toString()}`;
                     }
                 }
             }
