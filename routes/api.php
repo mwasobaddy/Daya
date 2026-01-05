@@ -63,6 +63,38 @@ Route::prefix('admin')->group(function () {
     Route::post('/campaigns/{campaignId}/complete', [AdminController::class, 'completeCampaign']);
     Route::get('/campaigns', [AdminController::class, 'getCampaigns']);
     Route::get('/venture-shares', [AdminController::class, 'getVentureSharesSummary']);
+    
+    // Test daily digest endpoint
+    Route::get('/test-digest', function () {
+        $digestService = app(\App\Services\AdminDigestService::class);
+        $digestData = $digestService->getDailyDigestData(\Carbon\Carbon::yesterday());
+        
+        return response()->json([
+            'message' => 'Digest data generated successfully',
+            'data' => $digestData,
+        ]);
+    });
+    
+    // Send test digest email
+    Route::post('/send-test-digest', function (Illuminate\Http\Request $request) {
+        $email = $request->input('email', 'admin@daya.africa');
+        
+        $digestService = app(\App\Services\AdminDigestService::class);
+        $digestData = $digestService->getDailyDigestData(\Carbon\Carbon::yesterday());
+        
+        try {
+            \Mail::to($email)->send(new \App\Mail\DailyAdminDigest($digestData));
+            return response()->json([
+                'message' => "Test digest sent successfully to {$email}",
+                'data' => $digestData,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to send digest',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    });
 });
 
 Route::prefix('scan')->group(function () {
