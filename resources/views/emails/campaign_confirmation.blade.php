@@ -25,9 +25,29 @@
             <div class="campaign-details">
                 <p><strong>Title:</strong> {{ $campaign->title }}</p>
 
-                <p><strong>Budget:</strong> ${{ number_format($campaign->budget, 2) }}</p>
+                <p><strong>Budget:</strong>
+                    @php
+                        $currency = '$';
+                        if (!empty($campaign->metadata['currency']) && strtoupper($campaign->metadata['currency']) === 'KSH') {
+                            $currency = 'KSh';
+                        } elseif (!empty($campaign->country) && stripos($campaign->country, 'kenya') !== false) {
+                            $currency = 'KSh';
+                        } else {
+                            $currency = '$';
+                        }
+                    @endphp
+                    {{ $currency }}{{ number_format($campaign->budget, 2) }}
+                </p>
                 <p><strong>Status:</strong> {{ ucfirst($campaign->status) }}</p>
                 <p><strong>DCD Assigned:</strong> {{ $dcd ? $dcd->name . ' (' . $dcd->email . ')' : 'To be assigned' }}</p>
+            </div>
+
+            <h3>Payment Instructions</h3>
+            <div class="campaign-details">
+                <p>To enable us to review and activate your campaign, please complete payment using the details below:</p>
+                <p><strong>Payment Method:</strong> M-Pesa</p>
+                <p><strong>Send money:</strong> <code>0111984607</code></p>
+                <p>Once payment is made, please keep the confirmation message for reference.</p>
             </div>
 
             <h3>What Happens Next?</h3>
@@ -48,6 +68,6 @@
             <p>This is an automated message. Please do not reply to this email.</p>
             <p>© 2024 Daya. All rights reserved.</p>
         </div>
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+    </div>
+</body>
+</html>
