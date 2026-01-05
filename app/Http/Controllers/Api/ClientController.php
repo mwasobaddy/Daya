@@ -232,12 +232,22 @@ class ClientController extends Controller
 
             // Create campaign with enhanced details
 
+            // Calculate cost per click based on campaign objective
+            $costPerClick = $this->calculateCostPerClick($request->campaign_objective, $request->explainer_video_url, $request->country);
+            
+            // Calculate max scans (budget / cost per click)
+            $maxScans = $costPerClick > 0 ? floor($request->budget / $costPerClick) : 0;
+
             $campaign = Campaign::create([
                 'client_id' => $client->id,
                 'dcd_id' => $dcdId, // From QR scan or null for admin assignment
                 'title' => $request->campaign_title,
                 'description' => $request->description ?? 'No description provided',
                 'budget' => $request->budget,
+                'cost_per_click' => $costPerClick,
+                'spent_amount' => 0,
+                'max_scans' => $maxScans,
+                'total_scans' => 0,
                 'county' => $request->target_county ?? 'Not specified',
                 'status' => 'submitted',
                 'campaign_objective' => $request->campaign_objective,
@@ -326,5 +336,29 @@ class ClientController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
+    }
+
+    /**
+     * Calculate cost per click based on campaign objective and country
+     */
+    protected function calculateCostPerClick(string $objective, ?string $explainerVideo, string $countryCode): float
+    {
+        // Base rates in Kenyan Shillings
+        $baseRate = match($objective) {
+            'music_promotion' => 1.0,
+            'app_downloads' => 5.0,
+            'product_launch' => 5.0,
+            'brand_awareness' => $explainerVideo ? 5.0 : 1.0,
+            'event_promotion' => $explainerVideo ? 5.0 : 1.0,
+            'social_cause' => $explainerVideo ? 5.0 : 1.0,
+            default => 1.0,
+        };
+
+        // Adjust for currency: 1 KSh = 10 Naira
+        if (strtoupper($countryCode) === 'NG') {
+            return $baseRate * 10;
+        }
+
+        return $baseRate;
     }
 }

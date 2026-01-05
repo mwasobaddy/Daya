@@ -165,6 +165,21 @@ class QRCodeService
             throw new \InvalidArgumentException('No active campaigns found for this DCD');
         }
 
+        // Check if campaign can accept more scans (budget not exhausted)
+        if (!$activeCampaign->canAcceptScans()) {
+            \Log::info('Campaign ' . $activeCampaign->id . ' has reached its budget/scan limit, marking as completed');
+            
+            // Auto-complete campaign if not already completed
+            if ($activeCampaign->status !== 'completed') {
+                $activeCampaign->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+            }
+            
+            throw new \InvalidArgumentException('Campaign has reached its budget limit and is now completed');
+        }
+
         $deviceFingerprint = $geoData['fingerprint'] ?? null;
         $scan = \App\Models\Scan::create([
             'dcd_id' => $dcdId,

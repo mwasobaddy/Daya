@@ -1116,6 +1116,19 @@ export default function CampaignSubmit({ flash }: Props) {
                                         className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
                                     />
                                     <InputError message={errors.budget} />
+                                    {data.budget && data.campaign_objective && data.campaign_objective !== '-' && parseFloat(data.budget) > 0 && (
+                                        <div className="mt-2 p-3 bg-purple-50 dark:bg-slate-700 rounded-lg border border-purple-200 dark:border-purple-600">
+                                            <div className="flex items-start gap-2">
+                                                <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-purple-800 dark:text-purple-300">
+                                                    <p className="font-semibold mb-1">Campaign Budget Breakdown:</p>
+                                                    <p>• Cost per scan: {getCurrencySymbol(data.country)}{getCostPerClick(data.campaign_objective, data.country)}</p>
+                                                    <p>• Maximum scans: <span className="font-bold">{Math.floor(parseFloat(data.budget) / getCostPerClick(data.campaign_objective, data.country))}</span> verified scans</p>
+                                                    <p className="mt-1 text-purple-600 dark:text-purple-400">Your campaign will automatically complete when the scan limit is reached.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -1526,6 +1539,10 @@ export default function CampaignSubmit({ flash }: Props) {
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Cost per Click:</span>
                                         <span className="font-medium text-blue-600">{getCurrencySymbol(data.country)}{getCostPerClick(data.campaign_objective, data.country)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-gray-100">
+                                        <span className="text-gray-600">Maximum Scans:</span>
+                                        <span className="font-medium text-purple-600">{Math.floor(parseFloat(data.budget) / getCostPerClick(data.campaign_objective, data.country))} verified scans</span>
                                     </div>
                                     <div className="flex justify-between py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Duration:</span>

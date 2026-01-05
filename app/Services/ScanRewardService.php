@@ -27,6 +27,22 @@ class ScanRewardService
             return null;
         }
 
+        // Check if campaign can still accept scans (budget not exhausted)
+        if (!$campaign->canAcceptScans()) {
+            Log::info('ScanRewardService: Campaign ' . $campaign->id . ' cannot accept more scans (budget exhausted or limit reached)');
+            
+            // Auto-complete campaign if not already completed
+            if ($campaign->status !== 'completed') {
+                $campaign->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' due to budget/scan limit');
+            }
+            
+            return null;
+        }
+
         // Ensure scan belongs to configured campaign/dcd
         if ($campaign->dcd_id !== $scan->dcd_id) {
             Log::warning('ScanRewardService: scan dcd_id does not match campaign dcd_id', ['scan_id' => $scan->id]);
@@ -49,6 +65,7 @@ class ScanRewardService
                 // If there's an existing earning for the recent scan, dedupe
                 $existingRecentEarning = Earning::where('type', 'scan')->where('related_id', $recent->id)->first();
                 if ($existingRecentEarning) {
+                    Log::info('ScanRewardService: Deduped scan ' . $scan->id . ' due to recent scan with same fingerprint');
                     return null;
                 }
             }
@@ -67,6 +84,20 @@ class ScanRewardService
 
             // Update the scan's earnings for visibility
             $scan->update(['earnings' => $payPerScan]);
+
+            // Update campaign spent amount and total scans
+            $campaign->increment('spent_amount', $payPerScan);
+            $campaign->increment('total_scans');
+
+            // Check if campaign should be auto-completed after this scan
+            $campaign->refresh();
+            if (!$campaign->canAcceptScans() && $campaign->status !== 'completed') {
+                $campaign->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' after reaching budget/scan limit');
+            }
 
             return $earning;
         } catch (\Exception $e) {
