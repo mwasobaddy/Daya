@@ -45,9 +45,22 @@ class ScanRewardService
 
         // Ensure scan belongs to configured campaign/dcd
         if ($campaign->dcd_id !== $scan->dcd_id) {
-            Log::warning('ScanRewardService: scan dcd_id does not match campaign dcd_id', ['scan_id' => $scan->id]);
+            Log::warning('ScanRewardService: scan dcd_id does not match campaign dcd_id', [
+                'scan_id' => $scan->id,
+                'scan_dcd_id' => $scan->dcd_id,
+                'campaign_dcd_id' => $campaign->dcd_id,
+                'scan_dcd_type' => gettype($scan->dcd_id),
+                'campaign_dcd_type' => gettype($campaign->dcd_id),
+            ]);
             return null;
         }
+        
+        Log::info('ScanRewardService: Processing scan reward', [
+            'scan_id' => $scan->id,
+            'campaign_id' => $campaign->id,
+            'dcd_id' => $scan->dcd_id,
+            'pay_per_scan' => $payPerScan,
+        ]);
 
         // Get pay per scan - prioritize cost_per_click from campaign
         $payPerScan = $overrideAmount ?? $campaign->cost_per_click ?? $this->computePayPerScan($campaign);
