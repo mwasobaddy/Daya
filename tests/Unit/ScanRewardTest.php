@@ -95,66 +95,6 @@ test('it credits dcd earnings for moderate touch campaign', function () {
         ->and($earning->type)->toBe('scan');
 });
 
-test('it credits da commission when dcd is referred', function () {
-    $scanRewardService = app(ScanRewardService::class);
-    
-    $da = User::factory()->create([
-        'role' => 'da',
-        'referral_code' => 'TEST123',
-    ]);
-
-    $dcd = User::factory()->create(['role' => 'dcd']);
-
-    Referral::create([
-        'referrer_id' => $da->id,
-        'referred_id' => $dcd->id,
-        'type' => 'da_to_dcd',
-    ]);
-
-    $client = User::factory()->create(['role' => 'client']);
-    $campaign = Campaign::create([
-        'client_id' => $client->id,
-        'dcd_id' => $dcd->id,
-        'title' => 'Test Campaign',
-        'budget' => 1000,
-        'cost_per_click' => 5.0,
-        'spent_amount' => 0,
-        'max_scans' => 200,
-        'total_scans' => 0,
-        'county' => 'Test County',
-        'status' => 'approved',
-        'campaign_objective' => 'app_downloads',
-        'digital_product_link' => 'https://example.com',
-        'target_audience' => 'General audience',
-        'duration' => '2026-01-10 to 2026-01-20',
-        'objectives' => 'Test objectives',
-        'metadata' => [
-            'start_date' => '2026-01-01',
-            'end_date' => '2026-12-31',
-        ],
-    ]);
-
-    $scan = Scan::create([
-        'dcd_id' => $dcd->id,
-        'campaign_id' => $campaign->id,
-        'scanned_at' => now(),
-    ]);
-
-    $dcdEarning = $scanRewardService->creditScanReward($scan);
-
-    expect($dcdEarning)->not->toBeNull()
-        ->and($dcdEarning->amount)->toBe(5.0);
-
-    $daEarning = Earning::where('user_id', $da->id)
-        ->where('type', 'commission')
-        ->first();
-
-    expect($daEarning)->not->toBeNull()
-        ->and($daEarning->amount)->toBe(0.25)
-        ->and($daEarning->campaign_id)->toBe($scan->campaign_id)
-        ->and($daEarning->scan_id)->toBe($scan->id);
-});
-
 test('it prevents duplicate scan rewards', function () {
     $scanRewardService = app(ScanRewardService::class);
     $client = User::factory()->create(['role' => 'client']);
@@ -249,5 +189,55 @@ test('it auto completes campaign when budget exhausted', function () {
     expect($campaign->status)->toBe('completed')
         ->and($campaign->spent_amount)->toBe(10.0)
         ->and($campaign->completed_at)->not->toBeNull();
+});
+
+test('it credits da commission when client they referred creates campaign', function () {
+    $da = User::factory()->create([
+        'role' => 'da',
+        'referral_code' => 'TEST123',
+    ]);
+
+    $client = User::factory()->create(['role' => 'client']);
+    $dcd = User::factory()->create(['role' => 'dcd']);
+
+    // DA refers the client
+    Referral::create([
+        'referrer_id' => $da->id,
+        'referred_id' => $client->id,
+        'type' => 'da_to_client',
+    ]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Test Campaign',
+        'budget' => 1000,
+        'cost_per_click' => 5.0,
+        'spent_amount' => 0,
+        'max_scans' => 200,
+        'total_scans' => 0,
+        'county' => 'Test County',
+        'status' => 'approved',
+        'campaign_objective' => 'app_downloads',
+        'digital_product_link' => 'https://example.com',
+        'target_audience' => 'General audience',
+        'duration' => '2026-01-10 to 2026-01-20',
+        'objectives' => 'Test objectives',
+        'metadata' => [
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+        ],
+    ]);
+
+    // Credit DA commission for campaign
+    $daEarning = ScanRewardService::creditDaCommissionForCampaign($campaign);
+
+    expect($daEarning)->not->toBeNull()
+        ->and($daEarning->amount)->toBe(50.0) // 5% of 1000
+        ->and($daEarning->commission_amount)->toBe(50.0)
+        ->and($daEarning->user_id)->toBe($da->id)
+        ->and($daEarning->campaign_id)->toBe($campaign->id)
+        ->and($daEarning->type)->toBe('commission')
+        ->and($daEarning->description)->toContain('5% of budget');
 });
 

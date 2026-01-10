@@ -104,9 +104,6 @@ class ScanRewardService
             $campaign->increment('spent_amount', $payPerScan);
             $campaign->increment('total_scans');
 
-            // Calculate and create DA commission (5% of DCD earnings)
-            $this->creditDaCommission($scan, $earning, $payPerScan);
-
             // Check if campaign should be auto-completed after this scan
             $campaign->refresh();
             if (!$campaign->canAcceptScans() && $campaign->status !== 'completed') {
@@ -171,57 +168,72 @@ class ScanRewardService
     }
 
     /**
-     * Credit DA commission (5% of DCD earnings)
+     * Credit DA commission (5% of campaign budget) when a client they referred creates a campaign.
+     * This should be called when a campaign is approved/launched.
      */
-    protected function creditDaCommission(Scan $scan, Earning $dcdEarning, float $dcdAmount): ?Earning
+    public static function creditDaCommissionForCampaign(Campaign $campaign): ?Earning
     {
-        // Find the DCD
-        $dcd = $scan->dcd;
-        if (!$dcd) {
+        // Find the client
+        $client = $campaign->client;
+        if (!$client) {
+            Log::warning('ScanRewardService: No client found for campaign ' . $campaign->id);
             return null;
         }
 
-        // Check if DCD was referred by a DA
-        $referral = \App\Models\Referral::where('referred_id', $dcd->id)
-            ->where('type', 'da_to_dcd')
+        // Check if client was referred by a DA
+        $referral = \App\Models\Referral::where('referred_id', $client->id)
+            ->where('type', 'da_to_client')
             ->first();
 
         if (!$referral) {
-            Log::info('ScanRewardService: No DA referral found for DCD ' . $dcd->id);
+            Log::info('ScanRewardService: No DA referral found for client ' . $client->id);
             return null;
         }
 
         $da = $referral->referrer;
         if (!$da || $da->role !== 'da') {
-            Log::warning('ScanRewardService: Invalid DA referrer for DCD ' . $dcd->id);
+            Log::warning('ScanRewardService: Invalid DA referrer for client ' . $client->id);
             return null;
         }
 
-        // Calculate 5% commission
-        $commissionAmount = round($dcdAmount * 0.05, 2);
+        // Calculate 5% of campaign budget
+        $commissionAmount = round($campaign->budget * 0.05, 2);
 
         if ($commissionAmount <= 0) {
+            Log::warning('ScanRewardService: Campaign budget too low for DA commission');
             return null;
+        }
+
+        // Check if commission already exists for this campaign
+        $existing = Earning::where('user_id', $da->id)
+            ->where('campaign_id', $campaign->id)
+            ->where('type', 'commission')
+            ->first();
+
+        if ($existing) {
+            Log::info('ScanRewardService: DA commission already credited for campaign ' . $campaign->id);
+            return $existing;
         }
 
         try {
             // Create DA commission earning
             $daEarning = Earning::create([
                 'user_id' => $da->id,
-                'campaign_id' => $scan->campaign_id,
-                'scan_id' => $scan->id,
+                'campaign_id' => $campaign->id,
+                'scan_id' => null,
                 'amount' => $commissionAmount,
                 'commission_amount' => $commissionAmount,
                 'type' => 'commission',
-                'description' => 'DA commission (5%) for DCD ' . $dcd->name . ' scan in campaign: ' . $scan->campaign->title,
+                'description' => 'DA commission (5% of budget) for client referral - Campaign: ' . $campaign->title,
                 'status' => 'pending',
             ]);
 
-            Log::info('ScanRewardService: DA commission credited', [
+            Log::info('ScanRewardService: DA commission credited for campaign', [
                 'da_id' => $da->id,
-                'dcd_id' => $dcd->id,
+                'client_id' => $client->id,
+                'campaign_id' => $campaign->id,
                 'commission' => $commissionAmount,
-                'dcd_earning' => $dcdAmount,
+                'budget' => $campaign->budget,
             ]);
 
             return $daEarning;
