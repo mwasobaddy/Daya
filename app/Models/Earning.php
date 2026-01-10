@@ -8,10 +8,11 @@ class Earning extends Model
 {
     protected $fillable = [
         'user_id',
+        'campaign_id',
+        'scan_id',
         'amount',
+        'commission_amount',
         'type',
-        'month',
-        'related_id',
         'status',
         'description',
         'paid_at',
@@ -21,6 +22,7 @@ class Earning extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'commission_amount' => 'decimal:2',
         ];
     }
 
@@ -28,5 +30,15 @@ class Earning extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
+    }
+
+    public function scan()
+    {
+        return $this->belongsTo(Scan::class);
     }
 }
