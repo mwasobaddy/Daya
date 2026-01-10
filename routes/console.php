@@ -18,3 +18,14 @@ Schedule::command('digest:send-admin-daily')
     ->onFailure(function () {
         \Log::error('Daily admin digest failed to send');
     });
+
+// Schedule scan monitoring digest to run every 5 minutes
+Schedule::command('digest:scan-monitoring')
+    ->everyFiveMinutes()
+    ->timezone('Africa/Nairobi')
+    ->onSuccess(function () {
+        \Log::info('Scan monitoring digest sent successfully');
+    })
+    ->onFailure(function () {
+        \Log::error('Scan monitoring digest failed to send');
+    });
