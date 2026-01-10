@@ -70,6 +70,18 @@
             <div class="user-details">
                 <h4>🏬 Business Details</h4>
                 <div class="detail-row">
+                    <span class="label">Country:</span>
+                    <span class="value">{{ ($user->country_id && \App\Models\Country::find($user->country_id)) ? \App\Models\Country::find($user->country_id)->name : ($user->profile['country_id'] ? \App\Models\Country::find($user->profile['country_id'])->name : 'N/A') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">County:</span>
+                    <span class="value">{{ ($user->county_id && \App\Models\County::find($user->county_id)) ? \App\Models\County::find($user->county_id)->name : ($user->profile['county_id'] ? \App\Models\County::find($user->profile['county_id'])->name : 'N/A') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Subcounty:</span>
+                    <span class="value">{{ ($user->subcounty_id && \App\Models\Subcounty::find($user->subcounty_id)) ? \App\Models\Subcounty::find($user->subcounty_id)->name : ($user->profile['subcounty_id'] ? \App\Models\Subcounty::find($user->profile['subcounty_id'])->name : 'N/A') }}</span>
+                </div>
+                <div class="detail-row">
                     <span class="label">Business Types:</span>
                     <span class="value">{{ is_array($user->profile['business_types'] ?? null) ? implode(', ', $user->profile['business_types']) : ($user->business_types ?? 'N/A') }}</span>
                 </div>
