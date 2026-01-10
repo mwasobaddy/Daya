@@ -15,8 +15,8 @@ class ScanRewardService
      */
     public function creditScanReward(Scan $scan, ?float $overrideAmount = null): ?Earning
     {
-        // Dedup: make sure we don't credit the same scan twice by related scan id
-        $existing = Earning::where('type', 'scan_earning')->where('scan_id', $scan->id)->first();
+        // Dedup: make sure we don't credit the same scan twice by scan_id
+        $existing = Earning::where('type', 'scan')->where('scan_id', $scan->id)->first();
         if ($existing) {
             return null;
         }
@@ -54,6 +54,9 @@ class ScanRewardService
             ]);
             return null;
         }
+
+        // Get pay per scan - prioritize cost_per_click from campaign
+        $payPerScan = $overrideAmount ?? $campaign->cost_per_click ?? $this->computePayPerScan($campaign);
         
         Log::info('ScanRewardService: Processing scan reward', [
             'scan_id' => $scan->id,
@@ -61,9 +64,6 @@ class ScanRewardService
             'dcd_id' => $scan->dcd_id,
             'pay_per_scan' => $payPerScan,
         ]);
-
-        // Get pay per scan - prioritize cost_per_click from campaign
-        $payPerScan = $overrideAmount ?? $campaign->cost_per_click ?? $this->computePayPerScan($campaign);
 
         // Dedup across recent scans by device fingerprint (helps prevent repeated scans by same device)
         $fp = $scan->device_fingerprint ?? null;
@@ -92,7 +92,7 @@ class ScanRewardService
                 'scan_id' => $scan->id,
                 'amount' => $payPerScan,
                 'commission_amount' => 0,
-                'type' => 'scan_earning',
+                'type' => 'scan',
                 'description' => 'Scan reward for campaign: ' . $campaign->title,
                 'status' => 'pending',
             ]);

@@ -47,7 +47,7 @@ test('it credits dcd earnings for light touch campaign', function () {
 
     expect($earning)->not->toBeNull()
         ->and($earning->amount)->toBe(1.0)
-        ->and($earning->type)->toBe('scan_earning')
+        ->and($earning->type)->toBe('scan')
         ->and($earning->user_id)->toBe($dcd->id);
     
     $campaign->refresh();
@@ -92,7 +92,7 @@ test('it credits dcd earnings for moderate touch campaign', function () {
 
     expect($earning)->not->toBeNull()
         ->and($earning->amount)->toBe(5.0)
-        ->and($earning->type)->toBe('scan_earning');
+        ->and($earning->type)->toBe('scan');
 });
 
 test('it credits da commission when dcd is referred', function () {
@@ -195,7 +195,7 @@ test('it prevents duplicate scan rewards', function () {
         ->and($earning2)->toBeNull();
 
     $earningCount = Earning::where('scan_id', $scan->id)
-        ->where('type', 'scan_earning')
+        ->where('type', 'scan')
         ->count();
     expect($earningCount)->toBe(1);
 });

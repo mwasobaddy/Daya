@@ -23,8 +23,7 @@ return new class extends Migration
             }
         });
         
-        // Update existing type values to new naming convention
-        DB::statement("UPDATE earnings SET type = 'scan_earning' WHERE type = 'scan'");
+        // No need to update type values - we'll keep using 'scan' type
     }
 
     /**
