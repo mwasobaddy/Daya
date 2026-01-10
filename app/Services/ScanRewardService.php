@@ -16,7 +16,7 @@ class ScanRewardService
     public function creditScanReward(Scan $scan, ?float $overrideAmount = null): ?Earning
     {
         // Dedup: make sure we don't credit the same scan twice by related scan id
-        $existing = Earning::where('type', 'scan')->where('related_id', $scan->id)->first();
+        $existing = Earning::where('type', 'scan_earning')->where('scan_id', $scan->id)->first();
         if ($existing) {
             return null;
         }
@@ -49,8 +49,8 @@ class ScanRewardService
             return null;
         }
 
-        // Compute pay per scan with override precedence
-        $payPerScan = $overrideAmount ?? $this->computePayPerScan($campaign);
+        // Get pay per scan - prioritize cost_per_click from campaign
+        $payPerScan = $overrideAmount ?? $campaign->cost_per_click ?? $this->computePayPerScan($campaign);
 
         // Dedup across recent scans by device fingerprint (helps prevent repeated scans by same device)
         $fp = $scan->device_fingerprint ?? null;
@@ -72,14 +72,16 @@ class ScanRewardService
         }
 
         try {
+            // Create DCD earning
             $earning = Earning::create([
                 'user_id' => $scan->dcd_id,
+                'campaign_id' => $campaign->id,
+                'scan_id' => $scan->id,
                 'amount' => $payPerScan,
-                'type' => 'scan',
+                'commission_amount' => 0,
+                'type' => 'scan_earning',
                 'description' => 'Scan reward for campaign: ' . $campaign->title,
-                'related_id' => $scan->id,
                 'status' => 'pending',
-                'month' => now()->format('Y-m'),
             ]);
 
             // Update the scan's earnings for visibility
@@ -88,6 +90,9 @@ class ScanRewardService
             // Update campaign spent amount and total scans
             $campaign->increment('spent_amount', $payPerScan);
             $campaign->increment('total_scans');
+
+            // Calculate and create DA commission (5% of DCD earnings)
+            $this->creditDaCommission($scan, $earning, $payPerScan);
 
             // Check if campaign should be auto-completed after this scan
             $campaign->refresh();
@@ -150,5 +155,66 @@ class ScanRewardService
         }
 
         return $basePay;
+    }
+
+    /**
+     * Credit DA commission (5% of DCD earnings)
+     */
+    protected function creditDaCommission(Scan $scan, Earning $dcdEarning, float $dcdAmount): ?Earning
+    {
+        // Find the DCD
+        $dcd = $scan->dcd;
+        if (!$dcd) {
+            return null;
+        }
+
+        // Check if DCD was referred by a DA
+        $referral = \App\Models\Referral::where('referred_id', $dcd->id)
+            ->where('referral_type', 'da_to_dcd')
+            ->first();
+
+        if (!$referral) {
+            Log::info('ScanRewardService: No DA referral found for DCD ' . $dcd->id);
+            return null;
+        }
+
+        $da = $referral->referrer;
+        if (!$da || $da->role !== 'da') {
+            Log::warning('ScanRewardService: Invalid DA referrer for DCD ' . $dcd->id);
+            return null;
+        }
+
+        // Calculate 5% commission
+        $commissionAmount = round($dcdAmount * 0.05, 2);
+
+        if ($commissionAmount <= 0) {
+            return null;
+        }
+
+        try {
+            // Create DA commission earning
+            $daEarning = Earning::create([
+                'user_id' => $da->id,
+                'campaign_id' => $scan->campaign_id,
+                'scan_id' => $scan->id,
+                'amount' => $commissionAmount,
+                'commission_amount' => $commissionAmount,
+                'type' => 'commission',
+                'description' => 'DA commission (5%) for DCD ' . $dcd->name . ' scan in campaign: ' . $scan->campaign->title,
+                'status' => 'pending',
+            ]);
+
+            Log::info('ScanRewardService: DA commission credited', [
+                'da_id' => $da->id,
+                'dcd_id' => $dcd->id,
+                'commission' => $commissionAmount,
+                'dcd_earning' => $dcdAmount,
+            ]);
+
+            return $daEarning;
+        } catch (\Exception $e) {
+            Log::error('ScanRewardService: Failed to credit DA commission - ' . $e->getMessage());
+            return null;
+        }
     }
 }
