@@ -108,7 +108,7 @@ test('it credits da commission when dcd is referred', function () {
     Referral::create([
         'referrer_id' => $da->id,
         'referred_id' => $dcd->id,
-        'referral_type' => 'da_to_dcd',
+        'type' => 'da_to_dcd',
     ]);
 
     $client = User::factory()->create(['role' => 'client']);

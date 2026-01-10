@@ -183,7 +183,7 @@ class ScanRewardService
 
         // Check if DCD was referred by a DA
         $referral = \App\Models\Referral::where('referred_id', $dcd->id)
-            ->where('referral_type', 'da_to_dcd')
+            ->where('type', 'da_to_dcd')
             ->first();
 
         if (!$referral) {
