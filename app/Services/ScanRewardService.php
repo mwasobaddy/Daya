@@ -58,11 +58,12 @@ class ScanRewardService
         // Get pay per scan - prioritize cost_per_click from campaign
         $payPerScan = $overrideAmount ?? $campaign->cost_per_click ?? $this->computePayPerScan($campaign);
         
-        Log::info('ScanRewardService: Processing scan reward', [
+        Log::info('ScanRewardService: Processing scan - deducting from campaign credit', [
             'scan_id' => $scan->id,
             'campaign_id' => $campaign->id,
             'dcd_id' => $scan->dcd_id,
             'pay_per_scan' => $payPerScan,
+            'campaign_credit_before' => $campaign->campaign_credit,
         ]);
 
         // Dedup across recent scans by device fingerprint (helps prevent repeated scans by same device)
@@ -75,34 +76,28 @@ class ScanRewardService
                           ->orderBy('id', 'desc')
                           ->first();
             if ($recent) {
-                // If there's an existing earning for the recent scan, dedupe
-                $existingRecentEarning = Earning::where('type', 'scan')->where('related_id', $recent->id)->first();
-                if ($existingRecentEarning) {
-                    Log::info('ScanRewardService: Deduped scan ' . $scan->id . ' due to recent scan with same fingerprint');
-                    return null;
-                }
+                Log::info('ScanRewardService: Deduped scan ' . $scan->id . ' due to recent scan with same fingerprint');
+                return null;
             }
         }
 
         try {
-            // Create DCD earning
-            $earning = Earning::create([
-                'user_id' => $scan->dcd_id,
-                'campaign_id' => $campaign->id,
-                'scan_id' => $scan->id,
-                'amount' => $payPerScan,
-                'commission_amount' => 0,
-                'type' => 'scan',
-                'description' => 'Scan reward for campaign: ' . $campaign->title,
-                'status' => 'pending',
-            ]);
-
+            // NO NEW EARNINGS - Earnings were distributed upfront when campaign was approved
+            // We only deduct from campaign_credit and track the scan
+            
             // Update the scan's earnings for visibility
             $scan->update(['earnings' => $payPerScan]);
 
-            // Update campaign spent amount and total scans
+            // Deduct from campaign credit and update tracking
+            $campaign->decrement('campaign_credit', $payPerScan);
             $campaign->increment('spent_amount', $payPerScan);
             $campaign->increment('total_scans');
+
+            Log::info('ScanRewardService: Deducted from campaign credit', [
+                'campaign_id' => $campaign->id,
+                'deducted' => $payPerScan,
+                'campaign_credit_after' => $campaign->fresh()->campaign_credit,
+            ]);
 
             // Check if campaign should be auto-completed after this scan
             $campaign->refresh();
@@ -111,12 +106,13 @@ class ScanRewardService
                     'status' => 'completed',
                     'completed_at' => now(),
                 ]);
-                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' after reaching budget/scan limit');
+                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' after exhausting credit/scan limit');
             }
 
-            return $earning;
+            // Return null since no new earning was created (upfront distribution model)
+            return null;
         } catch (\Exception $e) {
-            Log::warning('ScanRewardService: failed to create earning - ' . $e->getMessage());
+            Log::warning('ScanRewardService: failed to process scan - ' . $e->getMessage());
             return null;
         }
     }
@@ -168,7 +164,7 @@ class ScanRewardService
     }
 
     /**
-     * Credit DA commission (5% of campaign budget) when a client they referred creates a campaign.
+     * Credit DA commission (10% of campaign budget) when a client they referred creates a campaign.
      * This should be called when a campaign is approved/launched.
      */
     public static function creditDaCommissionForCampaign(Campaign $campaign): ?Earning
@@ -196,8 +192,8 @@ class ScanRewardService
             return null;
         }
 
-        // Calculate 5% of campaign budget
-        $commissionAmount = round($campaign->budget * 0.05, 2);
+        // Calculate 10% of campaign budget (changed from 5%)
+        $commissionAmount = round($campaign->budget * 0.10, 2);
 
         if ($commissionAmount <= 0) {
             Log::warning('ScanRewardService: Campaign budget too low for DA commission');
@@ -224,7 +220,7 @@ class ScanRewardService
                 'amount' => $commissionAmount,
                 'commission_amount' => $commissionAmount,
                 'type' => 'commission',
-                'description' => 'DA commission (5% of budget) for client referral - Campaign: ' . $campaign->title,
+                'description' => 'DA commission (10% of budget) for client referral - Campaign: ' . $campaign->title,
                 'status' => 'pending',
             ]);
 

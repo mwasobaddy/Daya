@@ -246,6 +246,7 @@ class ClientController extends Controller
                 'budget' => $request->budget,
                 'cost_per_click' => $costPerClick,
                 'spent_amount' => 0,
+                'campaign_credit' => 0, // Will be set to budget when campaign is approved
                 'max_scans' => $maxScans,
                 'total_scans' => 0,
                 'county' => $request->target_county ?? 'Not specified',

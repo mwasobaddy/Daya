@@ -13,6 +13,7 @@ class Campaign extends Model
         'budget',
         'cost_per_click',
         'spent_amount',
+        'campaign_credit',
         'max_scans',
         'total_scans',
         'county',
@@ -34,6 +35,7 @@ class Campaign extends Model
             'budget' => 'decimal:4',  // Allow up to 4 decimal places for precise budget values
             'cost_per_click' => 'decimal:4',
             'spent_amount' => 'decimal:4',
+            'campaign_credit' => 'decimal:4',
             'max_scans' => 'integer',
             'total_scans' => 'integer',
             'completed_at' => 'datetime',
@@ -104,6 +106,19 @@ class Campaign extends Model
             return false;
         }
 
+        // Check if campaign credit is exhausted
+        if ($this->campaign_credit <= 0) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Get remaining campaign credit
+     */
+    public function getRemainingCredit(): float
+    {
+        return max(0, (float)$this->campaign_credit);
     }
 }
