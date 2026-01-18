@@ -8,8 +8,31 @@ use App\Models\Referral;
 
 class VentureShareService
 {
+    // Cap limits for stake allocation (hardcoded)
+    private const DA_CAP = 3000;
+    private const DCD_CAP = 3000;
+
+    /**
+     * Check if DA cap has been reached
+     */
+    private function isDaCapReached(): bool
+    {
+        $daCount = User::where('role', 'da')->count();
+        return $daCount >= self::DA_CAP;
+    }
+
+    /**
+     * Check if DCD cap has been reached
+     */
+    private function isDcdCapReached(): bool
+    {
+        $dcdCount = User::where('role', 'dcd')->count();
+        return $dcdCount >= self::DCD_CAP;
+    }
+
     /**
      * Allocate venture shares based on referral type and new reward structure
+     * Note: Stops allocating shares once 3000 DA or 3000 DCD cap is reached
      */
     public function allocateSharesForReferral(Referral $referral): void
     {
@@ -20,6 +43,37 @@ class VentureShareService
         $referrerTokens = $this->getTokenNamesForUser($referrer);
         $referredTokens = $this->getTokenNamesForUser($referred);
         
+        switch ($referral->type) {
+            case 'da_to_da':
+            case 'dcd_to_da':
+            case 'admin_to_da':
+                // Check DA cap before allocating DA-related shares
+                if ($this->isDaCapReached()) {
+                    \Log::info('DA cap reached - skipping venture share allocation for DA referral', [
+                        'referral_type' => $referral->type,
+                        'referrer_id' => $referrer->id,
+                        'referred_id' => $referred->id,
+                        'da_count' => User::where('role', 'da')->count()
+                    ]);
+                    return;
+                }
+                break;
+                
+            case 'da_to_dcd':
+                // Check DCD cap before allocating DCD-related shares
+                if ($this->isDcdCapReached()) {
+                    \Log::info('DCD cap reached - skipping venture share allocation for DCD referral', [
+                        'referral_type' => $referral->type,
+                        'referrer_id' => $referrer->id,
+                        'referred_id' => $referred->id,
+                        'dcd_count' => User::where('role', 'dcd')->count()
+                    ]);
+                    return;
+                }
+                break;
+        }
+        
+        // Proceed with allocation if caps not reached
         switch ($referral->type) {
             case 'da_to_da':
                 // DA to DA Referral: 200KeDWS + 200KeDDS to referring DA
@@ -89,9 +143,20 @@ class VentureShareService
 
     /**
      * Allocate initial registration tokens to new DCD users
+     * Note: Stops allocating shares once 3000 DCD cap is reached
      */
     public function allocateInitialDcdTokens(User $dcd): void
     {
+        // Check if DCD cap has been reached
+        if ($this->isDcdCapReached()) {
+            \Log::info('DCD cap reached - skipping initial token allocation', [
+                'dcd_id' => $dcd->id,
+                'dcd_email' => $dcd->email,
+                'dcd_count' => User::where('role', 'dcd')->count()
+            ]);
+            return;
+        }
+
         $dcdTokens = $this->getTokenNamesForUser($dcd);
 
         // Allocate 1000 DDS tokens
