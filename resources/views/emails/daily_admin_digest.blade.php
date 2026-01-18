@@ -357,14 +357,6 @@
             </div>
             @endif
 
-            @if($data['top_performers']['top_campaign'])
-            <div class="performer-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                <h4>🥇 Top Campaign</h4>
-                <div class="name">{{ $data['top_performers']['top_campaign']['title'] }}</div>
-                <div class="stats">{{ $data['top_performers']['top_campaign']['scans'] }} scans</div>
-            </div>
-            @endif
-
             @if($data['top_performers']['top_referrer'])
             <div class="performer-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
                 <h4>🥇 Top Referrer (DA)</h4>
@@ -394,22 +386,52 @@
         <!-- Financial Summary -->
         <div class="section">
             <div class="section-title">💰 FINANCIAL SUMMARY</div>
-            <div class="metric-grid">
-                <div class="metric">
-                    <div class="metric-label">Revenue Today</div>
-                    <div class="metric-value">KSh {{ number_format($data['financial']['revenue_today'], 0) }}</div>
+
+            <!-- DCD Payments -->
+            @if($data['financial']['dcd_payments'] && count($data['financial']['dcd_payments']) > 0)
+            <div class="highlight-box">
+                <h3>💵 DCDs to Pay (60% of scan value)</h3>
+                <p style="margin-bottom: 10px;"><strong>Total: KSh {{ number_format($data['financial']['total_dcd_to_pay'], 2) }}</strong> from {{ $data['financial']['scan_count'] }} scans</p>
+                @foreach($data['financial']['dcd_payments'] as $payment)
+                <div class="highlight-item">
+                    • {{ $payment['name'] }} ({{ $payment['email'] }}): KSh {{ number_format($payment['amount'], 2) }}
+                    <small>({{ $payment['scan_count'] }} scans, {{ number_format($payment['total_scan_value'], 2) }} total value)</small>
                 </div>
-                <div class="metric">
-                    <div class="metric-label">Pending Earnings</div>
-                    <div class="metric-value">KSh {{ number_format($data['financial']['pending_earnings'], 2) }}</div>
+                @endforeach
+            </div>
+            @else
+            <div class="highlight-box">
+                <h3>💵 DCDs to Pay (60% of scan value)</h3>
+                <p style="margin-bottom: 10px;"><strong>No DCD payments due today</strong></p>
+            </div>
+            @endif
+
+            <!-- DA Payments -->
+            @if($data['financial']['da_payments'] && count($data['financial']['da_payments']) > 0)
+            <div class="highlight-box">
+                <h3>💰 DAs to Pay (10% of scan value)</h3>
+                <p style="margin-bottom: 10px;"><strong>Total: KSh {{ number_format($data['financial']['total_da_to_pay'], 2) }}</strong></p>
+                @foreach($data['financial']['da_payments'] as $payment)
+                <div class="highlight-item">
+                    • {{ $payment['name'] }} ({{ $payment['email'] }}): KSh {{ number_format($payment['amount'], 2) }}
+                    <small>(via DCD {{ $payment['dcd_name'] }}, {{ $payment['scan_count'] }} scans)</small>
                 </div>
-                <div class="metric">
-                    <div class="metric-label">Budget Utilization</div>
-                    <div class="metric-value">{{ $data['financial']['budget_utilization_rate'] }}%</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Total Budget Active</div>
-                    <div class="metric-value">KSh {{ number_format($data['financial']['total_budget_allocated'], 0) }}</div>
+                @endforeach
+            </div>
+            @else
+            <div class="highlight-box">
+                <h3>💰 DAs to Pay (10% of scan value)</h3>
+                <p style="margin-bottom: 10px;"><strong>No DA payments due today</strong></p>
+            </div>
+            @endif
+
+            <!-- DAYA Earnings -->
+            <div class="performer-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <h4>💎 DAYA Earnings (30% of scan value)</h4>
+                <div class="name">KSh {{ number_format($data['financial']['daya_earnings'], 2) }}</div>
+                <div class="stats">
+                    From {{ $data['financial']['scan_count'] }} scans •
+                    Total scan value: KSh {{ number_format($data['financial']['total_scan_value'], 2) }}
                 </div>
             </div>
         </div>

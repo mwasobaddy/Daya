@@ -223,31 +223,71 @@ class AdminDigestService
      */
     protected function getFinancialMetrics(Carbon $start, Carbon $end): array
     {
-        $revenueToday = Campaign::whereBetween('created_at', [$start, $end])
-            ->sum('budget');
+        // Get all scans from the specified period
+        $scans = Scan::whereBetween('scanned_at', [$start, $end])->get();
 
-        $pendingEarnings = Earning::where('status', 'pending')
-            ->sum('amount');
+        // Calculate DCD payments (60% of scan value)
+        $dcdPayments = [];
+        $totalDcdToPay = 0;
+        foreach ($scans->groupBy('dcd_id') as $dcdId => $dcdScans) {
+            if ($dcdId) {
+                $dcd = User::find($dcdId);
+                if ($dcd) {
+                    $scanValue = $dcdScans->sum('earnings');
+                    $dcdShare = $scanValue * 0.60; // 60% goes to DCD
+                    $dcdPayments[] = [
+                        'name' => $dcd->name,
+                        'email' => $dcd->email,
+                        'amount' => $dcdShare,
+                        'scan_count' => $dcdScans->count(),
+                        'total_scan_value' => $scanValue
+                    ];
+                    $totalDcdToPay += $dcdShare;
+                }
+            }
+        }
 
-        $paidEarnings = Earning::where('status', 'paid')
-            ->whereBetween('updated_at', [$start, $end])
-            ->sum('amount');
+        // Calculate DA payments (10% of scan value for referred DCDs)
+        $daPayments = [];
+        $totalDaToPay = 0;
+        foreach ($scans->groupBy('dcd_id') as $dcdId => $dcdScans) {
+            if ($dcdId) {
+                $dcd = User::find($dcdId);
+                if ($dcd) {
+                    // Find if this DCD was referred by a DA
+                    $referral = Referral::where('referred_id', $dcdId)
+                        ->whereIn('type', ['da_to_dcd', 'admin_to_da'])
+                        ->first();
 
-        // Budget utilization across all active campaigns
-        $activeCampaigns = Campaign::where('status', 'approved')->get();
-        $totalBudgetAllocated = $activeCampaigns->sum('budget');
-        $totalBudgetSpent = $activeCampaigns->sum('spent_amount');
-        $utilizationRate = $totalBudgetAllocated > 0 
-            ? round(($totalBudgetSpent / $totalBudgetAllocated) * 100, 1)
-            : 0;
+                    if ($referral && $referral->referrer && $referral->referrer->role === 'da') {
+                        $scanValue = $dcdScans->sum('earnings');
+                        $daShare = $scanValue * 0.10; // 10% goes to DA
+                        $daPayments[] = [
+                            'name' => $referral->referrer->name,
+                            'email' => $referral->referrer->email,
+                            'amount' => $daShare,
+                            'scan_count' => $dcdScans->count(),
+                            'total_scan_value' => $scanValue,
+                            'dcd_name' => $dcd->name
+                        ];
+                        $totalDaToPay += $daShare;
+                    }
+                }
+            }
+        }
+
+        // Calculate DAYA earnings (30% of scan value)
+        $totalScanValue = $scans->sum('earnings');
+        $dayaEarnings = $totalScanValue * 0.30; // 30% goes to DAYA
 
         return [
-            'revenue_today' => $revenueToday,
-            'pending_earnings' => $pendingEarnings,
-            'paid_today' => $paidEarnings,
-            'budget_utilization_rate' => $utilizationRate,
-            'total_budget_allocated' => $totalBudgetAllocated,
-            'total_budget_spent' => $totalBudgetSpent,
+            'dcd_payments' => $dcdPayments,
+            'total_dcd_to_pay' => $totalDcdToPay,
+            'da_payments' => $daPayments,
+            'total_da_to_pay' => $totalDaToPay,
+            'daya_earnings' => $dayaEarnings,
+            'total_scan_value' => $totalScanValue,
+            'scan_count' => $scans->count(),
         ];
     }
 
