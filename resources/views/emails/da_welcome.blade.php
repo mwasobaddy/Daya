@@ -204,10 +204,10 @@
                 </div>
 
                 <div class="earning-method">
-                    <h4>4️⃣ Earn 5% Commission When You Bring Clients</h4>
+                    <h4>4️⃣ Earn 10% Commission When You Bring Clients</h4>
                     <p>If you introduce a business, brand, or organization that runs a campaign on the Daya network:</p>
                     <div class="reward-highlight">
-                        ➡️ You earn 5% of the client's total campaign budget.
+                        ➡️ You earn 10% of the client's total campaign budget.
                     </div>
                     <p>This commission is credited directly to your wallet once the campaign launches.</p>
                 </div>
@@ -221,7 +221,7 @@
                     <li>• Total DCD referrals</li>
                     <li>• Confirmation of onboarding/activation</li>
                     <li>• Venture shares earned from each activity</li>
-                    <li>• 5% client commissions earned</li>
+                    <li>• 10% client commissions earned</li>
                     <li>• Eligibility based on the 3,000 DA & 30,000 DCD caps</li>
                 </ul>
             </div>

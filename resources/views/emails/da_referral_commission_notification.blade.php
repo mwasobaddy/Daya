@@ -104,7 +104,7 @@
             <div class="earnings-info">
                 <h3 style="margin-top: 0; color: #065f46;"><span class="icon">💚</span>How Your Earnings Work</h3>
                 <ul style="color: #047857;">
-                    <li><strong>Automatic Commission:</strong> You'll earn 5% of every campaign budget that {{ $referredUser->name }} creates</li>
+                    <li><strong>Automatic Commission:</strong> You'll earn 10% of every campaign budget that {{ $referredUser->name }} creates</li>
                     <li><strong>Passive Income:</strong> No additional work required - earnings are calculated automatically</li>
                     <li><strong>Long-term Benefits:</strong> As long as {{ $referredUser->name }} is active, you keep earning</li>
                     <li><strong>Track Earnings:</strong> Monitor your commissions in your dashboard</li>
