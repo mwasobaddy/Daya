@@ -53,6 +53,35 @@ class AdminDigestService
         $activeCampaigns = Campaign::where('status', 'approved')->count();
         $pendingReview = Campaign::where('status', 'submitted')->count();
 
+        // Get campaigns that had recap emails sent yesterday
+        $recapEmailsSent = Campaign::where('status', 'completed')
+            ->whereBetween('completed_at', [$start, $end])
+            ->whereNotNull('metadata')
+            ->get()
+            ->filter(function ($campaign) {
+                $metadata = $campaign->metadata ?? [];
+                return isset($metadata['recap_email_sent']) && $metadata['recap_email_sent'] === true;
+            })
+            ->count();
+
+        // Count unique users notified (clients + DCDs + DAs for completed campaigns)
+        $usersNotified = 0;
+        foreach ($completedCampaigns as $campaign) {
+            $metadata = $campaign->metadata ?? [];
+            if (isset($metadata['recap_email_sent']) && $metadata['recap_email_sent'] === true) {
+                // Count client, DCD, and potentially DA
+                $usersNotified += 2; // client + DCD
+                if ($campaign->dcd) {
+                    $referral = $campaign->dcd->referralsReceived()
+                        ->whereIn('type', ['da_to_dcd', 'admin_to_dcd'])
+                        ->first();
+                    if ($referral && $referral->referrer) {
+                        $usersNotified++; // DA/Admin
+                    }
+                }
+            }
+        }
+
         // Campaigns nearing completion (>80% budget spent)
         $nearingCompletion = Campaign::where('status', 'approved')
             ->whereRaw('spent_amount >= (budget * 0.8)')
@@ -94,6 +123,8 @@ class AdminDigestService
             'pending_review' => $pendingReview,
             'total_budget_new' => $newCampaigns->sum('budget'),
             'nearing_completion' => $nearingCompletion,
+            'recap_emails_sent' => $recapEmailsSent,
+            'users_notified_recap' => $usersNotified,
         ];
     }
 

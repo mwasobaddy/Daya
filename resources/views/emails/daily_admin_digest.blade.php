@@ -241,6 +241,16 @@
                 <div class="metric">
                     <div class="metric-label">Campaigns Completed</div>
                     <div class="metric-value">{{ $data['campaigns']['completed_count'] }}</div>
+                    @if($data['campaigns']['recap_emails_sent'] > 0)
+                        <div class="metric-change">
+                            {{ $data['campaigns']['recap_emails_sent'] }} recap emails sent
+                        </div>
+                    @endif
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Users Notified (Recap)</div>
+                    <div class="metric-value">{{ $data['campaigns']['users_notified_recap'] ?? 0 }}</div>
+                    <div class="metric-change">From completed campaigns</div>
                 </div>
                 <div class="metric">
                     <div class="metric-label">New Users</div>
@@ -273,11 +283,17 @@
             <div class="highlight-box">
                 <h3>✅ Key Achievements</h3>
                 @if($data['campaigns']['completed_count'] > 0)
+                    <p style="margin-bottom: 10px;"><strong>Completed Campaigns ({{ $data['campaigns']['completed_count'] }}):</strong></p>
                     @foreach($data['campaigns']['completed_campaigns'] as $campaign)
                         <div class="highlight-item">
                             • Campaign #{{ $campaign['id'] }} "{{ $campaign['title'] }}" completed ({{ $campaign['total_scans'] }} scans, KSh {{ number_format($campaign['spent'], 2) }})
                         </div>
                     @endforeach
+                    @if($data['campaigns']['recap_emails_sent'] > 0)
+                        <p style="margin-top: 10px; color: #059669; font-weight: 500;">
+                            ✉️ Recap emails sent for {{ $data['campaigns']['recap_emails_sent'] }} campaign(s) to {{ $data['campaigns']['users_notified_recap'] ?? 0 }} user(s)
+                        </p>
+                    @endif
                 @endif
                 @if($data['top_performers']['top_dcd'])
                     <div class="highlight-item">
