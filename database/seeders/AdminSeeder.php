@@ -17,6 +17,15 @@ class AdminSeeder extends Seeder
         // Admin users to create/update
         $admins = [
             [
+                'name' => 'Daya',
+                'email' => 'company@example.com',
+                'phone' => '+1234567892',
+                'referral_code' => '9c5R6S',
+                'title' => 'Company Profile',
+                'department' => 'Company',
+                'role' => 'company',
+            ],
+            [
                 'name' => 'Kelvin Ramsiel',
                 'email' => 'kelvinramsiel@gmail.com',
                 'phone' => '+1234567890',
@@ -26,22 +35,14 @@ class AdminSeeder extends Seeder
                 'role' => 'admin',
             ],
             [
-                'name' => 'Daya',
-                'email' => 'company@example.com',
-                'phone' => '+1234567892',
-                'referral_code' => '9c5R6S',
-                'title' => 'Company Profile',
-                'department' => 'Company',
-                'role' => 'company',
+                'name' => 'Akinola Dixon',
+                'email' => 'akinola.dixon@gmail.com',
+                'phone' => '+1234567891',
+                'referral_code' => '8b4I5Q',
+                'title' => 'System Administrator',
+                'department' => 'Operations',
+                'role' => 'admin',
             ],
-            // [
-            //     'name' => 'Akinola Dixon',
-            //     'email' => 'akinola.dixon@gmail.com',
-            //     'phone' => '+1234567891',
-            //     'referral_code' => '8b4I5Q',
-            //     'title' => 'System Administrator',
-            //     'department' => 'Operations',
-            // ],
         ];
 
         foreach ($admins as $adminData) {
