@@ -24,6 +24,7 @@ test('music_promotion scan rewards KSh 1 by default', function () {
         'title' => 'Music Campaign',
         'description' => 'Music',
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -34,11 +35,27 @@ test('music_promotion scan rewards KSh 1 by default', function () {
     ]);
 
     $url = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaign->id]);
+    
+    // First, get the scan processing page
     $response = $this->get($url);
-    $response->assertRedirect($campaign->digital_product_link);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
+
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaign->id,
+        'fingerprint' => 'test-fingerprint-music',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://example.com',
+    ]);
 
     $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
-    $earning = Earning::where('related_id', $scan->id)->where('type', 'scan')->first();
+    $earning = Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
     expect($earning)->not->toBeNull();
     expect((float)$earning->amount)->toBe(1.0);
 
@@ -60,6 +77,7 @@ test('app_downloads scan rewards KSh 5 by default', function () {
         'title' => 'App Campaign',
         'description' => 'App download',
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -70,10 +88,27 @@ test('app_downloads scan rewards KSh 5 by default', function () {
     ]);
 
     $url = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaign->id]);
-    $this->get($url);
+    
+    // First, get the scan processing page
+    $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
+
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaign->id,
+        'fingerprint' => 'test-fingerprint-app',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://example.com',
+    ]);
 
     $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
-    $earning = Earning::where('related_id', $scan->id)->where('type', 'scan')->first();
+    $earning = Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
     expect($earning)->not->toBeNull();
     expect((float)$earning->amount)->toBe(5.0);
 
@@ -95,6 +130,7 @@ test('brand_awareness without explainer rewards KSh 1, with explainer rewards KS
         'title' => 'Brand - Simple',
         'description' => 'BA Simple',
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -104,19 +140,13 @@ test('brand_awareness without explainer rewards KSh 1, with explainer rewards KS
         'status' => 'approved',
     ]);
 
-    $this->get(URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaignSimple->id]));
-    $scanSimple = \App\Models\Scan::where('campaign_id', $campaignSimple->id)->first();
-    $earningSimple = Earning::where('related_id', $scanSimple->id)->where('type', 'scan')->first();
-    expect((float)$earningSimple->amount)->toBe(1.0);
-    $scanSimple = \App\Models\Scan::where('campaign_id', $campaignSimple->id)->first();
-    expect((float) $scanSimple->earnings)->toBe(1.0);
-
     $campaignExplainer = Campaign::create([
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Brand - Explainer',
         'description' => 'BA Explainer',
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -127,11 +157,40 @@ test('brand_awareness without explainer rewards KSh 1, with explainer rewards KS
         'status' => 'approved',
     ]);
 
-    $this->get(URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaignExplainer->id]));
+    // Test simple brand awareness (KSh 1)
+    $urlSimple = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaignSimple->id]);
+    $responseSimple = $this->get($urlSimple);
+    $responseSimple->assertStatus(200);
+    $responseSimple->assertViewIs('scan-processing');
+
+    $apiResponseSimple = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaignSimple->id,
+        'fingerprint' => 'test-fingerprint-simple',
+    ]);
+
+    $apiResponseSimple->assertStatus(200);
+    $scanSimple = \App\Models\Scan::where('campaign_id', $campaignSimple->id)->first();
+    $earningSimple = Earning::where('scan_id', $scanSimple->id)->where('type', 'scan')->first();
+    expect((float)$earningSimple->amount)->toBe(1.0);
+    expect((float) $scanSimple->earnings)->toBe(1.0);
+
+    // Test brand awareness with explainer (KSh 5)
+    $urlExplainer = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaignExplainer->id]);
+    $responseExplainer = $this->get($urlExplainer);
+    $responseExplainer->assertStatus(200);
+    $responseExplainer->assertViewIs('scan-processing');
+
+    $apiResponseExplainer = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaignExplainer->id,
+        'fingerprint' => 'test-fingerprint-explainer',
+    ]);
+
+    $apiResponseExplainer->assertStatus(200);
     $scanExplainer = \App\Models\Scan::where('campaign_id', $campaignExplainer->id)->first();
-    $earningExplainer = Earning::where('related_id', $scanExplainer->id)->where('type', 'scan')->first();
+    $earningExplainer = Earning::where('scan_id', $scanExplainer->id)->where('type', 'scan')->first();
     expect((float)$earningExplainer->amount)->toBe(5.0);
-    $scanExplainer = \App\Models\Scan::where('campaign_id', $campaignExplainer->id)->first();
     expect((float) $scanExplainer->earnings)->toBe(5.0);
 });
 
@@ -151,6 +210,7 @@ test('music_promotion scan rewards N10 for Nigerian clients', function () {
         'title' => 'Nigerian Music Campaign',
         'description' => 'Music in Nigeria',
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -161,14 +221,29 @@ test('music_promotion scan rewards N10 for Nigerian clients', function () {
     ]);
 
     $url = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaign->id]);
+    
+    // First, get the scan processing page
     $response = $this->get($url);
-    $response->assertRedirect($campaign->digital_product_link);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
+
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaign->id,
+        'fingerprint' => 'test-fingerprint-nigeria',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://example.com',
+    ]);
 
     $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
-    $earning = Earning::where('related_id', $scan->id)->where('type', 'scan')->first();
+    $earning = Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
     expect($earning)->not->toBeNull();
     expect((float)$earning->amount)->toBe(10.0); // 1 KSh * 10 for Nigeria
 
-    $scan = \App\Models\Scan::where('campaign_id', $campaign->id)->first();
     expect((float) $scan->earnings)->toBe(10.0);
 });

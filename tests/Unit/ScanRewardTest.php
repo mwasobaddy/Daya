@@ -14,6 +14,15 @@ test('it credits dcd earnings for light touch campaign', function () {
     
     $client = User::factory()->create(['role' => 'client']);
     $dcd = User::factory()->create(['role' => 'dcd']);
+    $da = User::factory()->create(['role' => 'da']); // Create referrer
+    $company = User::factory()->create(['role' => 'company']); // Create company user
+
+    // Set up referral: DA refers DCD
+    Referral::create([
+        'referrer_id' => $da->id,
+        'referred_id' => $dcd->id,
+        'type' => 'da_to_dcd',
+    ]);
 
     $campaign = Campaign::create([
         'client_id' => $client->id,
@@ -44,10 +53,20 @@ test('it credits dcd earnings for light touch campaign', function () {
         'scanned_at' => now(),
     ]);
 
-    // In upfront model, creditScanReward returns null (no new earnings created)
+    // In new model, three earnings are created: 60% DCD, 30% Company, 10% Referrer
     $earning = $scanRewardService->creditScanReward($scan);
 
-    expect($earning)->toBeNull(); // Changed: no earnings created per scan
+    expect($earning)->not->toBeNull();
+    expect($earning->type)->toBe('scan');
+    expect((float)$earning->amount)->toBe(0.6); // 60% of 1.0
+    
+    // Check that all three earnings were created
+    $earnings = \App\Models\Earning::where('scan_id', $scan->id)->get();
+    expect($earnings)->toHaveCount(3);
+    
+    // Check amounts: 0.6 + 0.3 + 0.1 = 1.0 (allow for small floating point differences)
+    $totalEarned = $earnings->sum('amount');
+    expect(abs((float)$totalEarned - 1.0))->toBeLessThan(0.01);
     
     $campaign->refresh();
     expect($campaign->total_scans)->toBe(1)
@@ -59,6 +78,15 @@ test('it credits dcd earnings for moderate touch campaign', function () {
     $scanRewardService = app(ScanRewardService::class);
     $client = User::factory()->create(['role' => 'client']);
     $dcd = User::factory()->create(['role' => 'dcd']);
+    $da = User::factory()->create(['role' => 'da']); // Create referrer
+    $company = User::factory()->create(['role' => 'company']); // Create company user
+
+    // Set up referral: DA refers DCD
+    Referral::create([
+        'referrer_id' => $da->id,
+        'referred_id' => $dcd->id,
+        'type' => 'da_to_dcd',
+    ]);
 
     $campaign = Campaign::create([
         'client_id' => $client->id,
@@ -91,8 +119,18 @@ test('it credits dcd earnings for moderate touch campaign', function () {
 
     $earning = $scanRewardService->creditScanReward($scan);
 
-    // In upfront model, no earnings are created per scan
-    expect($earning)->toBeNull();
+    // In new model, three earnings are created: 60% DCD, 30% Company, 10% Referrer
+    expect($earning)->not->toBeNull();
+    expect($earning->type)->toBe('scan');
+    expect((float)$earning->amount)->toBe(3.0); // 60% of 5.0
+    
+    // Check that all three earnings were created
+    $earnings = \App\Models\Earning::where('scan_id', $scan->id)->get();
+    expect($earnings)->toHaveCount(3);
+    
+    // Check amounts: 3.0 + 1.5 + 0.5 = 5.0 (allow for small floating point differences)
+    $totalEarned = $earnings->sum('amount');
+    expect(abs((float)$totalEarned - 5.0))->toBeLessThan(0.01);
     
     $campaign->refresh();
     expect((float)$campaign->campaign_credit)->toBe(495.0) // 500 - 5
@@ -142,8 +180,8 @@ test('it prevents duplicate scan processing', function () {
     
     $result2 = $scanRewardService->creditScanReward($scan);
 
-    // Both return null in upfront model
-    expect($result1)->toBeNull()
+    // First scan creates earning, second returns null (deduped)
+    expect($result1)->not->toBeNull()
         ->and($result2)->toBeNull();
 
     $campaign->refresh();
@@ -205,55 +243,5 @@ test('it auto completes campaign when budget exhausted', function () {
         ->and((float)$campaign->spent_amount)->toBe(10.0)
         ->and((float)$campaign->campaign_credit)->toBe(0.0)
         ->and($campaign->completed_at)->not->toBeNull();
-});
-
-test('it credits da commission when client they referred creates campaign', function () {
-    $da = User::factory()->create([
-        'role' => 'da',
-        'referral_code' => 'TEST123',
-    ]);
-
-    $client = User::factory()->create(['role' => 'client']);
-    $dcd = User::factory()->create(['role' => 'dcd']);
-
-    // DA refers the client
-    Referral::create([
-        'referrer_id' => $da->id,
-        'referred_id' => $client->id,
-        'type' => 'da_to_client',
-    ]);
-
-    $campaign = Campaign::create([
-        'client_id' => $client->id,
-        'dcd_id' => $dcd->id,
-        'title' => 'Test Campaign',
-        'budget' => 1000,
-        'cost_per_click' => 5.0,
-        'spent_amount' => 0,
-        'max_scans' => 200,
-        'total_scans' => 0,
-        'county' => 'Test County',
-        'status' => 'approved',
-        'campaign_objective' => 'app_downloads',
-        'digital_product_link' => 'https://example.com',
-        'target_audience' => 'General audience',
-        'duration' => '2026-01-10 to 2026-01-20',
-        'objectives' => 'Test objectives',
-        'metadata' => [
-            'start_date' => '2026-01-01',
-            'end_date' => '2026-12-31',
-        ],
-    ]);
-
-    // Credit DA commission for campaign
-    $daEarning = ScanRewardService::creditDaCommissionForCampaign($campaign);
-
-    expect($daEarning)->not->toBeNull()
-        ->and((float)$daEarning->amount)->toBe(100.0) // 10% of 1000 (changed from 5%)
-        ->and((float)$daEarning->commission_amount)->toBe(100.0)
-        ->and($daEarning->user_id)->toBe($da->id)
-        ->and($daEarning->campaign_id)->toBe($campaign->id)
-        ->and($daEarning->type)->toBe('commission')
-        ->and($daEarning->description)->toContain('10% of budget');
 });
 

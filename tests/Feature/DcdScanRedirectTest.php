@@ -25,8 +25,8 @@ test('dcd scan redirect finds active campaign and redirects to product', functio
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Live Campaign',
-
         'budget' => 50,
+        'campaign_credit' => 50,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => "$today to $tomorrow",
@@ -45,15 +45,29 @@ test('dcd scan redirect finds active campaign and redirects to product', functio
     // Test the new DCD scan route
     $url = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $dcd->id]);
 
+    // First, get the scan processing page
     $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
 
-    // Check redirect to product
-    $response->assertRedirect($campaign->digital_product_link);
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => null, // Smart selection
+        'fingerprint' => 'test-fingerprint-456',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://example.com',
+    ]);
 
     // Assert a scan record exists
     $scan = Scan::where('campaign_id', $campaign->id)->first();
     expect($scan)->not->toBeNull();
     expect($scan->dcd_id)->toBe($dcd->id);
+    expect($scan->device_fingerprint)->toBe('test-fingerprint-456');
 });
 
 test('dcd scan redirect shows no active campaigns message when no campaigns', function () {
@@ -68,11 +82,22 @@ test('dcd scan redirect shows no active campaigns message when no campaigns', fu
     // Test the new DCD scan route with no campaigns
     $url = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $dcd->id]);
 
+    // First, get the scan processing page
     $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
 
-    // Should show the no active campaigns page
-    $response->assertStatus(404);
-    $response->assertSee('No active campaigns right now, try again later');
+    // Now simulate the API call - should fail with no active campaigns
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => null,
+        'fingerprint' => 'test-fingerprint-no-campaigns',
+    ]);
+
+    $apiResponse->assertStatus(400);
+    $apiResponse->assertJson([
+        'message' => 'No active campaigns found for this DCD',
+    ]);
 });
 
 test('dcd scan redirect shows no active campaigns when campaign is expired', function () {
@@ -113,9 +138,20 @@ test('dcd scan redirect shows no active campaigns when campaign is expired', fun
     // Test the new DCD scan route
     $url = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $dcd->id]);
 
+    // First, get the scan processing page
     $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
 
-    // Should show the no active campaigns page
-    $response->assertStatus(404);
-    $response->assertSee('No active campaigns right now, try again later');
+    // Now simulate the API call - should fail with no active campaigns (expired)
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => null,
+        'fingerprint' => 'test-fingerprint-expired',
+    ]);
+
+    $apiResponse->assertStatus(400);
+    $apiResponse->assertJson([
+        'message' => 'No active campaigns found for this DCD',
+    ]);
 });

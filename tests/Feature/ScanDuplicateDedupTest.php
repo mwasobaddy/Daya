@@ -24,7 +24,8 @@ test('duplicate scan with same fingerprint is single earning', function () {
         'dcd_id' => $dcd->id,
         'title' => 'Duplicate Test',
         'description' => 'Duplicate test',
-        'budget' => 100,
+        'budget' => 1000,
+        'campaign_credit' => 1000, // Initialize campaign credit
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -32,16 +33,21 @@ test('duplicate scan with same fingerprint is single earning', function () {
         'campaign_objective' => 'music_promotion',
         'digital_product_link' => 'https://example.com',
         'status' => 'approved',
+        'metadata' => [
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addDays(30)->format('Y-m-d'),
+        ],
     ]);
 
     // Simulate first scan with fingerprint
     $svc = app(App\Services\QRCodeService::class);
-    $scan1 = $svc->recordCampaignScan($dcd->id, $campaign->id, ['fingerprint' => 'fp-123']);
+    $result1 = $svc->recordCampaignScan($dcd->id, $campaign->id, ['fingerprint' => 'fp-123']);
+    $scan1 = $result1['scan'];
 
     // Simulate second scan using same fingerprint
     $scan2 = $svc->recordCampaignScan($dcd->id, $campaign->id, ['fingerprint' => 'fp-123']);
 
-    $earnings = Earning::where('user_id', $dcd->id)->where('type', 'scan')->where('month', now()->format('Y-m'))->get();
+    $earnings = Earning::where('user_id', $dcd->id)->where('type', 'scan')->get();
     expect($earnings->count())->toBe(1);
     expect($scan1->id)->not->toBeNull();
 });
@@ -61,9 +67,10 @@ test('distinct fingerprint creates separate earning', function () {
     $campaign = Campaign::create([
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
-        'title' => 'Duplicate Test',
-        'description' => 'Duplicate test',
-        'budget' => 100,
+        'title' => 'Duplicate Test 2',
+        'description' => 'Duplicate test 2',
+        'budget' => 1000,
+        'campaign_credit' => 1000, // Initialize campaign credit
         'county' => 'Example',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -71,12 +78,16 @@ test('distinct fingerprint creates separate earning', function () {
         'campaign_objective' => 'music_promotion',
         'digital_product_link' => 'https://example.com',
         'status' => 'approved',
+        'metadata' => [
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addDays(30)->format('Y-m-d'),
+        ],
     ]);
 
     $svc = app(App\Services\QRCodeService::class);
     $svc->recordCampaignScan($dcd->id, $campaign->id, ['fingerprint' => 'fp-123']);
     $svc->recordCampaignScan($dcd->id, $campaign->id, ['fingerprint' => 'fp-456']);
 
-    $earnings = Earning::where('user_id', $dcd->id)->where('type', 'scan')->where('month', now()->format('Y-m'))->get();
+    $earnings = Earning::where('user_id', $dcd->id)->where('type', 'scan')->get();
     expect($earnings->count())->toBe(2);
 });

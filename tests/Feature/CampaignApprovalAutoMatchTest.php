@@ -38,6 +38,7 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
         'title' => 'AutoMatch Campaign',
         'description' => 'Testing auto-match flow',
         'budget' => 200,
+        'campaign_credit' => 200,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => '2025-12-07 to 2025-12-10',
@@ -73,14 +74,29 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
         return $mail->hasTo($dcd->email);
     });
 
-    // Now simulate a scan redirect (client scans the QR) and assert an Earning is created  
     // Now simulate a scan redirect (client scans the DCD QR) and assert an Earning is created
     $signedUrl = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $campaign->dcd_id]);
-    $redirectResponse = $this->get($signedUrl);
-    $redirectResponse->assertRedirect($campaign->digital_product_link);
+    
+    // First, get the scan processing page
+    $processingResponse = $this->get($signedUrl);
+    $processingResponse->assertStatus(200);
+    $processingResponse->assertViewIs('scan-processing');
+
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $campaign->dcd_id,
+        'campaign_id' => $campaign->id, // Use specific campaign instead of smart selection
+        'fingerprint' => 'test-fingerprint-automatched',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => $campaign->digital_product_link,
+    ]);
 
     $scan = Scan::where('campaign_id', $campaign->id)->first();
-    $earning = Earning::where('related_id', $scan->id)->where('type', 'scan')->first();
+    $earning = Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
     expect($earning)->not->toBeNull();
     expect((float) $earning->amount)->toBe(1.23);
     expect($earning->user_id)->toBe($campaign->dcd_id);

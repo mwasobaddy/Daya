@@ -99,6 +99,7 @@ Route::prefix('admin')->group(function () {
 
 Route::prefix('scan')->group(function () {
     Route::post('/record', [ScanController::class, 'recordScan']);
+    Route::post('/record-with-fingerprint', [ScanController::class, 'recordScanWithFingerprint']);
     Route::get('/stats/admin', [ScanController::class, 'getAdminScanStats']);
     Route::get('/stats/user/{userId}', [ScanController::class, 'getScanStats']);
     Route::post('/qr/regenerate/{userId}', [ScanController::class, 'regenerateQRCode']);

@@ -57,4 +57,9 @@ Route::get('/qr/redirect', [\App\Http\Controllers\ScanRedirectController::class,
 Route::get('/qr/dcd', [\App\Http\Controllers\ScanRedirectController::class, 'handleDcd'])
     ->name('scan.dcd');
 
+// Scan error page
+Route::get('/scan-error', function () {
+    return view('scan-error');
+})->name('scan.error');
+
 require __DIR__.'/settings.php';

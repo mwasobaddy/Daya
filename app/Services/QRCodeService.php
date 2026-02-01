@@ -158,8 +158,10 @@ class QRCodeService
     {
         $dcd = User::findOrFail($dcdId);
         
+        $deviceFingerprint = $geoData['fingerprint'] ?? null;
+        
         // Find active campaign for this DCD using smart selection logic
-        $activeCampaign = $this->findActiveCampaignForDcd($dcd);
+        $activeCampaign = $this->findActiveCampaignForDcd($dcd, $deviceFingerprint, $geoData);
         
         if (!$activeCampaign) {
             throw new \InvalidArgumentException('No active campaigns found for this DCD');
@@ -203,38 +205,116 @@ class QRCodeService
     /**
      * Find the active campaign for a DCD using smart selection logic
      */
-    private function findActiveCampaignForDcd(User $dcd): ?\App\Models\Campaign
+    private function findActiveCampaignForDcd(User $dcd, ?string $deviceFingerprint = null, ?array $geoData = null): ?\App\Models\Campaign
     {
         $today = now()->format('Y-m-d');
         
-        // Get all assigned campaigns for this DCD, ordered by creation date (oldest first)
+        // Get all active campaigns for this DCD
         $campaigns = \App\Models\Campaign::where('dcd_id', $dcd->id)
-            ->whereIn('status', ['approved', 'active'])
-            ->orderBy('created_at', 'asc')
-            ->get();
-            
-        foreach ($campaigns as $campaign) {
-            $metadata = $campaign->metadata ?? [];
-            $startDate = $metadata['start_date'] ?? null;
-            $endDate = $metadata['end_date'] ?? null;
-            
-            // Skip if no date information
-            if (!$startDate || !$endDate) {
-                continue;
-            }
-            
-            // Check if campaign is expired
-            if ($today > $endDate) {
-                continue;
-            }
-            
-            // Check if campaign is active today
-            if ($today >= $startDate && $today <= $endDate) {
-                return $campaign;
-            }
+            ->where('status', 'live')
+            ->get()
+            ->filter(function ($campaign) use ($today) {
+                $metadata = $campaign->metadata ?? [];
+                $startDate = $metadata['start_date'] ?? null;
+                $endDate = $metadata['end_date'] ?? null;
+                
+                // Skip if no date information or not active today
+                return $startDate && $endDate && $today >= $startDate && $today <= $endDate;
+            });
+        
+        if ($campaigns->isEmpty()) {
+            return null;
         }
         
-        return null;
+        // Step 1: Filter out campaigns where device has already earned (to allow scanning multiple campaigns)
+        if ($geoData && isset($geoData['ip_address'])) {
+            $identifier = $geoData['ip_address'];
+            $identifierField = 'ip_address';
+        } elseif ($deviceFingerprint) {
+            $identifier = $deviceFingerprint;
+            $identifierField = 'device_fingerprint';
+        } else {
+            // No identifier, skip filtering
+            $identifier = null;
+        }
+        
+        if ($identifier) {
+            $campaigns = $campaigns->filter(function ($campaign) use ($identifier, $identifierField) {
+                $query = \App\Models\Earning::where('type', 'scan')->whereHas('scan', function($q) use ($identifier, $identifierField, $campaign) {
+                    if ($identifierField === 'ip_address') {
+                        $q->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$identifier])
+                          ->where('campaign_id', $campaign->id);
+                    } else {
+                        $q->where($identifierField, $identifier)
+                          ->where('campaign_id', $campaign->id);
+                    }
+                });
+                return !$query->exists(); // Keep campaigns where no earning exists
+            });
+        }
+        
+        if ($campaigns->isEmpty()) {
+            // If all campaigns have been scanned by this device, randomly select from all active campaigns
+            $allActiveCampaigns = \App\Models\Campaign::where('dcd_id', $dcd->id)
+                ->where('status', 'live')
+                ->get()
+                ->filter(function ($campaign) use ($today) {
+                    $metadata = $campaign->metadata ?? [];
+                    $startDate = $metadata['start_date'] ?? null;
+                    $endDate = $metadata['end_date'] ?? null;
+                    return $startDate && $endDate && $today >= $startDate && $today <= $endDate;
+                });
+            if ($allActiveCampaigns->isNotEmpty()) {
+                return $allActiveCampaigns->random();
+            }
+            return null;
+        }
+        
+        // Step 2: From remaining, find campaigns with least number of scans
+        $minScans = $campaigns->min('total_scans');
+        $leastScanned = $campaigns->filter(function ($campaign) use ($minScans) {
+            return $campaign->total_scans == $minScans;
+        });
+        
+        // Step 3: From those, find campaigns closest to deadline
+        $now = now();
+        $closestToDeadline = $leastScanned->sortBy(function ($campaign) use ($now) {
+            $metadata = $campaign->metadata ?? [];
+            $endDate = $metadata['end_date'] ?? null;
+            if (!$endDate) return PHP_INT_MAX;
+            $endCarbon = \Carbon\Carbon::parse($endDate);
+            return $now->diffInDays($endCarbon, false);
+        })->first();
+        
+        if (!$closestToDeadline) {
+            return null;
+        }
+        
+        // Step 4: From campaigns with same deadline distance, find those with more budget
+        $deadlineDistance = $now->diffInDays(\Carbon\Carbon::parse($closestToDeadline->metadata['end_date'] ?? null), false);
+        $sameDeadline = $leastScanned->filter(function ($campaign) use ($now, $deadlineDistance) {
+            $endDate = $campaign->metadata['end_date'] ?? null;
+            if (!$endDate) return false;
+            $endCarbon = \Carbon\Carbon::parse($endDate);
+            return $now->diffInDays($endCarbon, false) == $deadlineDistance;
+        });
+        
+        $highestBudget = $sameDeadline->sortByDesc(function ($campaign) {
+            return $campaign->campaign_credit - $campaign->spent_amount;
+        })->first();
+        
+        if (!$highestBudget) {
+            return null;
+        }
+        
+        // Step 5: If multiple with same budget, random pick
+        $sameBudget = $sameDeadline->filter(function ($campaign) use ($highestBudget) {
+            $remaining = $campaign->campaign_credit - $campaign->spent_amount;
+            $highestRemaining = $highestBudget->campaign_credit - $highestBudget->spent_amount;
+            return $remaining == $highestRemaining;
+        });
+        
+        return $sameBudget->random();
     }
 
     /**
@@ -243,9 +323,42 @@ class QRCodeService
      */
     public function recordCampaignScan(int $dcdId, int $campaignId, ?array $geoData = null)
     {
-        // For backward compatibility, we'll just delegate to the new DCD scan method
-        // The campaign ID is ignored since we now use smart selection
-        return $this->recordDcdScan($dcdId, $geoData);
+        $dcd = User::findOrFail($dcdId);
+        $campaign = \App\Models\Campaign::findOrFail($campaignId);
+
+        // Check if campaign can accept more scans (budget not exhausted)
+        if (!$campaign->canAcceptScans()) {
+            \Log::info('Campaign ' . $campaign->id . ' has reached its budget/scan limit, marking as completed');
+
+            // Auto-complete campaign if not already completed
+            if ($campaign->status !== 'completed') {
+                $campaign->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+            }
+
+            throw new \InvalidArgumentException('Campaign has reached its budget limit and is now completed');
+        }
+
+        $deviceFingerprint = $geoData['fingerprint'] ?? null;
+        $scan = \App\Models\Scan::create([
+            'dcd_id' => $dcdId,
+            'campaign_id' => $campaignId,
+            'scanned_at' => now(),
+            'geo' => $geoData,
+            'device_fingerprint' => $deviceFingerprint,
+        ]);
+
+        // Use the ScanRewardService to credit and dedupe earnings
+        try {
+            $svc = app(ScanRewardService::class);
+            $svc->creditScanReward($scan);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to credit scan reward via ScanRewardService: ' . $e->getMessage());
+        }
+
+        return ['scan' => $scan, 'campaign' => $campaign];
     }
 
     // Compute pay per scan was moved to ScanRewardService
@@ -365,7 +478,7 @@ class QRCodeService
 
                                 $html .= '<h1 class="title">Discover with Daya</h1>';
                                 $html .= '<div class="qr"><img src="data:image/png;base64,' . $b64Png . '" alt="Referral QR" /></div>';
-                                $html .= '<p class="caption">www.daya.africa</p>';
+                                $html .= '<p class="caption">dayadistribution.com</p>';
                                 $html .= '<div class="footer">&nbsp;</div>';
                                 $html .= '
                             <div>';

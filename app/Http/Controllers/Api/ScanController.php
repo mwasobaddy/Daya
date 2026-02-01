@@ -126,24 +126,50 @@ class ScanController extends Controller
     }
 
     /**
-     * Get QR code information for a user
+     * Record a scan event with device fingerprinting
      */
-    public function getQRCode(Request $request, $userId)
+    public function recordScanWithFingerprint(Request $request)
     {
-        $user = User::findOrFail($userId);
-
-        if (!$user->qr_code) {
-            return response()->json(['message' => 'No QR code found for this user'], 404);
-        }
-
-        $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($user->qr_code);
-
-        return response()->json([
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'role' => $user->role,
-            'qr_code_url' => $qrCodeUrl,
-            'referral_code' => $user->referral_code,
+        $request->validate([
+            'dcd_id' => 'required|integer|exists:users,id',
+            'fingerprint' => 'nullable|string',
+            'signature' => 'nullable|string', // Signature already validated when serving the page
         ]);
+
+        try {
+            $dcdId = $request->dcd_id;
+            $campaignId = $request->campaign_id;
+
+            // Prepare geoData with fingerprint
+            $geoData = [
+                'fingerprint' => $request->fingerprint,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ];
+
+            $redirectUrl = null;
+
+            if ($campaignId) {
+                // Direct campaign scan
+                $scan = $this->qrCodeService->recordCampaignScan($dcdId, $campaignId, $geoData);
+                $campaign = \App\Models\Campaign::findOrFail($campaignId);
+                $redirectUrl = $campaign->digital_product_link;
+            } else {
+                // DCD smart selection scan
+                $result = $this->qrCodeService->recordDcdScan($dcdId, $geoData);
+                $campaign = $result['campaign'];
+                $redirectUrl = $campaign->digital_product_link;
+            }
+
+            return response()->json([
+                'message' => 'Scan recorded successfully',
+                'redirect_url' => $redirectUrl,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            \Log::error('Fingerprint scan recording failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Scan recording failed'], 500);
+        }
     }
 }

@@ -22,8 +22,8 @@ test('scan redirect records a scan and redirects to product', function () {
         'client_id' => $client->id,
         'dcd_id' => $dcd->id,
         'title' => 'Live Campaign',
-
         'budget' => 50,
+        'campaign_credit' => 50,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => '2025-11-17 to 2025-11-20',
@@ -36,13 +36,31 @@ test('scan redirect records a scan and redirects to product', function () {
 
     $url = URL::temporarySignedRoute('scan.redirect', now()->addYear(), ['dcd' => $dcd->id, 'campaign' => $campaign->id]);
 
+    // First, get the scan processing page
     $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
 
-    // Check redirect to product
-    $response->assertRedirect($campaign->digital_product_link);
+    // Now simulate the API call that records the scan with fingerprint
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaign->id,
+        'fingerprint' => 'test-fingerprint-123',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://example.com',
+    ]);
 
     // Assert a scan record exists
     $scan = Scan::where('campaign_id', $campaign->id)->first();
     expect($scan)->not->toBeNull();
     expect($scan->dcd_id)->toBe($dcd->id);
+    expect($scan->device_fingerprint)->toBe('test-fingerprint-123');
+
+    // Assert earning was created
+    $earning = \App\Models\Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
+    expect($earning)->not->toBeNull();
 });
