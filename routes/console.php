@@ -19,17 +19,6 @@ Schedule::command('digest:send-admin-daily')
         \Log::error('Daily admin digest failed to send');
     });
 
-// Schedule scan monitoring digest to run every 5 minutes
-Schedule::command('digest:scan-monitoring')
-    ->everyFiveMinutes()
-    ->timezone('Africa/Nairobi')
-    ->onSuccess(function () {
-        \Log::info('Scan monitoring digest sent successfully');
-    })
-    ->onFailure(function () {
-        \Log::error('Scan monitoring digest failed to send');
-    });
-
 // Schedule campaign recap emails to run twice daily (9 AM and 3 PM EAT)
 Schedule::command('campaigns:send-recap-emails')
     ->twiceDaily(9, 15) // 9 AM and 3 PM
