@@ -27,13 +27,16 @@
 
                 <p><strong>Budget:</strong>
                     @php
-                        $currency = '$';
+                        $currency = '₦';
                         if (!empty($campaign->metadata['currency']) && strtoupper($campaign->metadata['currency']) === 'KSH') {
                             $currency = 'KSh';
-                        } elseif (!empty($campaign->country) && stripos($campaign->country, 'kenya') !== false) {
-                            $currency = 'KSh';
                         } else {
-                            $currency = '$';
+                            $clientCountry = $campaign->client->country ?? null;
+                            if ($clientCountry && strtoupper($clientCountry->code) === 'KEN') {
+                                $currency = 'KSh';
+                            } else {
+                                $currency = '₦';
+                            }
                         }
                     @endphp
                     {{ $currency }}{{ number_format($campaign->budget, 2) }}
@@ -45,8 +48,24 @@
             <h3>Payment Instructions</h3>
             <div class="campaign-details">
                 <p>To enable us to review and activate your campaign, please complete payment using the details below:</p>
-                <p><strong>Payment Method:</strong> M-Pesa</p>
-                <p><strong>Send money:</strong> <code>0111984607</code></p>
+                @php
+                    $clientCountry = $campaign->client->country ?? null;
+                    $isNigeria = $clientCountry && strtoupper($clientCountry->code) === 'NG';
+                    $isKenya = $clientCountry && strtoupper($clientCountry->code) === 'KEN';
+                @endphp
+
+                @if($isNigeria)
+                    <p><strong>Bank:</strong> FCMB</p>
+                    <p><strong>Account Name:</strong> Dayafrica Technologies Limited</p>
+                    <p><strong>Account Number:</strong> 8807182014</p>
+                @elseif($isKenya)
+                    <p><strong>Payment Method:</strong> M-Pesa</p>
+                    <p><strong>Account Name:</strong> Dixon Akinola</p>
+                    <p><strong>Send money to:</strong> <code>0111984607</code></p>
+                @else
+                    <p><strong>Payment Method:</strong> M-Pesa</p>
+                    <p><strong>Send money to:</strong> <code>0111984607</code></p>
+                @endif
                 <p>Once payment is made, please keep the confirmation message for reference.</p>
             </div>
 
