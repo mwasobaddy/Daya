@@ -60,6 +60,7 @@ class VentureShareService
                 break;
                 
             case 'da_to_dcd':
+            case 'dcd_to_dcd':
                 // Check DCD cap before allocating DCD-related shares
                 if ($this->isDcdCapReached()) {
                     \Log::info('DCD cap reached - skipping venture share allocation for DCD referral', [
@@ -107,17 +108,35 @@ class VentureShareService
                 );
                 break;
                 
-            case 'dcd_to_da':
-                // DCD to DA Referral: 1,000KeDWS + 1,000KeDDS to referring DCD
+            case 'dcd_to_dcd':
+                // DCD to DCD Referral: 500KeDWS + 500KeDDS to referring DCD
                 $this->allocateShares(
                     $referrer,
-                    1000,
+                    500,
+                    $referrerTokens['dws'],
+                    'DCD referral bonus for registering DCD: ' . $referred->name
+                );
+                $this->allocateShares(
+                    $referrer,
+                    500,
+                    $referrerTokens['dds'],
+                    'DCD referral bonus for registering DCD: ' . $referred->name
+                );
+                // Allocate initial tokens to new DCD
+                $this->allocateInitialDcdTokens($referred);
+                break;
+                
+            case 'dcd_to_da':
+                // DCD to DA Referral: 200KeDWS + 200KeDDS to referring DCD
+                $this->allocateShares(
+                    $referrer,
+                    200,
                     $referrerTokens['dws'],
                     'DA referral bonus for registering DA: ' . $referred->name
                 );
                 $this->allocateShares(
                     $referrer,
-                    1000,
+                    200,
                     $referrerTokens['dds'],
                     'DA referral bonus for registering DA: ' . $referred->name
                 );

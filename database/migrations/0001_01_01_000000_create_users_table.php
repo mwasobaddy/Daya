@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone')->nullable();
             $table->string('national_id')->nullable()->unique();
-            $table->enum('role', ['da', 'dcd', 'client', 'admin'])->nullable();
+            $table->enum('role', ['da', 'dcd', 'client', 'admin', 'company'])->nullable();
             $table->string('referral_code')->unique()->nullable();
             $table->string('qr_code')->nullable();
             $table->string('wallet_status')->default('pending'); // pending, activated

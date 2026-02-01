@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('title');
             $table->decimal('budget', 10, 2);
             $table->string('county');
-            $table->enum('status', ['draft', 'submitted', 'under_review', 'approved', 'paid', 'live', 'completed', 'rejected'])->default('submitted');
+            $table->enum('status', ['draft', 'submitted', 'under_review', 'approved', 'active', 'live', 'completed', 'rejected'])->default('submitted');
             $table->json('details')->nullable(); // additional campaign data
             $table->timestamps();
         });

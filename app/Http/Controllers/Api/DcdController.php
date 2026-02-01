@@ -185,10 +185,16 @@ class DcdController extends Controller
 
         // Create referral record if referrer exists
         if ($referrer) {
+            $referralType = match($referrer->role) {
+                'da' => 'da_to_dcd',
+                'dcd' => 'dcd_to_dcd',
+                default => 'da_to_dcd'  // fallback
+            };
+            
             $referral = Referral::create([
                 'referrer_id' => $referrer->id,
                 'referred_id' => $user->id,
-                'type' => 'da_to_dcd',
+                'type' => $referralType,
             ]);
 
             // Allocate venture shares for the referral

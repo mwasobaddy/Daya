@@ -23,25 +23,37 @@ class AdminSeeder extends Seeder
                 'referral_code' => '7a3H4P',
                 'title' => 'System Administrator',
                 'department' => 'IT',
+                'role' => 'admin',
             ],
             [
-                'name' => 'Akinola Dixon',
-                'email' => 'akinola.dixon@gmail.com',
-                'phone' => '+1234567891',
-                'referral_code' => '8b4I5Q',
-                'title' => 'System Administrator',
-                'department' => 'Operations',
+                'name' => 'Daya',
+                'email' => 'company@example.com',
+                'phone' => '+1234567892',
+                'referral_code' => '9c5R6S',
+                'title' => 'Company Profile',
+                'department' => 'Company',
+                'role' => 'company',
             ],
+            // [
+            //     'name' => 'Akinola Dixon',
+            //     'email' => 'akinola.dixon@gmail.com',
+            //     'phone' => '+1234567891',
+            //     'referral_code' => '8b4I5Q',
+            //     'title' => 'System Administrator',
+            //     'department' => 'Operations',
+            // ],
         ];
 
         foreach ($admins as $adminData) {
+            $role = $adminData['role'] ?? 'admin';
+            
             // Update existing user or create new admin
             $admin = User::where('email', $adminData['email'])->first();
 
             if ($admin) {
                 // Update existing user to admin role
                 $admin->update([
-                    'role' => 'admin',
+                    'role' => $role,
                     'wallet_status' => 'activated',
                     'profile' => array_merge($admin->profile ?? [], [
                         'title' => $adminData['title'],
@@ -57,7 +69,7 @@ class AdminSeeder extends Seeder
                     'name' => $adminData['name'],
                     'email' => $adminData['email'],
                     'password' => Hash::make('password123'), // You should change this to a secure password
-                    'role' => 'admin',
+                    'role' => $role,
                     'phone' => $adminData['phone'],
                     'referral_code' => $adminData['referral_code'],
                     'ward_id' => 1, // Default to first ward

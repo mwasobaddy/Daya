@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             GeographicalDataSeeder::class,
             AdminSeeder::class,
             // DaSeeder::class,
+            TestCampaignSeeder::class,
         ]);
     }
 }

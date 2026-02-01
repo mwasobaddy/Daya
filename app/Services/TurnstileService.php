@@ -24,6 +24,12 @@ class TurnstileService
      */
     public function verify(string $token, ?string $ip = null): bool
     {
+        // Bypass Turnstile verification in development environment
+        if (app()->environment('local')) {
+            Log::info('Turnstile verification bypassed in development environment');
+            return true;
+        }
+
         if (empty($token)) {
             Log::warning('Turnstile verification failed: Empty token provided');
             return false;
@@ -83,6 +89,16 @@ class TurnstileService
      */
     public function verifyWithDetails(string $token, ?string $ip = null): array
     {
+        // Bypass Turnstile verification in development environment
+        if (app()->environment('local')) {
+            Log::info('Turnstile verification bypassed in development environment');
+            return [
+                'success' => true,
+                'bypassed' => true,
+                'environment' => 'development',
+            ];
+        }
+
         if (empty($token)) {
             return [
                 'success' => false,

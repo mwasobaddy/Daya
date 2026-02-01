@@ -128,13 +128,19 @@ export default function DaRegister() {
         wallet_pin: '',
         confirm_pin: '',
         terms: false,
-        turnstile_token: '',
+        turnstile_token: import.meta.env.DEV ? 'dev-bypass-token' : '',
     });
 
     // APP_URL is no longer used for redirects; constant removed to avoid linter errors
 
     // Initialize Turnstile when component mounts
     useEffect(() => {
+        // Skip Turnstile in development environment
+        if (import.meta.env.DEV) {
+            setTurnstileLoaded(true);
+            return;
+        }
+
         let timeoutId: NodeJS.Timeout;
         let scriptLoadListener: (() => void) | null = null;
 

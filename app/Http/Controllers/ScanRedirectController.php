@@ -25,18 +25,12 @@ class ScanRedirectController extends Controller
         $dcdId = (int) $request->query('dcd');
         $campaignId = (int) $request->query('campaign');
 
-        try {
-            // Record scan and then redirect user
-            $this->qrCodeService->recordCampaignScan($dcdId, $campaignId, null);
-
-            $campaign = \App\Models\Campaign::findOrFail($campaignId);
-
-            return redirect()->away($campaign->digital_product_link);
-        } catch (\Exception $e) {
-            // Log and show a friendly page or fallback
-            \Log::warning('Failed to record scan redirect: ' . $e->getMessage());
-            abort(400, 'Invalid scan');
-        }
+        // Instead of redirecting immediately, serve the fingerprinting page
+        return response()->view('scan-processing', [
+            'dcdId' => $dcdId,
+            'campaignId' => $campaignId,
+            'signature' => $request->query('signature')
+        ]);
     }
 
     /**
@@ -51,24 +45,11 @@ class ScanRedirectController extends Controller
 
         $dcdId = (int) $request->query('dcd');
 
-        try {
-            // Use smart campaign selection and record scan
-            $result = $this->qrCodeService->recordDcdScan($dcdId, null);
-            $campaign = $result['campaign'];
-
-            return redirect()->away($campaign->digital_product_link);
-        } catch (\Exception $e) {
-            // Log and show user-friendly message
-            \Log::warning('DCD QR scan error: ' . $e->getMessage(), [
-                'dcd_id' => $dcdId,
-                'user_agent' => $request->userAgent(),
-                'ip' => $request->ip()
-            ]);
-
-            // Show "no active campaigns" message using a simple view
-            return response()->view('errors.no-active-campaigns', [
-                'message' => 'No active campaigns right now, try again later'
-            ], 404);
-        }
+        // Instead of redirecting immediately, serve the fingerprinting page
+        return response()->view('scan-processing', [
+            'dcdId' => $dcdId,
+            'campaignId' => null, // Will be determined by smart selection
+            'signature' => $request->query('signature')
+        ]);
     }
 }

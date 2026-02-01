@@ -149,7 +149,7 @@ export default function CampaignSubmit({ flash }: Props) {
         // allow custom 'other' business type from targeting UI
         other_business_type: '',
         music_genres: [] as string[],
-        turnstile_token: '',
+        turnstile_token: import.meta.env.DEV ? 'dev-bypass-token' : '',
     });
 
     const clearFieldError = useCallback((field: string) => {
@@ -165,6 +165,12 @@ export default function CampaignSubmit({ flash }: Props) {
 
     // Initialize Turnstile when component mounts
     useEffect(() => {
+        // Skip Turnstile in development environment
+        if (import.meta.env.DEV) {
+            setTurnstileLoaded(true);
+            return;
+        }
+
         let timeoutId: NodeJS.Timeout;
         let scriptLoadListener: (() => void) | null = null;
 
