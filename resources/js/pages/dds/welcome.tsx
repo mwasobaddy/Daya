@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, FileText } from 'lucide-react';
-import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 export default function Welcome() {
 
@@ -16,13 +15,6 @@ export default function Welcome() {
                 />
             </Head>
             <div className="h-screen bg-background text-foreground overflow-y-auto bg-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700">
-                {/* Appearance Toggle
-                <div className="absolute top-4 right-4 z-50">
-                    <AppearanceToggleDropdown />
-                </div>
-
-                <div className="absolute inset-0 bg-black opacity-10"></div>
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div> */}
 
                 <div className="flex min-h-screen flex-col items-center bg-transparent p-6  text-slate-900 lg:justify-center lg:p-8 relative z-10">
                     {/* Logo Header */}
@@ -38,11 +30,6 @@ export default function Welcome() {
                             </h1>
                         </div>
                     </header>
-
-                    {/* Appearance Toggle */}
-                    <div className="absolute top-4 right-4 z-50">
-                        <AppearanceToggleDropdown />
-                    </div>
 
                     <main className="w-full max-w-4xl">
                         <div className="w-full">

@@ -11,7 +11,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church, Shield, AlertCircle } from 'lucide-react';
 import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 const { toast, ToastContainer } = ReactToastify;
 
@@ -171,7 +170,7 @@ export default function CampaignSubmit({ flash }: Props) {
             return;
         }
 
-        let timeoutId: NodeJS.Timeout;
+        const timeoutId: NodeJS.Timeout | null = null;
         let scriptLoadListener: (() => void) | null = null;
 
         const loadTurnstileScript = () => {
@@ -1678,10 +1677,6 @@ export default function CampaignSubmit({ flash }: Props) {
             <Head title="Submit Campaign" />
 
             <div className="h-screen bg-background text-foreground overflow-y-auto bg-white dark:from-slate-700 dark:via-slate-800 dark:to-slate-700 campaign-page">
-                {/* Appearance Toggle
-                <div className="absolute top-4 right-4 z-50">
-                    <AppearanceToggleDropdown />
-                </div> */}
 
                 <div className="absolute inset-0 bg-black opacity-10"></div>
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-100 dark:opacity-80"></div>
