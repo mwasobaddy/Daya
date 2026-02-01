@@ -21,7 +21,7 @@ class MatchUnassignedCampaigns extends Command
      *
      * @var string
      */
-    protected $description = 'Check for approved campaigns without assigned DCDs and attempt to match them';
+    protected $description = 'Check for active campaigns without assigned DCDs and attempt to match them';
 
     protected CampaignMatchingService $matchingService;
 
@@ -42,20 +42,20 @@ class MatchUnassignedCampaigns extends Command
             $this->info('🔍 Running in dry-run mode - no changes will be made');
         }
 
-        // Find approved campaigns that don't have a DCD assigned
+        // Find active campaigns that don't have a DCD assigned
         $unassignedCampaigns = Campaign::query()
-            ->where('status', 'approved')
+            ->where('status', 'active')
             ->whereNull('dcd_id')
-            ->orderBy('approved_at', 'asc')
+            ->orderBy('updated_at', 'asc') // Use updated_at since approved_at might not exist for active campaigns
             ->get();
 
         if ($unassignedCampaigns->isEmpty()) {
-            $this->info('✅ No unassigned approved campaigns found.');
+            $this->info('✅ No unassigned active campaigns found.');
             Log::info('campaigns:match-unassigned completed - no campaigns to process');
             return 0;
         }
 
-        $this->info("📋 Found {$unassignedCampaigns->count()} unassigned approved campaigns");
+        $this->info("📋 Found {$unassignedCampaigns->count()} unassigned active campaigns");
         
         $matchedCount = 0;
         $unmatchedCount = 0;
@@ -78,7 +78,10 @@ class MatchUnassignedCampaigns extends Command
             if ($assignedDcd) {
                 $matchedCount++;
                 $this->info("    ✅ Matched with DCD: {$assignedDcd->name} ({$assignedDcd->email})");
-                
+
+                // Send notifications
+                $this->sendMatchNotifications($campaign, $assignedDcd);
+
                 Log::info('Campaign matched with DCD', [
                     'campaign_id' => $campaign->id,
                     'dcd_id' => $assignedDcd->id,
@@ -136,5 +139,54 @@ class MatchUnassignedCampaigns extends Command
         ]);
 
         return 0;
+    }
+
+    /**
+     * Send notifications when a campaign is matched with a DCD
+     */
+    private function sendMatchNotifications(Campaign $campaign, $dcd): void
+    {
+        $client = $campaign->client;
+
+        // Notify the DCD
+        try {
+            \Illuminate\Support\Facades\Mail::to($dcd->email)
+                ->queue(new \App\Mail\CampaignAssigned($campaign, $client));
+        } catch (\Exception $e) {
+            Log::error('Failed to queue campaign assignment email to DCD', [
+                'dcd_email' => $dcd->email,
+                'campaign_id' => $campaign->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Notify the client
+        if ($client) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($client->email)
+                    ->queue(new \App\Mail\CampaignMatched($campaign, $dcd));
+            } catch (\Exception $e) {
+                Log::error('Failed to queue campaign matched email to client', [
+                    'client_email' => $client->email,
+                    'campaign_id' => $campaign->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Notify admins (get all admin users)
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($admin->email)
+                    ->queue(new \App\Mail\AdminCampaignMatched($campaign, $dcd, $client));
+            } catch (\Exception $e) {
+                Log::error('Failed to queue campaign matched email to admin', [
+                    'admin_email' => $admin->email,
+                    'campaign_id' => $campaign->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
     }
 }

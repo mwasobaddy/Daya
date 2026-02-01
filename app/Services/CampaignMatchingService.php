@@ -33,34 +33,13 @@ class CampaignMatchingService
             $startDate = $campaignMetadata['start_date'] ?? null;
             $endDate = $campaignMetadata['end_date'] ?? null;
             
-            // Build base query for DCDs that do not have overlapping campaigns
-            $baseQuery = User::where('role', 'dcd');
-            
-            if ($startDate && $endDate) {
-                $baseQuery->whereDoesntHave('assignedCampaigns', function ($q) use ($startDate, $endDate) {
-                    $q->whereIn('status', ['submitted', 'approved', 'active'])
-                      ->where(function ($dateQuery) use ($startDate, $endDate) {
-                          // Check for overlapping date ranges using SQLite compatible JSON
-                          if (config('database.default') === 'sqlite') {
-                              $dateQuery->whereRaw(
-                                  "(json_extract(metadata, '$.start_date') <= ? AND json_extract(metadata, '$.end_date') >= ?)",
-                                  [$endDate, $startDate]
-                              );
-                          } else {
-                              // MySQL version
-                              $dateQuery->whereRaw(
-                                  "(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.start_date')) <= ? AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.end_date')) >= ?)",
-                                  [$endDate, $startDate]
-                              );
-                          }
-                      });
-                });
-            } else {
-                // Fallback to old logic if dates not available
-                $baseQuery->whereDoesntHave('assignedCampaigns', function ($q) {
-                    $q->whereIn('status', ['submitted', 'approved', 'active']);
-                });
-            }
+            // Build base query for DCDs with less than 3 active campaigns
+            $baseQuery = User::where('role', 'dcd')
+                ->whereHas('assignedCampaigns', function ($q) {
+                    $q->where('status', 'live')
+                      ->whereRaw("JSON_EXTRACT(metadata, '$.start_date') <= ?", [now()->format('Y-m-d')])
+                      ->whereRaw("JSON_EXTRACT(metadata, '$.end_date') >= ?", [now()->format('Y-m-d')]);
+                }, '<', 3); // Max 3 active campaigns per DCD
 
             // Try business name exact match (case insensitive)
             if ($businessName) {
