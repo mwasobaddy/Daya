@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
@@ -58,8 +59,9 @@ Route::get('/qr/dcd', [\App\Http\Controllers\ScanRedirectController::class, 'han
     ->name('scan.dcd');
 
 // Scan error page
-Route::get('/scan-error', function () {
-    return view('scan-error');
+Route::get('/scan-error', function (Request $request) {
+    $errorType = $request->query('error_type', 'general_error');
+    return view('scan-error', compact('errorType'));
 })->name('scan.error');
 
 require __DIR__.'/settings.php';
