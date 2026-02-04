@@ -1182,7 +1182,7 @@ export default function DcdRegister() {
         { value: 'games', label: 'Games' },
         { value: 'mobile_apps', label: 'Mobile Apps' },
         { value: 'product_launch', label: 'Product Launch' },
-        { value: 'real_estate', label: 'Real Estate' },
+        { value: 'apartment_listing', label: 'Apartment Listing' },
         { value: 'surveys', label: 'Surveys' },
         { value: 'events', label: 'Events & Promotions' },
         { value: 'education', label: 'Education & Learning' },

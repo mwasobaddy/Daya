@@ -120,7 +120,7 @@ class CampaignMatchingService
                     'app_downloads' => 'mobile_apps',
                     'music_promotion' => 'music',
                     'product_launch' => 'product_launch', 
-                    'apartment_listing' => 'real_estate',
+                    'apartment_listing' => 'apartment_listing',
                     'event_promotion' => 'events',
                     'brand_awareness' => ['movies', 'games', 'mobile_apps'], // Brand awareness can work with multiple content types
                     'social_cause' => 'education', // Social causes often educational
