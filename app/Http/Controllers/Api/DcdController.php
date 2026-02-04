@@ -62,7 +62,7 @@ class DcdController extends Controller
 
             // Campaign Preferences
             'campaign_types' => 'required|array|min:1',
-            'campaign_types.*' => 'in:music,movies,games,mobile_apps,product_launch,surveys,events,education',
+            'campaign_types.*' => 'in:music,movies,games,mobile_apps,product_launch,real_estate,surveys,events,education',
 
             // Music Preferences
             'music_genres' => 'required_if:campaign_types.*,music|array',
