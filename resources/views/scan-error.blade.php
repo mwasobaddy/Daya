@@ -13,7 +13,6 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -202,9 +201,9 @@
         @endif
 
         <div class="error-actions">
-            <a href="javascript:window.history.back()" class="btn btn-primary">
+            {{-- <a href="javascript:window.history.back()" class="btn btn-primary">
                 🔄 Try Again
-            </a>
+            </a> --}}
             <a href="{{ url('/') }}" class="btn btn-secondary">
                 🏠 Go Home
             </a>
