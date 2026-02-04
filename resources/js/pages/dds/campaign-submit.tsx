@@ -91,6 +91,7 @@ const cpcMap: Record<string, number> = {
     'social_cause': 1,         // Light-Touch (basic)
     'app_downloads': 5,        // Moderate-Touch
     'product_launch': 5,       // Moderate-Touch
+    'apartment_listing': 5,    // Moderate-Touch
 };
 
 const getCostPerClick = (objective: string, countryCode: string): number => {

@@ -261,6 +261,9 @@ class ScanRewardService
             case 'product_launch':
                 $basePay = 5.0;
                 break;
+            case 'apartment_listing':
+                $basePay = 5.0;
+                break;
             case 'brand_awareness':
                 $basePay = $explainer ? 5.0 : 1.0;
                 break;

@@ -349,6 +349,7 @@ class ClientController extends Controller
             'music_promotion' => 1.0,
             'app_downloads' => 5.0,
             'product_launch' => 5.0,
+            'apartment_listing' => 5.0,
             'brand_awareness' => $explainerVideo ? 5.0 : 1.0,
             'event_promotion' => $explainerVideo ? 5.0 : 1.0,
             'social_cause' => $explainerVideo ? 5.0 : 1.0,
