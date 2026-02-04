@@ -1705,10 +1705,10 @@ export default function CampaignSubmit({ flash }: Props) {
                         </p> */}
 
 
-                        <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+                        {/* <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
                             <Sparkles className="w-5 h-5 mr-2" />
-                            <span className="text-sm font-medium">Join our community of influencers and earn rewards while promoting Daya across Africa</span>
-                        </div>
+                            <span className="text-sm font-medium">Join Africa's Leading Digital Network</span>
+                        </div> */}
 
                         <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                             Launch Your
@@ -1717,10 +1717,10 @@ export default function CampaignSubmit({ flash }: Props) {
                             </span>
                         </h1>
                     </div>
-
+{/* 
                     <p className="text-xl md:text-2xl  text-slate-900 max-w-3xl mx-auto mb-12 dark:text-slate-300">
                         Join our community of influencers and earn rewards while promoting Daya across Africa
-                    </p>
+                    </p> */}
 
                     <div className="mb-10 animate-in slide-in-from-top-5 duration-700">
                         <div className="relative">
