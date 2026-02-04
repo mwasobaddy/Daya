@@ -173,7 +173,7 @@
             @endif
         </p>
 
-        @if($errorType === 'no_campaigns' || $errorType === 'budget_exhausted')
+        {{-- @if($errorType === 'no_campaigns' || $errorType === 'budget_exhausted')
             <div class="error-details">
                 <strong>Details:</strong>
                 <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
@@ -181,7 +181,8 @@
                         <li>No active campaigns are currently assigned to this DCD</li>
                         <li>Campaigns may be scheduled for future dates or have ended</li>
                         <li>Please check back later for new campaign opportunities</li>
-                    @elseif($errorType === 'budget_exhausted')
+                    @endif
+                    @if($errorType === 'budget_exhausted')
                         <li>The campaign has reached its maximum scan limit</li>
                         <li>All allocated budget has been utilized</li>
                         <li>The campaign has been automatically completed</li>
@@ -191,7 +192,8 @@
                     Timestamp: {{ now()->format('Y-m-d H:i:s T') }}
                 </p>
             </div>
-        @else
+        @endif --}}
+        @if($errorType === 'general_error' || $errorType === 'system_error')
             <div class="error-details">
                 <strong>Possible causes:</strong>
                 <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
