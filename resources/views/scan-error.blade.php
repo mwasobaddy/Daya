@@ -142,9 +142,9 @@
 </head>
 <body>
     <div class="error-container">
-        <div class="error-icon">
+        {{-- <div class="error-icon">
             ⚠️
-        </div>
+        </div> --}}
 
         <h1 class="error-title">
             @if($errorType === 'no_campaigns')
