@@ -8,7 +8,7 @@ import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church, Shield, AlertCircle } from 'lucide-react';
+import { CheckCircle, Loader2, User, Briefcase, Target, CheckSquare, ArrowRight, ArrowLeft, Sparkles, Rocket, XCircle, Palette, Music, Handshake, Building, Phone, Megaphone, PartyPopper, Heart, Building2, HandPlatter, Utensils, HandCoins, CarTaxiFront, Church, Shield, AlertCircle, Home } from 'lucide-react';
 import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -1095,8 +1095,9 @@ export default function CampaignSubmit({ flash }: Props) {
                                             <SelectItem value="app_downloads"><Phone /> App Downloads</SelectItem>
                                             <SelectItem value="brand_awareness"><Megaphone /> Brand Awareness</SelectItem>
                                             <SelectItem value="product_launch"><Rocket /> Product Launch</SelectItem>
+                                            <SelectItem value="apartment_listing"><Home /> Apartment Listing</SelectItem>
                                             <SelectItem value="event_promotion"><PartyPopper /> Event Promotion</SelectItem>
-                                            <SelectItem value="social_cause"><Heart /> Surveys</SelectItem>
+                                            <SelectItem value="social_cause"><Heart /> Social Cause</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <InputError message={errors.campaign_objective} />
