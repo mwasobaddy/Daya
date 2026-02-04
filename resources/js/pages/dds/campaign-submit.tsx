@@ -1097,7 +1097,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                             <SelectItem value="product_launch"><Rocket /> Product Launch</SelectItem>
                                             <SelectItem value="apartment_listing"><Home /> Apartment Listing</SelectItem>
                                             <SelectItem value="event_promotion"><PartyPopper /> Event Promotion</SelectItem>
-                                            <SelectItem value="social_cause"><Heart /> Social Cause</SelectItem>
+                                            <SelectItem value="social_cause"><Heart /> Surveys</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <InputError message={errors.campaign_objective} />
