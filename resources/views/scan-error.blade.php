@@ -147,21 +147,59 @@
             ⚠️
         </div>
 
-        <h1 class="error-title">Scan Processing Failed</h1>
+        <h1 class="error-title">
+            @if($errorType === 'no_campaigns')
+                No Campaigns Available
+            @elseif($errorType === 'budget_exhausted')
+                Campaign Budget Exhausted
+            @elseif($errorType === 'system_error')
+                System Error
+            @else
+                Scan Processing Failed
+            @endif
+        </h1>
 
         <p class="error-message">
-            We encountered an issue while processing your QR code scan. This could be due to a network error, invalid QR code, or system maintenance.
+            @if($errorType === 'no_campaigns')
+                There are currently no active campaigns available for this Digital Content Distributor. Please try again later or contact support for more information.
+            @elseif($errorType === 'budget_exhausted')
+                The selected campaign has reached its budget limit and is no longer accepting new scans. Please try scanning a different QR code.
+            @elseif($errorType === 'system_error')
+                We encountered a system error while processing your scan. Our technical team has been notified and is working to resolve this issue.
+            @else
+                We encountered an issue while processing your QR code scan. This could be due to a network error, invalid QR code, or system maintenance.
+            @endif
         </p>
 
-        <div class="error-details">
-            <strong>Possible causes:</strong>
-            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
-                <li>Network connectivity issues</li>
-                <li>Invalid or expired QR code</li>
-                <li>Campaign no longer active</li>
-                <li>System temporarily unavailable</li>
-            </ul>
-        </div>
+        @if($errorType === 'no_campaigns' || $errorType === 'budget_exhausted')
+            <div class="error-details">
+                <strong>Details:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                    @if($errorType === 'no_campaigns')
+                        <li>No active campaigns are currently assigned to this DCD</li>
+                        <li>Campaigns may be scheduled for future dates or have ended</li>
+                        <li>Please check back later for new campaign opportunities</li>
+                    @elseif($errorType === 'budget_exhausted')
+                        <li>The campaign has reached its maximum scan limit</li>
+                        <li>All allocated budget has been utilized</li>
+                        <li>The campaign has been automatically completed</li>
+                    @endif
+                </ul>
+                <p style="margin-top: 1rem; font-weight: bold;">
+                    Timestamp: {{ now()->format('Y-m-d H:i:s T') }}
+                </p>
+            </div>
+        @else
+            <div class="error-details">
+                <strong>Possible causes:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                    <li>Network connectivity issues</li>
+                    <li>Invalid or expired QR code</li>
+                    <li>Campaign no longer active</li>
+                    <li>System temporarily unavailable</li>
+                </ul>
+            </div>
+        @endif
 
         <div class="error-actions">
             <a href="javascript:window.history.back()" class="btn btn-primary">
@@ -174,21 +212,31 @@
 
         <div class="support-info">
             <p>
-                If this problem persists, please contact our support team at
+                @if($errorType === 'no_campaigns')
+                    Please check back later for new campaign opportunities. If you believe this is an error, contact our support team.
+                @elseif($errorType === 'budget_exhausted')
+                    Try scanning a different QR code from another Digital Content Distributor. Contact support if you need assistance.
+                @else
+                    If this problem persists, please contact our support team at
+                @endif
                 <a href="mailto:support@daya.com">support@daya.com</a>
             </p>
-            <p style="margin-top: 0.5rem;">
-                <small>Error occurred at: {{ now()->format('Y-m-d H:i:s T') }}</small>
-            </p>
+            @if($errorType !== 'no_campaigns' && $errorType !== 'budget_exhausted')
+                <p style="margin-top: 0.5rem;">
+                    <small>Error occurred at: {{ now()->format('Y-m-d H:i:s T') }}</small>
+                </p>
+            @endif
         </div>
     </div>
 
     <script>
-        // Auto-retry logic for certain errors
+        // Auto-retry logic for transient errors only
         const urlParams = new URLSearchParams(window.location.search);
         const retry = urlParams.get('retry');
+        const errorType = urlParams.get('error_type') || 'general_error';
 
-        if (!retry && window.history.length > 1) {
+        // Only retry for transient errors (general_error, system_error)
+        if (!retry && window.history.length > 1 && (errorType === 'general_error' || errorType === 'system_error')) {
             // Add retry parameter and redirect back after 3 seconds
             setTimeout(() => {
                 const currentUrl = new URL(window.location);
