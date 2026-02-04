@@ -33,7 +33,7 @@ test('dcd scan redirect finds active campaign and redirects to product', functio
         'objectives' => 'Test objectives',
         'campaign_objective' => 'brand_awareness',
         'digital_product_link' => 'https://example.com',
-        'status' => 'approved',
+        'status' => 'live',
         'metadata' => [
             'business_name' => 'TestDcd', 
             'business_types' => ['business'],
@@ -97,6 +97,7 @@ test('dcd scan redirect shows no active campaigns message when no campaigns', fu
     $apiResponse->assertStatus(400);
     $apiResponse->assertJson([
         'message' => 'No active campaigns found for this DCD',
+        'error_type' => 'no_campaigns',
     ]);
 });
 
@@ -153,5 +154,6 @@ test('dcd scan redirect shows no active campaigns when campaign is expired', fun
     $apiResponse->assertStatus(400);
     $apiResponse->assertJson([
         'message' => 'No active campaigns found for this DCD',
+        'error_type' => 'no_campaigns',
     ]);
 });
