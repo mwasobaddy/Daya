@@ -166,10 +166,25 @@ class ScanController extends Controller
                 'redirect_url' => $redirectUrl,
             ]);
         } catch (\InvalidArgumentException $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            $errorType = 'general_error';
+            $message = $e->getMessage();
+            
+            if (str_contains($message, 'No active campaigns found for this DCD')) {
+                $errorType = 'no_campaigns';
+            } elseif (str_contains($message, 'Campaign has reached its budget limit')) {
+                $errorType = 'budget_exhausted';
+            }
+            
+            return response()->json([
+                'message' => $message,
+                'error_type' => $errorType
+            ], 400);
         } catch (\Exception $e) {
             \Log::error('Fingerprint scan recording failed: ' . $e->getMessage());
-            return response()->json(['message' => 'Scan recording failed'], 500);
+            return response()->json([
+                'message' => 'Scan recording failed',
+                'error_type' => 'system_error'
+            ], 500);
         }
     }
 }
