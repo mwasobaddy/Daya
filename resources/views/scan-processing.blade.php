@@ -54,7 +54,15 @@
                 })
 
                 if (!response.ok) {
-                    throw new Error('Failed to record scan')
+                    // Try to get error details from response
+                    let errorType = 'general_error';
+                    try {
+                        const errorData = await response.json();
+                        errorType = errorData.error_type || 'general_error';
+                    } catch (e) {
+                        // If we can't parse JSON, keep default error type
+                    }
+                    throw new Error(`Failed to record scan: ${errorType}`);
                 }
 
                 const result = await response.json()
@@ -64,8 +72,11 @@
 
             } catch (error) {
                 console.error('Scan processing failed:', error)
-                // Fallback: redirect to a default page or show error
-                window.location.href = '/scan-error'
+                // Extract error type from error message if available
+                const errorMatch = error.message.match(/Failed to record scan: (\w+)/);
+                const errorType = errorMatch ? errorMatch[1] : 'general_error';
+                // Redirect to error page with error type
+                window.location.href = `/scan-error?error_type=${errorType}`
             }
         }
 
