@@ -154,22 +154,23 @@ test('does not select dcd with an active campaign', function () {
         'ward_id' => $ward->id,
     ]);
 
-    // Create an active campaign for this dcd
-    Campaign::create([
-        'client_id' => $client->id,
-        'dcd_id' => $dcd->id,
-        'title' => 'Existing Active Campaign',
-
-        'budget' => 200,
-        'county' => 'Example County',
-        'target_audience' => 'General Audience',
-        'duration' => '2025-11-17 to 2025-11-20',
-        'objectives' => 'Test objectives',
-        'campaign_objective' => 'brand_awareness',
-        'digital_product_link' => 'https://example.com',
-        'status' => 'approved',
-        'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business']],
-    ]);
+    // Create 3 active campaigns for this dcd (reaching the limit)
+    for ($i = 1; $i <= 3; $i++) {
+        Campaign::create([
+            'client_id' => $client->id,
+            'dcd_id' => $dcd->id,
+            'title' => 'Existing Active Campaign ' . $i,
+            'budget' => 200,
+            'county' => 'Example County',
+            'target_audience' => 'General Audience',
+            'duration' => '2025-11-17 to 2025-11-20',
+            'objectives' => 'Test objectives',
+            'campaign_objective' => 'brand_awareness',
+            'digital_product_link' => 'https://example.com',
+            'status' => 'live',
+            'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business'], 'start_date' => now()->format('Y-m-d'), 'end_date' => now()->addDays(30)->format('Y-m-d')],
+        ]);
+    }
 
     $campaign = Campaign::create([
         'client_id' => $client->id,
