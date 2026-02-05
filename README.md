@@ -718,7 +718,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
-- **Email**: support@daya.africa
+- **Email**: support@dayadistribution.com
 - **Documentation**: [PRD.md](PRD.md), [DAILY_DIGEST_DOCUMENTATION.md](DAILY_DIGEST_DOCUMENTATION.md)
 - **Issues**: GitHub Issues
 

@@ -1827,8 +1827,8 @@ export default function CampaignSubmit({ flash }: Props) {
                                 <div className="mt-8 text-center p-4 bg-gray-50 rounded-xl">
                                     <p className="text-sm text-gray-600">
                                         <strong className="text-gray-900">Need help?</strong> Contact our support team at{' '}
-                                        <a href="mailto:support@daya.africa" className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors">
-                                            support@daya.africa
+                                        <a href="mailto:support@dayadistribution.com" className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors">
+                                            support@dayadistribution.com
                                         </a>
                                     </p>
                                 </div>

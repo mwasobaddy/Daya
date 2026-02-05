@@ -2175,8 +2175,8 @@ export default function DcdRegister() {
                                 <div className="mb-8 text-center p-4 bg-gray-50 rounded-xl dark:bg-slate-700">
                                     <p className="text-sm text-gray-600 dark:text-slate-300">
                                         <strong className="text-gray-900 dark:text-slate-100">Need help?</strong> Contact our support team at{' '}
-                                        <a href="mailto:support@daya.africa" className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors dark:text-blue-400 dark:hover:text-blue-300">
-                                            support@daya.africa
+                                        <a href="mailto:support@dayadistribution.com" className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors dark:text-blue-400 dark:hover:text-blue-300">
+                                            support@dayadistribution.com
                                         </a>
                                     </p>
                                 </div>
@@ -2208,10 +2208,10 @@ export default function DcdRegister() {
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <a
-                                    href="mailto:support@daya.africa"
+                                    href="mailto:support@dayadistribution.com"
                                     className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500  text-slate-900 rounded-lg hover:from-blue-600 hover:to-green-600 transition-all shadow-md hover:shadow-lg dark:from-blue-600 dark:to-green-600 dark:hover:from-blue-700 dark:hover:to-green-700"
                                 >
-                                    📧 support@daya.africa
+                                    📧 support@dayadistribution.com
                                 </a>
                             </div>
                         </div>

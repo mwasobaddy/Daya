@@ -183,7 +183,7 @@
             </div>
 
             <div class="section">
-                <p>If you have any questions or need support, contact us at <a href="mailto:ambassadorsupport@daya.africa" style="color: #4f46e5; text-decoration: none;">ambassadorsupport@daya.africa</a>.</p>
+                <p>If you have any questions or need support, contact us at <a href="mailto:ambassadorsupport@dayadistribution.com" style="color: #4f46e5; text-decoration: none;">ambassadorsupport@dayadistribution.com</a>.</p>
                 <p><strong>Keep building 💪🏾</strong></p>
                 <p>The Daya Team</p>
             </div>

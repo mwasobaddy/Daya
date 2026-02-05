@@ -32,7 +32,7 @@
 
             <p>These venture shares represent your earned participation on the platform and can be redeemed for various benefits within the Daya ecosystem. Keep referring more members to grow your balances and unlock additional value.</p>
 
-            <p>If you have any questions regarding your venture shares or referrals, please reach out to us at ambassadorsupport@daya.africa.</p>
+            <p>If you have any questions regarding your venture shares or referrals, please reach out to us at ambassadorsupport@dayadistribution.com.</p>
 
             <p>Best regards,<br>
             The Daya Team</p>

@@ -223,7 +223,7 @@
                 @else
                     If this problem persists, please contact our support team at
                 @endif
-                <a href="mailto:support@daya.com">support@daya.com</a>
+                <a href="mailto:support@dayadistribution.com">support@dayadistribution.com</a>
             </p>
             @if($errorType !== 'no_campaigns' && $errorType !== 'budget_exhausted')
                 <p style="margin-top: 0.5rem;">
