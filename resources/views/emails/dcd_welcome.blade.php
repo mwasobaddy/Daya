@@ -52,6 +52,17 @@
                 <li>Track your earnings through monthly reports sent to this email</li>
             </ul>
 
+            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #856404; margin-top: 0;">🎯 Your Referral Program</h3>
+                <p><strong>Earn additional income by referring new DCDs to the Daya network!</strong></p>
+                <p>Your unique referral code: <strong style="font-family: monospace; background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px;">{{ $user->referral_code ?? 'DCD-' . $user->id }}</strong></p>
+                <p>Share this referral link with potential DCDs:</p>
+                <p style="word-break: break-all; font-family: monospace; background-color: #f8f9fa; padding: 10px; border-radius: 3px; border: 1px solid #dee2e6;">
+                    {{ url('/register?dcd_ref=' . ($user->referral_code ?? 'DCD-' . $user->id)) }}
+                </p>
+                <p><em>When someone registers using your referral code, you'll earn a commission on their future earnings!</em></p>
+            </div>
+
             <p>Stay tuned for your first campaign assignment and start earning!</p>
 
             <p>Best regards,<br>
