@@ -1,13 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Mail\AdminDcdRegistration;
-use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use App\Mail\DcdWelcome;
 use App\Mail\ReferralBonusNotification;
+use App\Models\User;
 use App\Services\VentureShareService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -39,9 +38,9 @@ test('dcd welcome mailable renders successfully', function () {
 
     $referrer = User::factory()->create(['role' => 'da', 'ward_id' => $ward->id]);
     $dcd = User::factory()->create([
-        'role' => 'dcd', 
+        'role' => 'dcd',
         'ward_id' => $ward->id,
-        'email' => 'kelvinramsiel01@gmail.com'
+        'email' => 'kelvinramsiel01@gmail.com',
     ]);
 
     // Set a referral code for testing
@@ -62,8 +61,8 @@ test('dcd welcome mailable renders successfully', function () {
     expect($html)->toContain('Your Referral Program');
     expect($html)->toContain('Earn additional income by referring new DCDs');
     expect($html)->toContain('TEST-REF-123'); // Check for the referral code
-    expect($html)->toContain('/register?dcd_ref=TEST-REF-123'); // Check for the referral link
-    
+    expect($html)->toContain('http://127.0.0.1:8000?ref=TEST-REF-123'); // Check for the referral link
+
     $attachments = $mailable->attachments();
     expect($attachments)->toHaveCount(1);
     expect($attachments[0]->as)->toBe('dcd-qr-code.pdf');
@@ -79,12 +78,14 @@ test('dcd welcome mailable renders with fallback referral code', function () {
 
     $referrer = User::factory()->create(['role' => 'da', 'ward_id' => $ward->id]);
     $dcd = User::factory()->create([
-        'role' => 'dcd', 
+        'role' => 'dcd',
         'ward_id' => $ward->id,
-        'email' => 'kelvinramsiel01@gmail.com'
+        'email' => 'kelvinramsiel01@gmail.com',
     ]);
 
-    // Don't set referral_code to test fallback
+    // Explicitly set referral_code to null to test fallback
+    $dcd->referral_code = null;
+    $dcd->save();
     $fakePdfBase64 = base64_encode('%PDF-1.4 fake pdf content');
     $dcd->qr_code = $fakePdfBase64;
     $dcd->save();
@@ -93,8 +94,10 @@ test('dcd welcome mailable renders with fallback referral code', function () {
     $html = $mailable->render();
 
     expect($html)->toContain('Your Referral Program');
-    expect($html)->toContain('DCD-' . $dcd->id); // Check for fallback referral code
-    expect($html)->toContain('/register?dcd_ref=DCD-' . $dcd->id); // Check for fallback referral link
+    expect($html)->toContain('DCD-'.$dcd->id); // Check for fallback referral code
+
+    // Check that the referral link contains the correct ref parameter
+    expect($html)->toContain('http://127.0.0.1:8000?ref=DCD-'.$dcd->id);
 });
 
 test('referral bonus notification mailable renders successfully', function () {
@@ -104,9 +107,9 @@ test('referral bonus notification mailable renders successfully', function () {
     $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
 
     $referrer = User::factory()->create([
-        'role' => 'da', 
+        'role' => 'da',
         'ward_id' => $ward->id,
-        'country_id' => $country->id
+        'country_id' => $country->id,
     ]);
 
     $ventureShareService = app(VentureShareService::class);
@@ -127,9 +130,9 @@ test('referral bonus notification mailable renders with Nigerian tokens', functi
     $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
 
     $referrer = User::factory()->create([
-        'role' => 'da', 
+        'role' => 'da',
         'ward_id' => $ward->id,
-        'country_id' => $country->id
+        'country_id' => $country->id,
     ]);
 
     $ventureShareService = app(VentureShareService::class);

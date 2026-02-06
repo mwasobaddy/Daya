@@ -3,12 +3,10 @@
 use App\Models\AdminAction;
 use App\Models\Campaign;
 use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use App\Services\CampaignMatchingService;
 use App\Services\QRCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -36,7 +34,11 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
         'campaign_objective' => 'brand_awareness',
         'digital_product_link' => 'https://example.com',
         'status' => 'under_review',
-        'metadata' => ['business_name' => 'ShopsRUs', 'business_types' => ['business']],
+        'metadata' => [
+            'business_name' => 'ShopsRUs',
+            'business_types' => ['business'],
+            'start_date' => now()->format('Y-m-d'), // Add start_date for auto-assignment
+        ],
     ]);
 
     // Make an adminAction record
@@ -59,8 +61,8 @@ test('admin approval auto-assigns a dcd and generates qr', function () {
 
     $campaign->refresh();
     expect($campaign->dcd_id)->toBe($dcd->id);
-    
-    // Verify DCD retains existing QR code 
+
+    // Verify DCD retains existing QR code
     $dcd->refresh();
     expect($dcd->qr_code)->toBe('qr-codes/existing-dcd-qr.svg');
 });

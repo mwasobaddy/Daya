@@ -1,8 +1,8 @@
 <?php
 
-use App\Services\QRCodeService;
-use App\Models\User;
 use App\Models\Campaign;
+use App\Models\User;
+use App\Services\QRCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -25,15 +25,16 @@ test('smart campaign selection finds active campaign for dcd', function () {
         'title' => 'Active Campaign',
 
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => "$today to $tomorrow",
         'objectives' => 'Test objectives',
         'campaign_objective' => 'brand_awareness',
         'digital_product_link' => 'https://example.com',
-        'status' => 'approved',
+        'status' => 'live',
         'metadata' => [
-            'business_name' => 'TestDcd', 
+            'business_name' => 'TestDcd',
             'business_types' => ['business'],
             'start_date' => $today,
             'end_date' => $tomorrow,
@@ -56,8 +57,8 @@ test('smart campaign selection throws exception when no active campaigns', funct
     $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'TestDcd', 'account_type' => 'business', 'ward_id' => $ward->id]);
 
     $svc = app(QRCodeService::class);
-    
-    expect(fn() => $svc->recordDcdScan($dcd->id, null))
+
+    expect(fn () => $svc->recordDcdScan($dcd->id, null))
         ->toThrow(\InvalidArgumentException::class, 'No active campaigns found for this DCD');
 });
 
@@ -79,15 +80,16 @@ test('smart campaign selection prioritizes oldest campaigns first', function () 
         'title' => 'Newer Campaign',
 
         'budget' => 200,
+        'campaign_credit' => 200,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => "$today to $tomorrow",
         'objectives' => 'Test objectives',
         'campaign_objective' => 'brand_awareness',
         'digital_product_link' => 'https://newer.example.com',
-        'status' => 'approved',
+        'status' => 'live',
         'metadata' => [
-            'business_name' => 'TestDcd', 
+            'business_name' => 'TestDcd',
             'business_types' => ['business'],
             'start_date' => $today,
             'end_date' => $tomorrow,
@@ -101,15 +103,16 @@ test('smart campaign selection prioritizes oldest campaigns first', function () 
         'title' => 'Older Campaign',
 
         'budget' => 100,
+        'campaign_credit' => 100,
         'county' => 'Example County',
         'target_audience' => 'General Audience',
         'duration' => "$today to $tomorrow",
         'objectives' => 'Test objectives',
         'campaign_objective' => 'brand_awareness',
         'digital_product_link' => 'https://older.example.com',
-        'status' => 'approved',
+        'status' => 'live',
         'metadata' => [
-            'business_name' => 'TestDcd', 
+            'business_name' => 'TestDcd',
             'business_types' => ['business'],
             'start_date' => $today,
             'end_date' => $tomorrow,
