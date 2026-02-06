@@ -759,7 +759,7 @@ export default function CampaignSubmit({ flash }: Props) {
             emoji: <HandPlatter />,
             cardClass: '',
             titleClass: 'font-semibold text-sm mb-3 text-orange-500 flex items-center gap-2',
-            types: ['salon', 'barber_shop', 'beauty_parlour', 'tailor', 'uber', 'shoe_repair', 'photography_studio', 'printing_cyber', 'laundry'],
+            types: ['salon', 'barber_shop', 'beauty_parlour', 'tailor', 'shoe_repair', 'photography_studio', 'printing_cyber', 'laundry'],
         },
         {
             id: 'food',
@@ -783,7 +783,7 @@ export default function CampaignSubmit({ flash }: Props) {
             emoji: <CarTaxiFront />,
             cardClass: '',
             titleClass: 'font-semibold text-sm mb-3 text-orange-500 flex items-center gap-2',
-            types: ['boda_boda', 'matatu_sacco', 'fuel_station', 'car_wash'],
+            types: ['boda_boda', 'matatu_sacco', 'fuel_station', 'uber', 'car_wash'],
         },
         {
             id: 'community',

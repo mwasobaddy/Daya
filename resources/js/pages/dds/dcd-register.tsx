@@ -1172,7 +1172,7 @@ export default function DcdRegister() {
         { value: 'stationery', label: 'Stationery', category: 'retail' },
         { value: 'tailor', label: 'Tailor', category: 'services' },
         { value: 'taxi_airport', label: 'Taxi (Airport)', category: 'transport' },
-        { value: 'uber', label: 'Uber', category: 'services' },
+        { value: 'uber', label: 'Uber', category: 'transport' },
         { value: 'wholesale_shop', label: 'Wholesale Shop', category: 'retail' },
     ];
 
