@@ -39,7 +39,7 @@
                 <li>Submit final results when complete</li>
             </ul>
 
-            <p><strong>Potential Earnings:</strong> You can earn up to 20% commission on this campaign budget.</p>
+            <p><strong>Potential Earnings:</strong> You can earn up to 60% commission on this campaign budget.</p>
 
             <p>Good luck with your campaign!</p>
 
