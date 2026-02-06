@@ -48,7 +48,7 @@
                 <li>Wait for campaign assignments to be sent to your email</li>
                 <li>When assigned a campaign, you'll use your personal QR code (attached) for customer interactions</li>
                 <li>Display your QR code prominently and direct customers to scan it</li>
-                <li>You earn commissions on successful campaign completions (up to 20% of campaign budget)</li>
+                <li>You earn commissions on successful campaign completions (up to 60% of campaign budget)</li>
                 <li>Track your earnings through monthly reports sent to this email</li>
             </ul>
 
@@ -58,9 +58,8 @@
                 <p>Your unique referral code: <strong style="font-family: monospace; background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px;">{{ $user->referral_code ?? 'DCD-' . $user->id }}</strong></p>
                 <p>Share this referral link with potential DCDs:</p>
                 <p style="word-break: break-all; font-family: monospace; background-color: #f8f9fa; padding: 10px; border-radius: 3px; border: 1px solid #dee2e6;">
-                    {{ url('/register?dcd_ref=' . ($user->referral_code ?? 'DCD-' . $user->id)) }}
+                    <div class="referral-link">{{ url('/?ref=' . $user->referral_code) }}</div>
                 </p>
-                <p><em>When someone registers using your referral code, you'll earn a commission on their future earnings!</em></p>
             </div>
 
             <p>Stay tuned for your first campaign assignment and start earning!</p>
