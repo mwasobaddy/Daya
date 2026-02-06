@@ -93,7 +93,7 @@ class CreateTestDcd extends Command
                 'password' => bcrypt('1234'),
                 'role' => 'dcd',
                 'national_id' => 'TEST' . rand(1000, 9999),
-                'phone' => '+1234567890',
+                'phone' => '+1' . rand(100000000, 999999999),
                 'country_id' => $ward->subcounty->county->country->id,
                 'county_id' => $ward->subcounty->county->id,
                 'subcounty_id' => $ward->subcounty->id,
