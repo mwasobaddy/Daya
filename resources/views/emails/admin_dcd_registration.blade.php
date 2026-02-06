@@ -48,21 +48,21 @@
                 </div>
                 <div class="detail-row">
                     <span class="label">Country:</span>
-                    <span class="value">{{ ($user->country_id && \App\Models\Country::find($user->country_id)) ? \App\Models\Country::find($user->country_id)->name : ($user->profile['country_id'] ? \App\Models\Country::find($user->profile['country_id'])->name : 'N/A') }}</span>
+                    <span class="value">{{ ($user->country_id && \App\Models\Country::find($user->country_id)) ? \App\Models\Country::find($user->country_id)->name : (($user->profile['country_id'] ?? null) ? \App\Models\Country::find($user->profile['country_id'])->name : 'N/A') }}</span>
                 </div>
                 
                 <div class="detail-row">
                     <span class="label">County:</span>
-                    <span class="value">{{ ($user->county_id && \App\Models\County::find($user->county_id)) ? \App\Models\County::find($user->county_id)->name : ($user->profile['county_id'] ? \App\Models\County::find($user->profile['county_id'])->name : 'N/A') }}</span>
+                    <span class="value">{{ ($user->county_id && \App\Models\County::find($user->county_id)) ? \App\Models\County::find($user->county_id)->name : (($user->profile['county_id'] ?? null) ? \App\Models\County::find($user->profile['county_id'])->name : 'N/A') }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Subcounty:</span>
-                    <span class="value">{{ ($user->subcounty_id && \App\Models\Subcounty::find($user->subcounty_id)) ? \App\Models\Subcounty::find($user->subcounty_id)->name : ($user->profile['subcounty_id'] ? \App\Models\Subcounty::find($user->profile['subcounty_id'])->name : 'N/A') }}</span>
+                    <span class="value">{{ ($user->subcounty_id && \App\Models\Subcounty::find($user->subcounty_id)) ? \App\Models\Subcounty::find($user->subcounty_id)->name : (($user->profile['subcounty_id'] ?? null) ? \App\Models\Subcounty::find($user->profile['subcounty_id'])->name : 'N/A') }}</span>
                 </div>
 
                 <div class="detail-row">
                     <span class="label">Ward:</span>
-                    <span class="value">{{ ($user->ward_id && \App\Models\Ward::find($user->ward_id)) ? \App\Models\Ward::find($user->ward_id)->name : ($user->profile['ward_id'] ? \App\Models\Ward::find($user->profile['ward_id'])->name : 'N/A') }}</span>
+                    <span class="value">{{ ($user->ward_id && \App\Models\Ward::find($user->ward_id)) ? \App\Models\Ward::find($user->ward_id)->name : (($user->profile['ward_id'] ?? null) ? \App\Models\Ward::find($user->profile['ward_id'])->name : 'N/A') }}</span>
                 </div>
             </div>
 
