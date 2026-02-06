@@ -22,7 +22,7 @@ class CreateTestDcd extends Command
      *
      * @var string
      */
-    protected $signature = 'dcd:create-test {email : The email address for the test DCD}';
+    protected $signature = 'dcd:create-test {email : The email address for the test DCD} {--referrer= : The referrer DCD email}';
 
     /**
      * The console command description.
@@ -47,14 +47,31 @@ class CreateTestDcd extends Command
     public function handle()
     {
         $email = $this->argument('email');
+        $referrerEmail = $this->option('referrer');
 
         $this->info("Creating test DCD with email: {$email}");
+        if ($referrerEmail) {
+            $this->info("With referrer: {$referrerEmail}");
+        }
 
         try {
             // Check if user already exists
             if (User::where('email', $email)->exists()) {
                 $this->error("User with email {$email} already exists!");
                 return;
+            }
+
+            // Find referrer if provided
+            $referrer = null;
+            $referralCode = null;
+            if ($referrerEmail) {
+                $referrer = User::where('email', $referrerEmail)->first();
+                if (!$referrer) {
+                    $this->error("Referrer with email {$referrerEmail} not found!");
+                    return;
+                }
+                $referralCode = $referrer->referral_code;
+                $this->info("Using referral code: {$referralCode}");
             }
 
             // Get test data
@@ -113,8 +130,31 @@ class CreateTestDcd extends Command
             $qrFilename = $this->qrCodeService->generateDcdQr($user);
             $user->update(['qr_code' => $qrFilename]);
 
-            // No referrer for test
-            $referrer = null;
+            // Create referral record if referrer exists
+            if ($referrer) {
+                $referralType = match($referrer->role) {
+                    'da' => 'da_to_dcd',
+                    'dcd' => 'dcd_to_dcd',
+                    default => 'da_to_dcd'  // fallback
+                };
+                
+                $referral = \App\Models\Referral::create([
+                    'referrer_id' => $referrer->id,
+                    'referred_id' => $user->id,
+                    'type' => $referralType,
+                ]);
+
+                // Allocate venture shares for the referral
+                $this->ventureShareService->allocateSharesForReferral($referral);
+
+                // Notify referrer of venture share update
+                $this->info('Sending referral bonus notification to referrer...');
+                try {
+                    \Mail::to($referrer->email)->send(new ReferralBonusNotification($referrer, $this->ventureShareService));
+                } catch (\Exception $e) {
+                    $this->error('Failed to send referral bonus notification: ' . $e->getMessage());
+                }
+            }
 
             // Send welcome email
             $this->info('Sending welcome email...');
