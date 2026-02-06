@@ -36,14 +36,14 @@
 
             <div class="token-highlight">
                 <h2 style="margin: 0 0 15px 0; color: #27ae60;">💰 Your Welcome Bonus</h2>
-                <div class="token-amount">1000 {{ $tokenNames['dds'] }} Tokens</div>
+                <div class="token-type">1000 {{ $tokenNames['dds'] }} Tokens</div>
                 <div class="token-type">1000 {{ $tokenNames['dws'] }} Tokens</div>
                 <p style="margin: 15px 0 0 0; color: #155724; font-size: 14px;">Ready to start earning from day one!</p>
             </div>
 
             <div class="balance-card">
                 <h3 style="margin-top: 0;"><span class="icon">💎</span>Your Current Token Balance</h3>
-                <div style="display: flex; justify-content: space-between; margin: 15px 0; flex-direction: row; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; margin: 15px 0; flex-direction: column; gap: 20px;">
                     <div style="text-align: center; flex: 1;">
                         <div style="font-size: 1.5em; font-weight: bold; color: #16a085;">{{ number_format($balances['kedds'], 2) }}</div>
                         <div style="font-size: 14px; color: #666;">{{ $tokenNames['dds'] }} Tokens</div>
