@@ -124,6 +124,10 @@ class CreateTestDcd extends Command
             $this->info('Sending wallet creation email...');
             Mail::to($user->email)->send(new WalletCreated($user));
 
+            // Process the queued job immediately for testing
+            $this->info('Processing queued email...');
+            \Artisan::call('queue:work', ['--once' => true]);
+
             // Allocate initial tokens
             $this->info('Allocating initial tokens...');
             $this->ventureShareService->allocateInitialDcdTokens($user);
