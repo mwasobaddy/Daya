@@ -58,7 +58,7 @@
                 <p>Your unique referral code: <strong style="font-family: monospace; background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px;">{{ $user->referral_code ?? 'DCD-' . $user->id }}</strong></p>
                 <p>Share this referral link with potential DCDs:</p>
                 <p style="word-break: break-all; font-family: monospace; background-color: #f8f9fa; padding: 10px; border-radius: 3px; border: 1px solid #dee2e6;">
-                    <div class="referral-link">{{ url('/?ref=' . $user->referral_code) }}</div>
+                    {{ url('/?ref=' . $user->referral_code) }}
                 </p>
             </div>
 
