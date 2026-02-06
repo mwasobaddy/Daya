@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\SerializesModels;
 
-class DcdWelcome extends Mailable
+class DcdWelcome extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
