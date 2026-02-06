@@ -36,8 +36,8 @@
 
             <div class="token-highlight">
                 <h2 style="margin: 0 0 15px 0; color: #27ae60;">💰 Your Welcome Bonus</h2>
-                <div class="token-type">1000 {{ $tokenNames['dds'] }} Tokens</div>
-                <div class="token-type">1000 {{ $tokenNames['dws'] }} Tokens</div>
+                <div class="token-amount">1000 {{ $tokenNames['dds'] }} Tokens</div>
+                <div class="token-amount">1000 {{ $tokenNames['dws'] }} Tokens</div>
                 <p style="margin: 15px 0 0 0; color: #155724; font-size: 14px;">Ready to start earning from day one!</p>
             </div>
 
