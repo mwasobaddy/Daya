@@ -55,7 +55,7 @@ class DaReferralTest extends TestCase
             'email' => 'testda@example.com',
             'ward_id' => $ward->id,
             'address' => 'Test Address',
-            'phone' => '+254700000000',
+            'phone' => '0700000000',
             'platforms' => ['instagram', 'facebook'],
             'followers' => '1k_10k',
             'communication_channel' => 'whatsapp',
@@ -63,6 +63,7 @@ class DaReferralTest extends TestCase
             'wallet_pin' => '1234',
             'confirm_pin' => '1234',
             'terms' => '1',
+            'turnstile_token' => 'dummy_token',
         ];
 
         // Make the API request
@@ -130,7 +131,7 @@ class DaReferralTest extends TestCase
             'email' => 'testda2@example.com',
             'ward_id' => $ward->id,
             'address' => 'Test Address 2',
-            'phone' => '+254711111111',
+            'phone' => '0711111111',
             'platforms' => ['twitter'],
             'followers' => '10k_50k',
             'communication_channel' => 'telegram',
@@ -138,6 +139,7 @@ class DaReferralTest extends TestCase
             'wallet_pin' => '5678',
             'confirm_pin' => '5678',
             'terms' => '1',
+            'turnstile_token' => 'dummy_token',
         ];
 
         // Make the API request
@@ -187,7 +189,7 @@ class DaReferralTest extends TestCase
             'email' => 'testda3@example.com',
             'ward_id' => $ward->id,
             'address' => 'Test Address 3',
-            'phone' => '+254722222222',
+            'phone' => '0722222222',
             'platforms' => ['tiktok'],
             'followers' => '50k_100k',
             'communication_channel' => 'email',
@@ -195,6 +197,7 @@ class DaReferralTest extends TestCase
             'wallet_pin' => '9999',
             'confirm_pin' => '9999',
             'terms' => '1',
+            'turnstile_token' => 'dummy_token',
         ];
 
         // Make the API request
