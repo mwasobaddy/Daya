@@ -8,9 +8,15 @@ use App\Models\Referral;
 
 class VentureShareService
 {
-    // Cap limits for stake allocation (hardcoded)
-    private const DA_CAP = 3000;
-    private const DCD_CAP = 3000;
+    // Cap limits for stake allocation
+    private int $daCap;
+    private int $dcdCap;
+
+    public function __construct(int $daCap = 3000, int $dcdCap = 3000)
+    {
+        $this->daCap = $daCap;
+        $this->dcdCap = $dcdCap;
+    }
 
     /**
      * Check if DA cap has been reached
@@ -18,7 +24,7 @@ class VentureShareService
     private function isDaCapReached(): bool
     {
         $daCount = User::where('role', 'da')->count();
-        return $daCount >= self::DA_CAP;
+        return $daCount >= $this->daCap;
     }
 
     /**
@@ -27,7 +33,7 @@ class VentureShareService
     private function isDcdCapReached(): bool
     {
         $dcdCount = User::where('role', 'dcd')->count();
-        return $dcdCount >= self::DCD_CAP;
+        return $dcdCount >= $this->dcdCap;
     }
 
     /**
