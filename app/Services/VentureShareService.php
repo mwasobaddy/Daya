@@ -122,8 +122,7 @@ class VentureShareService
                     $referrerTokens['dds'],
                     'DCD referral bonus for registering DCD: ' . $referred->name
                 );
-                // Allocate initial tokens to new DCD
-                $this->allocateInitialDcdTokens($referred);
+                // Note: Initial tokens are allocated in the controller, not here
                 break;
                 
             case 'dcd_to_da':
