@@ -3,33 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminCampaignActionRequest;
+use App\Http\Requests\AdminValidationRequest;
 use App\Models\Campaign;
-use App\Models\User;
-use App\Services\VentureShareService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Mail;
+use App\Services\AdminService;
 
 class AdminController extends Controller
 {
-    protected $ventureShareService;
+    protected $adminService;
 
-    public function __construct(VentureShareService $ventureShareService)
+    public function __construct(AdminService $adminService)
     {
-        $this->ventureShareService = $ventureShareService;
+        $this->adminService = $adminService;
     }
 
     /**
      * Approve a pending campaign
      */
-    public function approveCampaign(Request $request, $campaignId)
+    public function approveCampaign(AdminCampaignActionRequest $request, $campaignId)
     {
-        $request->validate([
-            'admin_token' => 'required|string', // Simple token-based auth for demo
-        ]);
-
-        // Simple admin authentication (in production, use proper auth)
-        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+        if (! $request->authenticateAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -39,24 +32,7 @@ class AdminController extends Controller
             return response()->json(['message' => 'Campaign is not pending'], 400);
         }
 
-        $campaign->update(['status' => 'approved']);
-
-        // Notify DCD that campaign is approved
-        $dcd = User::find($campaign->dcd_id);
-        $client = User::find($campaign->client_id);
-
-        Mail::to($dcd->email)->send(new \App\Mail\CampaignApproved($campaign, $client));
-
-        // Notify the DA who referred this DCD
-        $referral = $dcd->referralsReceived()->where('type', 'da_to_dcd')->first();
-        if ($referral && $referral->referrer) {
-            $da = $referral->referrer;
-            try {
-                Mail::to($da->email)->send(new \App\Mail\DaCampaignNotification($da, $dcd, $campaign));
-            } catch (\Exception $e) {
-                \Log::warning('Failed to send DaCampaignNotification email to DA: ' . $e->getMessage());
-            }
-        }
+        $this->adminService->approveCampaign($campaign);
 
         return response()->json(['message' => 'Campaign approved successfully']);
     }
@@ -64,14 +40,9 @@ class AdminController extends Controller
     /**
      * Mark a campaign as completed and allocate venture shares
      */
-    public function completeCampaign(Request $request, $campaignId)
+    public function completeCampaign(AdminCampaignActionRequest $request, $campaignId)
     {
-        $request->validate([
-            'admin_token' => 'required|string',
-        ]);
-
-        // Simple admin authentication
-        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+        if (! $request->authenticateAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -81,19 +52,7 @@ class AdminController extends Controller
             return response()->json(['message' => 'Campaign must be approved first'], 400);
         }
 
-        $campaign->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
-        // Allocate venture shares for campaign completion
-        $dcd = User::find($campaign->dcd_id);
-        $this->ventureShareService->allocateSharesForCampaignCompletion($dcd, $campaign->budget);
-
-        // Notify client and DCD
-        $client = User::find($campaign->client_id);
-        Mail::to($client->email)->send(new \App\Mail\CampaignCompleted($campaign, $dcd));
-        Mail::to($dcd->email)->send(new \App\Mail\CampaignCompleted($campaign, $client));
+        $this->adminService->completeCampaign($campaign);
 
         return response()->json(['message' => 'Campaign completed successfully']);
     }
@@ -101,20 +60,13 @@ class AdminController extends Controller
     /**
      * Get all campaigns for admin review
      */
-    public function getCampaigns(Request $request)
+    public function getCampaigns(AdminCampaignActionRequest $request)
     {
-        $request->validate([
-            'admin_token' => 'required|string',
-        ]);
-
-        // Simple admin authentication
-        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+        if (! $request->authenticateAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $campaigns = Campaign::with(['client', 'dcd'])
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+        $campaigns = $this->adminService->getCampaigns();
 
         return response()->json($campaigns);
     }
@@ -122,32 +74,13 @@ class AdminController extends Controller
     /**
      * Get venture shares summary for all users
      */
-    public function getVentureSharesSummary(Request $request)
+    public function getVentureSharesSummary(AdminCampaignActionRequest $request)
     {
-        $request->validate([
-            'admin_token' => 'required|string',
-        ]);
-
-        // Simple admin authentication
-        if (!Hash::check($request->admin_token, hash('sha256', 'daya_admin_2024'))) {
+        if (! $request->authenticateAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $users = User::whereIn('role', ['da', 'dcd', 'client'])
-                    ->with('ventureShares')
-                    ->get()
-                    ->map(function ($user) {
-                        $totalShares = $this->ventureShareService->getTotalShares($user);
-                        return [
-                            'id' => $user->id,
-                            'name' => $user->name,
-                            'email' => $user->email,
-                            'role' => $user->role,
-                            'kedds_total' => $totalShares['kedds'],
-                            'kedws_total' => $totalShares['kedws'],
-                            'referral_code' => $user->referral_code,
-                        ];
-                    });
+        $users = $this->adminService->getVentureSharesSummary();
 
         return response()->json($users);
     }
@@ -155,33 +88,13 @@ class AdminController extends Controller
     /**
      * Validate a referral code
      */
-    public function validateReferralCode(Request $request)
+    public function validateReferralCode(AdminValidationRequest $request)
     {
-        $request->validate([
-            'referral_code' => 'required|string|min:6|max:8|regex:/^[A-Z0-9]{6,8}$/',
-        ]);
+        $result = $this->adminService->validateReferralCode($request->referral_code);
 
-        $referralCode = strtoupper($request->referral_code);
+        $status = $result['valid'] ? 200 : 400;
 
-        // Check if referral code exists in users table (case-insensitive search)
-        $user = User::whereRaw('UPPER(referral_code) = ?', [$referralCode])->first();
-
-        if (!$user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Invalid referral code'
-            ], 400);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'message' => 'Valid referral code',
-            'referrer' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role
-            ]
-        ]);
+        return response()->json($result, $status);
     }
 
     /**
@@ -189,98 +102,50 @@ class AdminController extends Controller
      */
     public function getAdminReferralCode()
     {
-        $admin = User::where('role', 'admin')->first();
+        $result = $this->adminService->getAdminReferralCode();
 
-        if (!$admin || !$admin->referral_code) {
+        if (! $result) {
             return response()->json([
-                'error' => 'Admin referral code not found'
+                'error' => 'Admin referral code not found',
             ], 404);
         }
 
-        return response()->json([
-            'referral_code' => $admin->referral_code,
-            'admin_name' => $admin->name
-        ]);
+        return response()->json($result);
     }
 
     /**
      * Validate an email address for uniqueness
      */
-    public function validateEmail(Request $request)
+    public function validateEmail(AdminValidationRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|max:255',
-        ]);
+        $result = $this->adminService->validateEmail($request->email);
 
-        $email = strtolower($request->email);
+        $status = $result['valid'] ? 200 : 422;
 
-        // Check if email already exists in users table (case-insensitive search)
-        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
-
-        if ($user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'This email address is already registered'
-            ], 422);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'message' => 'Email address is available'
-        ]);
+        return response()->json($result, $status);
     }
 
     /**
      * Validate a national ID for uniqueness
      */
-    public function validateNationalId(Request $request)
+    public function validateNationalId(AdminValidationRequest $request)
     {
-        $request->validate([
-            'national_id' => 'required|string|max:255|regex:/^\d+$/',
-        ]);
+        $result = $this->adminService->validateNationalId($request->national_id);
 
-        $nationalId = $request->national_id;
+        $status = $result['valid'] ? 200 : 422;
 
-        // Check if national ID already exists in users table
-        $user = User::where('national_id', $nationalId)->first();
-
-        if ($user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'This National ID is already registered'
-            ], 422);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'message' => 'National ID is available'
-        ]);
+        return response()->json($result, $status);
     }
 
     /**
      * Validate a phone number for uniqueness
      */
-    public function validatePhone(Request $request)
+    public function validatePhone(AdminValidationRequest $request)
     {
-        $request->validate([
-            'phone' => 'required|string|max:20|regex:/^\+?[\d\s\-()]{10,}$/',
-        ]);
+        $result = $this->adminService->validatePhone($request->phone);
 
-        $phone = $request->phone;
+        $status = $result['valid'] ? 200 : 422;
 
-        // Check if phone number already exists in users table
-        $user = User::where('phone', $phone)->first();
-
-        if ($user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'This phone number is already registered'
-            ], 422);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'message' => 'Phone number is available'
-        ]);
+        return response()->json($result, $status);
     }
 }
