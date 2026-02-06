@@ -4,29 +4,29 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\QRCodeService;
+use App\Services\ScanService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ScanController extends Controller
 {
-    protected $qrCodeService;
+    protected $scanService;
 
-    public function __construct(QRCodeService $qrCodeService)
+    public function __construct(ScanService $scanService)
     {
-        $this->qrCodeService = $qrCodeService;
+        $this->scanService = $scanService;
     }
 
     /**
      * Record a scan event when a client scans a DCD QR code
      */
-    public function recordScan(Request $request)
+    public function recordScan(Request $request): JsonResponse
     {
         $request->validate([
             'dcd_id' => 'required|integer|exists:users,id',
         ]);
 
         try {
-            // Get client location data if available
             $geoData = null;
             if ($request->has(['latitude', 'longitude'])) {
                 $geoData = [
@@ -36,7 +36,7 @@ class ScanController extends Controller
                 ];
             }
 
-            $scan = $this->qrCodeService->recordScan(
+            $scan = $this->scanService->recordScan(
                 $request->dcd_id,
                 $request->ip(),
                 $geoData
@@ -55,43 +55,41 @@ class ScanController extends Controller
     /**
      * Get scan statistics for a DCD (requires authentication in production)
      */
-    public function getScanStats(Request $request, $userId)
-    {
-        $request->validate([
-            'admin_token' => 'required|string', // Simple auth for demo
-        ]);
-
-        // Simple admin authentication
-        if (!hash_equals(hash('sha256', 'daya_admin_2024'), hash('sha256', $request->admin_token))) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $user = User::findOrFail($userId);
-
-        if ($user->role !== 'dcd') {
-            return response()->json(['message' => 'User is not a DCD'], 400);
-        }
-
-        $stats = $this->qrCodeService->getScanStats($user);
-
-        return response()->json($stats);
-    }
-
-    /**
-     * Get admin scan statistics
-     */
-    public function getAdminScanStats(Request $request)
+    public function getScanStats(Request $request, $userId): JsonResponse
     {
         $request->validate([
             'admin_token' => 'required|string',
         ]);
 
-        // Simple admin authentication
-        if (!hash_equals(hash('sha256', 'daya_admin_2024'), hash('sha256', $request->admin_token))) {
+        if (! $this->scanService->authenticateAdmin($request->admin_token)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $stats = $this->qrCodeService->getAdminScanStats();
+        $user = User::findOrFail($userId);
+
+        try {
+            $stats = $this->scanService->getScanStats($user);
+
+            return response()->json($stats);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Get admin scan statistics
+     */
+    public function getAdminScanStats(Request $request): JsonResponse
+    {
+        $request->validate([
+            'admin_token' => 'required|string',
+        ]);
+
+        if (! $this->scanService->authenticateAdmin($request->admin_token)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $stats = $this->scanService->getAdminScanStats();
 
         return response()->json($stats);
     }
@@ -99,26 +97,24 @@ class ScanController extends Controller
     /**
      * Regenerate QR code for a user
      */
-    public function regenerateQRCode(Request $request, $userId)
+    public function regenerateQRCode(Request $request, $userId): JsonResponse
     {
         $request->validate([
             'admin_token' => 'required|string',
         ]);
 
-        // Simple admin authentication
-        if (!hash_equals(hash('sha256', 'daya_admin_2024'), hash('sha256', $request->admin_token))) {
+        if (! $this->scanService->authenticateAdmin($request->admin_token)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = User::findOrFail($userId);
 
         try {
-            $qrCodeFilename = $this->qrCodeService->regenerateQRCode($user);
-            $qrCodeUrl = $this->qrCodeService->getQRCodeUrl($qrCodeFilename);
+            $result = $this->scanService->regenerateQRCode($user);
 
             return response()->json([
                 'message' => 'QR code regenerated successfully',
-                'qr_code_url' => $qrCodeUrl,
+                'qr_code_url' => $result['qr_code_url'],
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
@@ -128,62 +124,42 @@ class ScanController extends Controller
     /**
      * Record a scan event with device fingerprinting
      */
-    public function recordScanWithFingerprint(Request $request)
+    public function recordScanWithFingerprint(Request $request): JsonResponse
     {
         $request->validate([
             'dcd_id' => 'required|integer|exists:users,id',
             'fingerprint' => 'nullable|string',
-            'signature' => 'nullable|string', // Signature already validated when serving the page
+            'signature' => 'nullable|string',
         ]);
 
         try {
-            $dcdId = $request->dcd_id;
-            $campaignId = $request->campaign_id;
-
-            // Prepare geoData with fingerprint
-            $geoData = [
+            $data = [
+                'dcd_id' => $request->dcd_id,
+                'campaign_id' => $request->campaign_id,
                 'fingerprint' => $request->fingerprint,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ];
 
-            $redirectUrl = null;
-
-            if ($campaignId) {
-                // Direct campaign scan
-                $scan = $this->qrCodeService->recordCampaignScan($dcdId, $campaignId, $geoData);
-                $campaign = \App\Models\Campaign::findOrFail($campaignId);
-                $redirectUrl = $campaign->digital_product_link;
-            } else {
-                // DCD smart selection scan
-                $result = $this->qrCodeService->recordDcdScan($dcdId, $geoData);
-                $campaign = $result['campaign'];
-                $redirectUrl = $campaign->digital_product_link;
-            }
+            $result = $this->scanService->recordScanWithFingerprint($data);
 
             return response()->json([
                 'message' => 'Scan recorded successfully',
-                'redirect_url' => $redirectUrl,
+                'redirect_url' => $result['redirect_url'],
             ]);
         } catch (\InvalidArgumentException $e) {
-            $errorType = 'general_error';
-            $message = $e->getMessage();
-            
-            if (str_contains($message, 'No active campaigns found for this DCD')) {
-                $errorType = 'no_campaigns';
-            } elseif (str_contains($message, 'Campaign has reached its budget limit')) {
-                $errorType = 'budget_exhausted';
-            }
-            
+            $errorType = $this->scanService->determineScanErrorType($e);
+
             return response()->json([
-                'message' => $message,
-                'error_type' => $errorType
+                'message' => $e->getMessage(),
+                'error_type' => $errorType,
             ], 400);
         } catch (\Exception $e) {
-            \Log::error('Fingerprint scan recording failed: ' . $e->getMessage());
+            \Log::error('Fingerprint scan recording failed: '.$e->getMessage());
+
             return response()->json([
                 'message' => 'Scan recording failed',
-                'error_type' => 'system_error'
+                'error_type' => 'system_error',
             ], 500);
         }
     }
