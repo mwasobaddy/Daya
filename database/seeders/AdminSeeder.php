@@ -19,7 +19,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Daya',
                 'email' => 'company@example.com',
-                'phone' => '+1234567892',
+                'phone' => '0111984608',
                 'referral_code' => '9c5R6S',
                 'title' => 'Company Profile',
                 'department' => 'Company',
@@ -28,7 +28,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Kelvin Ramsiel',
                 'email' => 'kelvinramsiel@gmail.com',
-                'phone' => '+1234567890',
+                'phone' => '0740252837',
                 'referral_code' => '7a3H4P',
                 'title' => 'System Administrator',
                 'department' => 'IT',
@@ -37,7 +37,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Akinola Dixon',
                 'email' => 'akinola.dixon@gmail.com',
-                'phone' => '+1234567891',
+                'phone' => '0111984607',
                 'referral_code' => '8b4I5Q',
                 'title' => 'System Administrator',
                 'department' => 'Operations',
