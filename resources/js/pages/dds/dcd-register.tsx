@@ -836,7 +836,7 @@ export default function DcdRegister() {
     };
 
     const validatePhone = (phone: string): boolean => {
-        const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
+        const phoneRegex = /^0[\d\s\-()]{9,}$/;
         return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 

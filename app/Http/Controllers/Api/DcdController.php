@@ -43,7 +43,7 @@ class DcdController extends Controller
             'email' => 'required|email|unique:users',
             'ward_id' => 'required|exists:wards,id',
             'business_address' => 'required|string',
-            'phone' => 'required|string',
+            'phone' => 'required|string|max:10|regex:/^0[\d\s\-()]{9}$/',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
 

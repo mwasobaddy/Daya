@@ -43,7 +43,7 @@ class ClientController extends Controller
                 'business_name' => 'required|string|max:255',
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
-                'phone' => 'required|string|max:20',
+                'phone' => 'required|string|max:10|regex:/^0[\d\s\-()]{9}$/',
 
                 'country' => 'required|string|max:10',
                 'referral_code' => 'nullable|string|max:50',
