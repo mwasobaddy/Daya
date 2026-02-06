@@ -216,31 +216,21 @@ class DcdController extends Controller
         ]);
         Mail::to($user->email)->send(new DcdWelcome($user, $referrer, $qrFilename));
 
-    // Send wallet creation notification
-    try {
+        // Send wallet creation notification
+        \Log::info('Sending wallet creation notification', ['user_id' => $user->id, 'email' => $user->email]);
         Mail::to($user->email)->send(new WalletCreated($user));
-    } catch (\Exception $e) {
-        \Log::warning('Failed to send wallet creation email to DCD: ' . $e->getMessage());
-    }
 
         // Allocate initial DCD registration tokens (1000 DDS + 1000 DWS)
-        try {
-            $this->ventureShareService->allocateInitialDcdTokens($user);
-            \Log::info('Initial DCD tokens allocated', [
-                'user_id' => $user->id,
-                'dds_tokens' => 1000,
-                'dws_tokens' => 1000
-            ]);
+        $this->ventureShareService->allocateInitialDcdTokens($user);
+        \Log::info('Initial DCD tokens allocated', [
+            'user_id' => $user->id,
+            'dds_tokens' => 1000,
+            'dws_tokens' => 1000
+        ]);
 
-            // Send token allocation notification email
-            Mail::to($user->email)->send(new DcdTokenAllocationNotification($user, $this->ventureShareService));
-            \Log::info('DCD token allocation notification sent', [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
-        } catch (\Exception $e) {
-            \Log::warning('Failed to allocate initial DCD tokens or send notification: ' . $e->getMessage());
-        }
+        // Send token allocation notification email
+        \Log::info('Sending DCD token allocation notification', ['user_id' => $user->id, 'email' => $user->email]);
+        Mail::to($user->email)->send(new DcdTokenAllocationNotification($user, $this->ventureShareService));
 
         // Send admin notification email to all admin users
         $adminUsers = User::where('role', 'admin')->get();
