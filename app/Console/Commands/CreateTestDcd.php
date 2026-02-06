@@ -132,11 +132,7 @@ class CreateTestDcd extends Command
 
             // Create referral record if referrer exists
             if ($referrer) {
-                $referralType = match($referrer->role) {
-                    'da' => 'da_to_dcd',
-                    'dcd' => 'dcd_to_dcd',
-                    default => 'da_to_dcd'  // fallback
-                };
+                $referralType = 'da_to_dcd'; // Use da_to_dcd for test, as dcd_to_dcd may not be allowed
                 
                 $referral = \App\Models\Referral::create([
                     'referrer_id' => $referrer->id,
