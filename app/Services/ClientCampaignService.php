@@ -181,7 +181,7 @@ class ClientCampaignService
 
     protected function determineDcdId(array $data): ?int
     {
-        if ($data['dcd_id']) {
+        if (isset($data['dcd_id']) && $data['dcd_id']) {
             $dcd = User::where('id', $data['dcd_id'])->where('role', 'dcd')->first();
             if ($dcd) {
                 Log::info('Campaign assigned to DCD from QR scan', ['dcd_id' => $dcd->id, 'dcd_name' => $dcd->name]);
@@ -195,7 +195,7 @@ class ClientCampaignService
 
     protected function processReferral(array $data, User $client): void
     {
-        if ($data['referred_by_code']) {
+        if (isset($data['referred_by_code']) && $data['referred_by_code']) {
             $referrer = User::where('referral_code', strtoupper($data['referred_by_code']))->first();
 
             if ($referrer && $referrer->role === 'da') {
@@ -222,7 +222,7 @@ class ClientCampaignService
 
     protected function createCampaign(array $data, User $client, ?int $dcdId, string $contentSafety): Campaign
     {
-        $costPerClick = $this->calculateCostPerClick($data['campaign_objective'], $data['explainer_video_url'], $data['country']);
+        $costPerClick = $this->calculateCostPerClick($data['campaign_objective'], $data['explainer_video_url'] ?? null, $data['country']);
         $maxScans = $costPerClick > 0 ? floor($data['budget'] / $costPerClick) : 0;
 
         return Campaign::create([
@@ -240,13 +240,13 @@ class ClientCampaignService
             'status' => 'submitted',
             'campaign_objective' => $data['campaign_objective'],
             'digital_product_link' => $data['digital_product_link'],
-            'explainer_video_url' => $data['explainer_video_url'],
+            'explainer_video_url' => $data['explainer_video_url'] ?? null,
             'target_audience' => $data['target_audience'] ?? 'General audience',
             'duration' => $data['start_date'].' to '.$data['end_date'],
             'objectives' => $data['objectives'] ?? 'Campaign objectives as described',
             'metadata' => [
                 'digital_product_link' => $data['digital_product_link'],
-                'explainer_video_url' => $data['explainer_video_url'],
+                'explainer_video_url' => $data['explainer_video_url'] ?? null,
                 'campaign_objective' => $data['campaign_objective'],
                 'content_safety' => $contentSafety,
                 'content_safety_preferences' => $data['content_safety_preferences'],
@@ -262,7 +262,7 @@ class ClientCampaignService
                 'business_name' => $data['business_name'],
                 'phone' => $data['phone'],
                 'country' => $data['country'],
-                'referral_code' => $data['referral_code'],
+                'referral_code' => $data['referral_code'] ?? null,
             ],
         ]);
     }

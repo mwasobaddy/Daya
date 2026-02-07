@@ -33,13 +33,23 @@ class CampaignMatchingService
             $startDate = $campaignMetadata['start_date'] ?? null;
             $endDate = $campaignMetadata['end_date'] ?? null;
             
-            // Build base query for DCDs with less than 3 active campaigns
+            // Build base query for DCDs with less than 3 active campaigns and no date overlaps
             $baseQuery = User::where('role', 'dcd')
                 ->whereHas('assignedCampaigns', function ($q) {
                     $q->where('status', 'live')
                       ->whereRaw("JSON_EXTRACT(metadata, '$.start_date') <= ?", [now()->format('Y-m-d')])
                       ->whereRaw("JSON_EXTRACT(metadata, '$.end_date') >= ?", [now()->format('Y-m-d')]);
-                }, '<', 3); // Max 3 active campaigns per DCD
+                }, '<', 3) // Max 3 active campaigns per DCD
+                ->whereDoesntHave('assignedCampaigns', function ($q) use ($startDate, $endDate) {
+                    // Exclude DCDs with campaigns that overlap with the new campaign dates
+                    $q->whereIn('status', ['approved', 'live'])
+                      ->where(function ($overlapQuery) use ($startDate, $endDate) {
+                          if ($startDate && $endDate) {
+                              $overlapQuery->whereRaw("JSON_EXTRACT(metadata, '$.start_date') <= ?", [$endDate])
+                                          ->whereRaw("JSON_EXTRACT(metadata, '$.end_date') >= ?", [$startDate]);
+                          }
+                      });
+                });
 
             // Try business name exact match (case insensitive)
             if ($businessName) {
