@@ -154,6 +154,15 @@
         </div>
 
         <div class="content">
+            @php
+                $currency = '₦';
+                $clientCountry = $campaign->client->country ?? null;
+                if ($clientCountry && strtoupper($clientCountry->code) === 'KEN') {
+                    $currency = 'KSh';
+                } else {
+                    $currency = '₦';
+                }
+            @endphp
             <div class="section">
                 <p>Dear {{ $recipient->name }},</p>
                 
@@ -168,7 +177,7 @@
 
             @if($stats['recipient_earnings'] > 0)
             <div class="highlight-box">
-                <div class="amount">KSh {{ number_format($stats['recipient_earnings'], 2) }}</div>
+                <div class="amount">{{ $currency }} {{ number_format($stats['recipient_earnings'], 2) }}</div>
                 <div class="label">Your Earnings from This Campaign</div>
             </div>
             @endif
@@ -186,7 +195,7 @@
                         <div class="stat-label">Budget Used</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">KSh {{ number_format($stats['spent_amount'], 2) }}</div>
+                        <div class="stat-value">{{ $currency }} {{ number_format($stats['spent_amount'], 2) }}</div>
                         <div class="stat-label">Total Spent</div>
                     </div>
                     <div class="stat-card">
@@ -201,19 +210,19 @@
                 
                 <div class="info-row">
                     <span class="info-label">Total Budget:</span>
-                    <span class="info-value">KSh {{ number_format($stats['budget'], 2) }}</span>
+                    <span class="info-value">{{ $currency }} {{ number_format($stats['budget'], 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Amount Spent:</span>
-                    <span class="info-value">KSh {{ number_format($stats['spent_amount'], 2) }}</span>
+                    <span class="info-value">{{ $currency }} {{ number_format($stats['spent_amount'], 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Remaining Credit:</span>
-                    <span class="info-value">KSh {{ number_format($stats['remaining_credit'], 2) }}</span>
+                    <span class="info-value">{{ $currency }} {{ number_format($stats['remaining_credit'], 2) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Average Cost Per Scan:</span>
-                    <span class="info-value">KSh {{ number_format($stats['avg_cost_per_scan'], 2) }}</span>
+                    <span class="info-value">{{ $currency }} {{ number_format($stats['avg_cost_per_scan'], 2) }}</span>
                 </div>
             </div>
 
@@ -249,7 +258,7 @@
             <div class="section">
                 <div class="success-box">
                     <strong>🎉 Great Work!</strong><br>
-                    You successfully completed this campaign and earned KSh {{ number_format($stats['recipient_earnings'], 2) }}. Keep up the excellent work!
+                    You successfully completed this campaign and earned {{ $currency }} {{ number_format($stats['recipient_earnings'], 2) }}. Keep up the excellent work!
                 </div>
             </div>
             @endif

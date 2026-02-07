@@ -83,7 +83,7 @@ class AdminCampaignPending extends Mailable
     private function setCurrencySymbol()
     {
         $metadata = $this->campaign->metadata ?? [];
-        $countryCode = $metadata['target_country'] ?? 'KE';
+        $countryCode = $metadata['country'] ?? 'KE';
         
         $currencyMap = [
             'KE' => 'KSh',
