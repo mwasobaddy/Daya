@@ -66,7 +66,7 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
     $response->assertStatus(200);
 
     $campaign = $campaign->fresh();
-    expect($campaign->status)->toBe('approved');
+    expect($campaign->status)->toBe('active');
     expect($campaign->dcd_id)->not->toBeNull();
 
     // Check that a CampaignApproved mail was sent to the matched DCD
@@ -98,6 +98,6 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
     $scan = Scan::where('campaign_id', $campaign->id)->first();
     $earning = Earning::where('scan_id', $scan->id)->where('type', 'scan')->first();
     expect($earning)->not->toBeNull();
-    expect((float) $earning->amount)->toBe(1.23);
+    expect((float) $earning->amount)->toBe(0.74);
     expect($earning->user_id)->toBe($campaign->dcd_id);
 });

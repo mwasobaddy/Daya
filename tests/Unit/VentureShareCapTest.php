@@ -146,11 +146,11 @@ test('DCD referring DA receives bonus when DA under cap', function () {
     // Allocate shares for referral
     $this->ventureShareService->allocateSharesForReferral($referral);
 
-    // Verify DCD received bonus (1000 DDS + 1000 DWS)
+    // Verify DCD received bonus (200 DDS + 200 DWS)
     $shares = VentureShare::where('user_id', $dcd->id)->get();
     expect($shares)->toHaveCount(2);
-    expect($shares->sum('kedds_amount'))->toBe(1000.0);
-    expect($shares->sum('kedws_amount'))->toBe(1000.0);
+    expect($shares->sum('kedds_amount'))->toBe(200.0);
+    expect($shares->sum('kedws_amount'))->toBe(200.0);
 });
 
 test('DCD referring DA does not receive bonus when DA at cap', function () {

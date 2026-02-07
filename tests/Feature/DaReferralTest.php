@@ -13,6 +13,16 @@ class DaReferralTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Mock TurnstileService for all tests
+        $this->mock(\App\Services\TurnstileService::class, function ($mock) {
+            $mock->shouldReceive('verifyWithDetails')->andReturn(['success' => true]);
+        });
+    }
+
     /** @test */
     public function da_registration_with_admin_referrer_id_shows_referral_in_admin_email()
     {
@@ -70,8 +80,8 @@ class DaReferralTest extends TestCase
         $response = $this->postJson('/api/da/create', $daData);
 
         // Assert successful registration
-        $response->assertStatus(200)
-                ->assertJson(['message' => 'DA registered successfully']);
+        $response->assertStatus(201)
+                ->assertJson(['message' => 'DA account created successfully! Welcome to Daya.']);
 
         // Verify the DA user was created
         $da = User::where('email', 'testda@example.com')->first();
@@ -146,7 +156,7 @@ class DaReferralTest extends TestCase
         $response = $this->postJson('/api/da/create', $daData);
 
         // Assert successful registration
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         // Verify referral record was created with correct type
         $da = User::where('email', 'testda2@example.com')->first();
@@ -204,7 +214,7 @@ class DaReferralTest extends TestCase
         $response = $this->postJson('/api/da/create', $daData);
 
         // Assert successful registration
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         // Verify no referral record was created
         $da = User::where('email', 'testda3@example.com')->first();

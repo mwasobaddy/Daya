@@ -91,6 +91,11 @@ test('admin action route returns error when link already used or invalid', funct
 test('campaign submission creates admin action link and clicking it approves campaign', function () {
     Mail::fake();
 
+    // Mock TurnstileService
+    $this->mock(\App\Services\TurnstileService::class, function ($mock) {
+        $mock->shouldReceive('verifyWithDetails')->andReturn(['success' => true]);
+    });
+
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
     $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
     $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
@@ -121,6 +126,7 @@ test('campaign submission creates admin action link and clicking it approves cam
         'end_date' => now()->addDays(5)->toDateString(),
         'target_audience' => 'General audience',
         'objectives' => 'Some objectives',
+        'turnstile_token' => 'fake-token',
     ];
 
     $resp = $this->postJson('/api/client/campaign/submit', $payload);
@@ -143,6 +149,11 @@ test('campaign submission creates admin action link and clicking it approves cam
 
 test('campaign submission requiring music genres for label account type works and may auto-assign DCD', function () {
     Mail::fake();
+
+    // Mock TurnstileService
+    $this->mock(\App\Services\TurnstileService::class, function ($mock) {
+        $mock->shouldReceive('verifyWithDetails')->andReturn(['success' => true]);
+    });
 
     $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
     $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
@@ -175,6 +186,7 @@ test('campaign submission requiring music genres for label account type works an
         'end_date' => now()->addDays(5)->toDateString(),
         'business_types' => ['label'],
         'music_genres' => ['Hip Hop'],
+        'turnstile_token' => 'fake-token',
     ];
 
     $resp = $this->postJson('/api/client/campaign/submit', $payload);

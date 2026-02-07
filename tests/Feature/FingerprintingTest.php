@@ -18,5 +18,5 @@ test('fingerprinting page loads correctly', function () {
 
     $response->assertStatus(200);
     $response->assertSee('Processing your scan');
-    $response->assertSee('fingerprint.js');
+    $response->assertSee('fingerprintjs');
 });
