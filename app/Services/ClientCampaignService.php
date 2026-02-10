@@ -107,9 +107,9 @@ class ClientCampaignService
                 'business_name' => $data['business_name'],
                 'account_type' => $data['account_type'],
                 'country_id' => $data['target_country'] ? Country::where('code', strtoupper($data['target_country']))->first()?->id : null,
-                'county_id' => $data['target_county'],
-                'subcounty_id' => $data['target_subcounty'],
-                'ward_id' => $data['target_ward'],
+                'county_id' => $data['target_county'] ?? null,
+                'subcounty_id' => $data['target_subcounty'] ?? null,
+                'ward_id' => $data['target_ward'] ?? null,
             ]);
         } else {
             $existingUserByPhone = User::where('phone', $data['phone'])->first();
@@ -121,9 +121,9 @@ class ClientCampaignService
                     'business_name' => $data['business_name'],
                     'account_type' => $data['account_type'],
                     'country_id' => $data['target_country'] ? Country::where('code', strtoupper($data['target_country']))->first()?->id : null,
-                    'county_id' => $data['target_county'],
-                    'subcounty_id' => $data['target_subcounty'],
-                    'ward_id' => $data['target_ward'],
+                    'county_id' => $data['target_county'] ?? null,
+                    'subcounty_id' => $data['target_subcounty'] ?? null,
+                    'ward_id' => $data['target_ward'] ?? null,
                 ]);
             } else {
                 $emailInUse = User::where('email', $data['email'])->where('role', 'client')->exists();
@@ -143,9 +143,9 @@ class ClientCampaignService
                     'account_type' => $data['account_type'],
                     'referral_code' => $referralCode,
                     'country_id' => $data['target_country'] ? Country::where('code', strtoupper($data['target_country']))->first()?->id : null,
-                    'county_id' => $data['target_county'],
-                    'subcounty_id' => $data['target_subcounty'],
-                    'ward_id' => $data['target_ward'],
+                    'county_id' => $data['target_county'] ?? null,
+                    'subcounty_id' => $data['target_subcounty'] ?? null,
+                    'ward_id' => $data['target_ward'] ?? null,
                     'password' => bcrypt('temporary_password_'.time()),
                 ]);
             }
@@ -251,9 +251,9 @@ class ClientCampaignService
                 'content_safety' => $contentSafety,
                 'content_safety_preferences' => $data['content_safety_preferences'],
                 'target_country' => $data['target_country'],
-                'target_county' => $data['target_county'],
-                'target_subcounty' => $data['target_subcounty'],
-                'target_ward' => $data['target_ward'],
+                'target_county' => $data['target_county'] ?? null,
+                'target_subcounty' => $data['target_subcounty'] ?? null,
+                'target_ward' => $data['target_ward'] ?? null,
                 'business_types' => $data['business_types'],
                 'music_genres' => $data['music_genres'] ?? [],
                 'start_date' => $data['start_date'],
