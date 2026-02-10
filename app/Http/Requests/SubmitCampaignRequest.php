@@ -29,7 +29,7 @@ class SubmitCampaignRequest extends FormRequest
             'campaign_title' => 'required|string|max:255',
             'digital_product_link' => 'required|url|max:500',
             'explainer_video_url' => 'nullable|url|max:500',
-            'campaign_objective' => 'required|in:music_promotion,app_downloads,brand_awareness,product_launch,event_promotion,social_cause',
+            'campaign_objective' => 'required|in:music_promotion,app_downloads,brand_awareness,product_launch,apartment_listing,event_promotion,social_cause',
             'budget' => 'required|numeric|min:50',
             'description' => 'nullable|string|max:2000',
 

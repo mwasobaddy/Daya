@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('campaigns', function (Blueprint $table) {
             $table->dropColumn('campaign_type');
-            $table->enum('campaign_objective', ['music_promotion', 'app_downloads', 'brand_awareness', 'product_launch', 'event_promotion', 'social_cause'])->after('title');
+            $table->enum('campaign_objective', ['music_promotion', 'app_downloads', 'brand_awareness', 'product_launch', 'apartment_listing', 'event_promotion', 'social_cause'])->after('title');
             $table->string('digital_product_link')->after('campaign_objective');
             $table->string('explainer_video_url')->nullable()->after('digital_product_link');
         });
