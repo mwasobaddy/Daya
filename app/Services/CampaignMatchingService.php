@@ -66,18 +66,45 @@ class CampaignMatchingService
                 }
             }
 
-            // Fallback: match by account_type (business_types array)
+            // Fallback: match by business_types array in DCD profile
             if (!empty($businessTypes) && is_array($businessTypes)) {
-                $candidate = (clone $baseQuery)
-                    ->whereIn('account_type', $businessTypes)
-                    ->orderBy('created_at', 'asc')
-                    ->lockForUpdate()
-                    ->first();
+                // Try DB-powered JSON query first (efficient on MySQL/Postgres)
+                $candidateQuery = (clone $baseQuery)->orderBy('created_at', 'asc');
+                $candidateQuery->where(function ($q) use ($businessTypes) {
+                    foreach ($businessTypes as $bt) {
+                        $q->orWhereJsonContains('profile->business_types', $bt);
+                    }
+                });
 
+                // Prefer same target country if provided
+                if ($targetCountryCode) {
+                    $country = Country::where('code', strtoupper($targetCountryCode))->first();
+                    if ($country) {
+                        $candidateQuery->where('country_id', $country->id);
+                    }
+                }
+
+                $candidate = $candidateQuery->lockForUpdate()->first();
                 if ($candidate) {
                     $campaign->dcd_id = $candidate->id;
                     $campaign->save();
                     return $candidate;
+                }
+
+                // Fallback: query a smaller candidate set (possibly country-filtered) and do PHP-level matching to support SQLite / other DBs.
+                $inMemoryQuery = clone $baseQuery;
+                if ($targetCountryCode && isset($country)) {
+                    $inMemoryQuery->where('country_id', $country->id);
+                }
+                $candidates = $inMemoryQuery->orderBy('created_at', 'asc')->get();
+                foreach ($candidates as $candidateUser) {
+                    $profile = is_string($candidateUser->profile) ? json_decode($candidateUser->profile, true) : (array) $candidateUser->profile;
+                    $dcdBusinessTypes = $profile['business_types'] ?? [];
+                    if (!empty($dcdBusinessTypes) && array_intersect($businessTypes, $dcdBusinessTypes)) {
+                        $campaign->dcd_id = $candidateUser->id;
+                        $campaign->save();
+                        return $candidateUser;
+                    }
                 }
             }
 

@@ -239,3 +239,51 @@ test('assigns a dcd matching music genres and preferred country', function () {
     expect($assigned->id)->toBe($dcd->id);
     expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
 });
+
+test('assigns a dcd matching business types in profile', function () {
+    // Create a Country/County/Subcounty/Ward since users require ward_id
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+
+    $dcd = User::factory()->create([
+        'role' => 'dcd',
+        'business_name' => 'UniqueBusiness',
+        'account_type' => 'business',
+        'ward_id' => $ward->id,
+        'profile' => [
+            'business_types' => ['retail', 'food']
+        ]
+    ]);
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'title' => 'Business Campaign',
+        'description' => 'Promote retail business',
+        'budget' => 150,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => '2025-11-17 to 2025-11-20',
+        'objectives' => 'Increase sales',
+        'campaign_objective' => 'brand_awareness',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'submitted',
+        'metadata' => [
+            'business_name' => 'DifferentBusiness', // No match
+            'business_types' => ['retail'], // Should match
+            'start_date' => '2025-11-17',
+            'end_date' => '2025-11-20',
+        ],
+    ]);
+
+    $svc = app(CampaignMatchingService::class);
+
+    $assigned = $svc->assignDcd($campaign);
+
+    expect($assigned)->not->toBeNull();
+    expect($assigned->id)->toBe($dcd->id);
+    expect($campaign->fresh()->dcd_id)->toBe($dcd->id);
+});
