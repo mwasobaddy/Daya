@@ -64,6 +64,7 @@
                     <p><strong>Send money to:</strong> <code>0111984607</code></p>
                 @else
                     <p><strong>Payment Method:</strong> M-Pesa</p>
+                    <p><strong>Account Name:</strong> Dixon Akinola</p>
                     <p><strong>Send money to:</strong> <code>0111984607</code></p>
                 @endif
                 <p>Once payment is made, please keep the confirmation message for reference.</p>
