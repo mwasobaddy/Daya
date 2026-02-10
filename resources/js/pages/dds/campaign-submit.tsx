@@ -905,7 +905,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                         type="tel"
                                         value={data.phone}
                                         onChange={(e) => updateData('phone', e.target.value)}
-                                        placeholder="+234 xxx xxx xxxx"
+                                        placeholder="07 xxx xxx xxxx"
                                         className="border-blue-300 dark:border-blue-600/20 bg-white dark:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                                     />
                                     <InputError message={errors.phone} />
