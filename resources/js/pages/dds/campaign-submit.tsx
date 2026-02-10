@@ -669,10 +669,18 @@ export default function CampaignSubmit({ flash }: Props) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                     },
                     body: JSON.stringify(data),
                 });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    console.error('Unexpected response content type for campaign submit:', contentType);
+                    toast.error('Unexpected response from the server. Please try again.');
+                    return;
+                }
 
                 const result = await response.json();
 
