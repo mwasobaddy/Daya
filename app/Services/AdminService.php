@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\CampaignApproved;
 use App\Mail\CampaignCompleted;
+use App\Mail\ClientCampaignApproved;
 use App\Mail\DaCampaignNotification;
 use App\Models\Campaign;
 use App\Models\User;
@@ -45,6 +46,14 @@ class AdminService
         $dcd = User::find($campaign->dcd_id);
         $client = User::find($campaign->client_id);
 
+        // Notify the client that their campaign has been approved
+        try {
+            Mail::to($client->email)->send(new ClientCampaignApproved($campaign));
+        } catch (\Exception $e) {
+            Log::warning('Failed to send ClientCampaignApproved email: '.$e->getMessage());
+        }
+
+        // Notify the DCD that they have a new campaign to work on
         try {
             Mail::to($dcd->email)->send(new CampaignApproved($campaign, $client));
         } catch (\Exception $e) {
