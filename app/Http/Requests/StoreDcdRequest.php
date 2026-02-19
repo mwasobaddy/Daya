@@ -23,7 +23,7 @@ class StoreDcdRequest extends FormRequest
             'email' => 'required|email|unique:users',
             'ward_id' => 'required|exists:wards,id',
             'business_address' => 'required|string',
-            'phone' => 'required|string|max:11|regex:/^0[\d\s\-()]{9}$/',
+            'phone' => 'required|string|max:11|regex:/^0[\d\s\-()]{10}$/',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
 
