@@ -93,7 +93,7 @@ class DaCreationService
             Mail::to($user->email)->send(new \App\Mail\DaWelcome($user));
 
             // Notify admins
-            $this->notifyAdminsOfRegistration($user);
+            $this->notifyAdminsOfRegistration($user, $referrer);
 
             return $user;
         });
@@ -131,12 +131,27 @@ class DaCreationService
         }
     }
 
-    protected function notifyAdminsOfRegistration(User $user): void
+    protected function notifyAdminsOfRegistration(User $user, ?User $referrer = null): void
     {
-        try {
-            Mail::to(config('mail.admin_email', 'admin@daya.com'))->send(new \App\Mail\AdminDaRegistration($user));
-        } catch (\Exception $e) {
-            \Log::warning('Failed to send admin notification: '.$e->getMessage());
+        $adminUsers = User::where('role', 'admin')->get();
+        if ($adminUsers->isEmpty()) {
+            \Log::warning('No admin users found to notify about DA registration');
+
+            return;
         }
+
+        foreach ($adminUsers as $admin) {
+            try {
+                Mail::to($admin->email)->send(new \App\Mail\AdminDaRegistration($user, $referrer));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send admin notification to '.$admin->email.': '.$e->getMessage());
+            }
+        }
+
+        \Log::info('Notified '.$adminUsers->count().' admin users about DA registration', [
+            'da_id' => $user->id,
+            'da_name' => $user->name,
+            'admin_emails' => $adminUsers->pluck('email')->toArray(),
+        ]);
     }
 }
