@@ -19,7 +19,7 @@ class SubmitCampaignRequest extends FormRequest
             'business_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:10|regex:/^0[\d\s\-()]{9}$/',
+            'phone' => 'required|string|max:11|regex:/^0[\d\s\-()]{9}$/',
             'country' => 'required|string|max:10',
             'referral_code' => 'nullable|string|max:50',
             'referred_by_code' => 'nullable|string|max:50', // DA referral code
