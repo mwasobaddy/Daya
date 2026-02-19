@@ -816,7 +816,7 @@ export default function DaRegister() {
     };
 
     const validatePhone = (phone: string): boolean => {
-        const phoneRegex = /^0[\d\s\-()]{9,}$/;
+        const phoneRegex = /^0[\d\s\-()]{10,}$/;
         return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
