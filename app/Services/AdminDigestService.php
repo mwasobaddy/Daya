@@ -326,7 +326,7 @@ class AdminDigestService
                 'name' => $topDCD->dcd->name ?? 'Unknown',
                 'business_name' => $topDCD->dcd->business_name ?? 'N/A',
                 'scans' => $topDCD->scan_count,
-                'earnings' => $topDCD->total_earnings,
+                'earnings' => $topDCD->total_earnings * 0.60, // DCD gets 60% of scan value
             ] : null,
             'top_campaign' => $topCampaign ? [
                 'id' => $topCampaign->campaign->id ?? 0,
