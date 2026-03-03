@@ -66,7 +66,7 @@ test('admin approval auto-matches dcd, sends QR pdf, and scan leads to earning',
     $response->assertStatus(200);
 
     $campaign = $campaign->fresh();
-    expect($campaign->status)->toBe('active');
+    expect($campaign->status)->toBe('live');
     expect($campaign->dcd_id)->not->toBeNull();
 
     // Check that a CampaignApproved mail was sent to the matched DCD
