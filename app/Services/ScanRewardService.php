@@ -44,7 +44,7 @@ class ScanRewardService
         }
 
         // Ensure scan belongs to configured campaign/dcd
-        if ($campaign->dcd_id !== $scan->dcd_id) {
+        if ($campaign->dcd_id != $scan->dcd_id) {
             Log::warning('ScanRewardService: scan dcd_id does not match campaign dcd_id', [
                 'scan_id' => $scan->id,
                 'scan_dcd_id' => $scan->dcd_id,
