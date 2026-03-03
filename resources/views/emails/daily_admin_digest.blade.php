@@ -436,16 +436,6 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="section" style="text-align: center; padding: 20px;">
-            <a href="{{ config('app.url') }}/admin/campaigns?status=submitted" class="button">
-                Approve Campaigns ({{ $data['campaigns']['pending_review'] }})
-            </a>
-            <a href="{{ config('app.url') }}/admin/dashboard" class="button">
-                View Full Dashboard
-            </a>
-        </div>
-
         <!-- Footer -->
         <div class="footer">
             <p>This is an automated daily digest from Daya Distribution Platform</p>
