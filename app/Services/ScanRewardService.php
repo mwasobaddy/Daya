@@ -110,21 +110,6 @@ class ScanRewardService
             }
         }
 
-        // Additional deduplication by IP address (fallback for fingerprint issues)
-        $ip = $scan->geo['ip_address'] ?? null;
-        if ($ip) {
-            $recentByIp = Scan::where('campaign_id', $scan->campaign_id)
-                              ->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$ip])
-                              ->where('id', '<', $scan->id)
-                              ->where('created_at', '>=', now()->subMinutes(10)) // 10 minute window for IP-based dedup
-                              ->orderBy('id', 'desc')
-                              ->first();
-            if ($recentByIp) {
-                Log::info('ScanRewardService: Deduped scan ' . $scan->id . ' due to recent scan from same IP within 10 minutes');
-                return null;
-            }
-        }
-
         // Aggressive deduplication: prevent multiple scans from same IP within 2 minutes for same campaign
         // This catches cases where fingerprinting fails or users try to bypass detection
         if ($ip) {
