@@ -21,13 +21,17 @@ class AdminDigestService
         $startOfDay = $date->copy()->startOfDay();
         $endOfDay = $date->copy()->endOfDay();
 
+        // For financial metrics, use monthly data
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
+
         return [
             'date' => $date->format('M d, Y'),
             'day_name' => $date->format('l'),
             'campaigns' => $this->getCampaignMetrics($startOfDay, $endOfDay),
             'scans' => $this->getScanMetrics($startOfDay, $endOfDay),
             'users' => $this->getUserMetrics($startOfDay, $endOfDay),
-            'financial' => $this->getFinancialMetrics($startOfDay, $endOfDay),
+            'financial' => $this->getFinancialMetrics($startOfMonth, $endOfMonth),
             'top_performers' => $this->getTopPerformers($startOfDay, $endOfDay),
             'alerts' => $this->getAlerts(),
             'comparison' => $this->getComparisonMetrics($startOfDay, $endOfDay),

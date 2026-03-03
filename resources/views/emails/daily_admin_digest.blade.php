@@ -434,6 +434,49 @@
                     Total scan value: KSh {{ number_format($data['financial']['total_scan_value'], 2) }}
                 </div>
             </div>
+
+            <!-- Monthly Commission Table -->
+            <div class="highlight-box">
+                <h3>📊 Monthly Commission Summary</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background: #f9fafb;">
+                            <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Type</th>
+                            <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Name</th>
+                            <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Email</th>
+                            <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Commission</th>
+                            <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Scans</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($data['financial']['dcd_payments'] ?? [] as $payment)
+                        <tr>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">DCD</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">{{ $payment['name'] }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">{{ $payment['email'] }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">KSh {{ number_format($payment['amount'], 2) }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">{{ $payment['scan_count'] }}</td>
+                        </tr>
+                        @endforeach
+                        @foreach($data['financial']['da_payments'] ?? [] as $payment)
+                        <tr>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">DA</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">{{ $payment['name'] }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">{{ $payment['email'] }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">KSh {{ number_format($payment['amount'], 2) }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">{{ $payment['scan_count'] }}</td>
+                        </tr>
+                        @endforeach
+                        <tr style="background: #d1fae5;">
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">Company</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">DAYA</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px;">-</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">KSh {{ number_format($data['financial']['daya_earnings'], 2) }}</td>
+                            <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">{{ $data['financial']['scan_count'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Footer -->
