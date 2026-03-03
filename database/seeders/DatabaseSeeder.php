@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             GeographicalDataSeeder::class,
+            CompanySeeder::class,
             AdminSeeder::class,
             // DaSeeder::class,
             TestCampaignSeeder::class,
