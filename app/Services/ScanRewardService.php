@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Scan;
 use App\Models\Campaign;
 use App\Models\Earning;
+use App\Models\Scan;
 use Illuminate\Support\Facades\Log;
 
 class ScanRewardService
@@ -23,23 +23,24 @@ class ScanRewardService
 
         $campaign = $scan->campaign()->first();
         if (! $campaign) {
-            Log::warning('ScanRewardService: campaign not found for scan ' . $scan->id);
+            Log::warning('ScanRewardService: campaign not found for scan '.$scan->id);
+
             return null;
         }
 
         // Check if campaign can still accept scans (budget not exhausted)
-        if (!$campaign->canAcceptScans()) {
-            Log::info('ScanRewardService: Campaign ' . $campaign->id . ' cannot accept more scans (budget exhausted or limit reached)');
-            
+        if (! $campaign->canAcceptScans()) {
+            Log::info('ScanRewardService: Campaign '.$campaign->id.' cannot accept more scans (budget exhausted or limit reached)');
+
             // Auto-complete campaign if not already completed
             if ($campaign->status !== 'completed') {
                 $campaign->update([
                     'status' => 'completed',
                     'completed_at' => now(),
                 ]);
-                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' due to budget/scan limit');
+                Log::info('ScanRewardService: Auto-completed campaign '.$campaign->id.' due to budget/scan limit');
             }
-            
+
             return null;
         }
 
@@ -52,12 +53,13 @@ class ScanRewardService
                 'scan_dcd_type' => gettype($scan->dcd_id),
                 'campaign_dcd_type' => gettype($campaign->dcd_id),
             ]);
+
             return null;
         }
 
         // Get pay per scan - prioritize cost_per_click from campaign if set (> 0)
         $payPerScan = $overrideAmount ?? ($campaign->cost_per_click > 0 ? $campaign->cost_per_click : $this->computePayPerScan($campaign));
-        
+
         Log::info('ScanRewardService: Processing scan - deducting from campaign credit', [
             'scan_id' => $scan->id,
             'campaign_id' => $campaign->id,
@@ -70,13 +72,14 @@ class ScanRewardService
         $fp = $scan->device_fingerprint ?? null;
         if ($fp) {
             $existingEarning = Earning::where('type', 'scan')
-                                     ->whereHas('scan', function($query) use ($fp, $scan) {
-                                         $query->where('device_fingerprint', $fp)
-                                               ->where('campaign_id', $scan->campaign_id);
-                                     })
-                                     ->first();
+                ->whereHas('scan', function ($query) use ($fp, $scan) {
+                    $query->where('device_fingerprint', $fp)
+                        ->where('campaign_id', $scan->campaign_id);
+                })
+                ->first();
             if ($existingEarning) {
-                Log::info('ScanRewardService: Blocked scan ' . $scan->id . ' - device already earned from this campaign');
+                Log::info('ScanRewardService: Blocked scan '.$scan->id.' - device already earned from this campaign');
+
                 return null;
             }
         }
@@ -85,13 +88,14 @@ class ScanRewardService
         $ip = $scan->geo['ip_address'] ?? null;
         if ($ip) {
             $existingEarningByIp = Earning::where('type', 'scan')
-                                         ->whereHas('scan', function($query) use ($ip, $scan) {
-                                             $query->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$ip])
-                                                   ->where('campaign_id', $scan->campaign_id);
-                                         })
-                                         ->first();
+                ->whereHas('scan', function ($query) use ($ip, $scan) {
+                    $query->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$ip])
+                        ->where('campaign_id', $scan->campaign_id);
+                })
+                ->first();
             if ($existingEarningByIp) {
-                Log::info('ScanRewardService: Blocked scan ' . $scan->id . ' - IP already earned from this campaign');
+                Log::info('ScanRewardService: Blocked scan '.$scan->id.' - IP already earned from this campaign');
+
                 return null;
             }
         }
@@ -99,13 +103,14 @@ class ScanRewardService
         // Dedup across recent scans by device fingerprint (helps prevent repeated scans by same device)
         if ($fp) {
             $recent = Scan::where('campaign_id', $scan->campaign_id)
-                          ->where('device_fingerprint', $fp)
-                          ->where('id', '<', $scan->id)
-                          ->where('created_at', '>=', now()->subMinutes(30)) // Reduced from 1 hour to 30 minutes
-                          ->orderBy('id', 'desc')
-                          ->first();
+                ->where('device_fingerprint', $fp)
+                ->where('id', '<', $scan->id)
+                ->where('created_at', '>=', now()->subMinutes(30)) // Reduced from 1 hour to 30 minutes
+                ->orderBy('id', 'desc')
+                ->first();
             if ($recent) {
-                Log::info('ScanRewardService: Deduped scan ' . $scan->id . ' due to recent scan with same fingerprint within 30 minutes');
+                Log::info('ScanRewardService: Deduped scan '.$scan->id.' due to recent scan with same fingerprint within 30 minutes');
+
                 return null;
             }
         }
@@ -114,13 +119,14 @@ class ScanRewardService
         // This catches cases where fingerprinting fails or users try to bypass detection
         if ($ip) {
             $veryRecentByIp = Scan::where('campaign_id', $scan->campaign_id)
-                                  ->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$ip])
-                                  ->where('id', '<', $scan->id)
-                                  ->where('created_at', '>=', now()->subMinutes(2))
-                                  ->orderBy('id', 'desc')
-                                  ->first();
+                ->whereRaw("JSON_EXTRACT(geo, '$.ip_address') = ?", [$ip])
+                ->where('id', '<', $scan->id)
+                ->where('created_at', '>=', now()->subMinutes(2))
+                ->orderBy('id', 'desc')
+                ->first();
             if ($veryRecentByIp) {
-                Log::warning('ScanRewardService: Blocked aggressive duplicate scan ' . $scan->id . ' from IP ' . $ip . ' within 2 minutes');
+                Log::warning('ScanRewardService: Blocked aggressive duplicate scan '.$scan->id.' from IP '.$ip.' within 2 minutes');
+
                 return null;
             }
         }
@@ -131,7 +137,7 @@ class ScanRewardService
             $dcdAmount = round($payPerScan * 0.60, 2);
             $companyAmount = round($payPerScan * 0.30, 2);
             $referrerAmount = round($payPerScan * 0.10, 2);
-            
+
             // Adjust for rounding errors to ensure total equals payPerScan
             $totalCalculated = $dcdAmount + $companyAmount + $referrerAmount;
             if ($totalCalculated != $payPerScan) {
@@ -141,8 +147,9 @@ class ScanRewardService
 
             // Get the DCD user
             $dcd = $scan->dcd;
-            if (!$dcd) {
-                Log::warning('ScanRewardService: DCD not found for scan ' . $scan->id);
+            if (! $dcd) {
+                Log::warning('ScanRewardService: DCD not found for scan '.$scan->id);
+
                 return null;
             }
 
@@ -207,17 +214,18 @@ class ScanRewardService
 
             // Check if campaign should be auto-completed after this scan
             $campaign->refresh();
-            if (!$campaign->canAcceptScans() && $campaign->status !== 'completed') {
+            if (! $campaign->canAcceptScans() && $campaign->status !== 'completed') {
                 $campaign->update([
                     'status' => 'completed',
                     'completed_at' => now(),
                 ]);
-                Log::info('ScanRewardService: Auto-completed campaign ' . $campaign->id . ' after exhausting credit/scan limit');
+                Log::info('ScanRewardService: Auto-completed campaign '.$campaign->id.' after exhausting credit/scan limit');
             }
 
             return $dcdEarning; // Return the DCD earning as the primary earning
         } catch (\Exception $e) {
-            Log::warning('ScanRewardService: failed to process scan - ' . $e->getMessage());
+            Log::warning('ScanRewardService: failed to process scan - '.$e->getMessage());
+
             return null;
         }
     }
@@ -247,6 +255,9 @@ class ScanRewardService
                 $basePay = 5.0;
                 break;
             case 'apartment_listing':
+                $basePay = 5.0;
+                break;
+            case 'deal_listing':
                 $basePay = 5.0;
                 break;
             case 'brand_awareness':

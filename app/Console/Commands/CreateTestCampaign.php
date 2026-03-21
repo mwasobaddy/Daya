@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\Campaign;
+use App\Models\User;
 use App\Services\AdminActionService;
 use App\Services\CampaignMatchingService;
 use Illuminate\Console\Command;
@@ -26,6 +26,7 @@ class CreateTestCampaign extends Command
     protected $description = 'Create a test campaign, approve it, and link it to a DCD';
 
     protected $adminActionService;
+
     protected $campaignMatchingService;
 
     public function __construct(AdminActionService $adminActionService, CampaignMatchingService $campaignMatchingService)
@@ -49,8 +50,9 @@ class CreateTestCampaign extends Command
         try {
             // Get test geographical data
             $ward = \App\Models\Ward::with('subcounty.county.country')->first();
-            if (!$ward) {
+            if (! $ward) {
                 $this->error('No ward found in database. Please seed the database first.');
+
                 return;
             }
 
@@ -58,14 +60,14 @@ class CreateTestCampaign extends Command
             $clientEmail = 'test-client@example.com';
             $client = User::where('email', $clientEmail)->first();
 
-            if (!$client) {
+            if (! $client) {
                 $this->info('Creating test client...');
                 $client = User::create([
                     'name' => 'Test Client',
                     'email' => $clientEmail,
                     'password' => bcrypt('1234'),
                     'role' => 'client',
-                    'phone' => '+1' . rand(100000000, 999999999),
+                    'phone' => '+1'.rand(100000000, 999999999),
                     'country_id' => $ward->subcounty->county->country->id,
                     'county_id' => $ward->subcounty->county->id,
                     'subcounty_id' => $ward->subcounty->id,
@@ -101,7 +103,7 @@ class CreateTestCampaign extends Command
                 'digital_product_link' => 'https://example.com/test-campaign',
                 'explainer_video_url' => null,
                 'target_audience' => 'General audience',
-                'duration' => now()->format('Y-m-d') . ' to ' . now()->addDays(30)->format('Y-m-d'),
+                'duration' => now()->format('Y-m-d').' to '.now()->addDays(30)->format('Y-m-d'),
                 'objectives' => "Test campaign objectives for {$objective}",
                 'metadata' => [
                     'digital_product_link' => 'https://example.com/test-campaign',
@@ -129,11 +131,11 @@ class CreateTestCampaign extends Command
 
             // Submit campaign (simulate client submission)
             $campaign->update(['status' => 'under_review']);
-            $this->info("Campaign submitted for review");
+            $this->info('Campaign submitted for review');
 
             // Create admin user if doesn't exist
             $admin = User::where('role', 'admin')->first();
-            if (!$admin) {
+            if (! $admin) {
                 $this->info('Creating test admin...');
                 $admin = User::create([
                     'name' => 'Test Admin',
@@ -146,14 +148,14 @@ class CreateTestCampaign extends Command
             }
 
             // Approve the campaign using the admin action system
-            $this->info("Approving campaign...");
+            $this->info('Approving campaign...');
             $actionLink = $this->adminActionService->generateActionLink('approve_campaign', $campaign->id);
-            
+
             // Extract token from the URL path (format: /admin/action/approve_campaign/{token}?signature=...)
             $urlParts = parse_url($actionLink);
             $path = $urlParts['path'] ?? '';
             $pathParts = explode('/', $path);
-            
+
             // Path should be: /admin/action/approve_campaign/{token}
             if (count($pathParts) >= 4 && $pathParts[1] === 'admin' && $pathParts[2] === 'action') {
                 $action = $pathParts[3]; // approve_campaign
@@ -161,11 +163,11 @@ class CreateTestCampaign extends Command
             } else {
                 throw new \Exception('Invalid action link path format');
             }
-            
-            if (!$token || !$action) {
+
+            if (! $token || ! $action) {
                 throw new \Exception('Failed to extract token and action from link');
             }
-            
+
             $result = $this->adminActionService->executeAction($token, $action);
 
             $campaign->refresh();
@@ -175,11 +177,11 @@ class CreateTestCampaign extends Command
                 $dcd = User::find($campaign->dcd_id);
                 $this->info("Campaign linked to DCD: {$dcd->name} (ID: {$dcd->id})");
             } else {
-                $this->warn("No DCD was auto-matched. Campaign is approved but not linked to any DCD.");
+                $this->warn('No DCD was auto-matched. Campaign is approved but not linked to any DCD.');
                 $this->info("You can manually link it using: php artisan tinker then \$campaign = Campaign::find({$campaign->id}); \$campaign->update(['dcd_id' => 1]);");
             }
 
-            $this->info("Test campaign created successfully!");
+            $this->info('Test campaign created successfully!');
             $this->info("Campaign ID: {$campaign->id}");
             $this->info("Client: {$client->name} ({$client->email})");
             $this->info("Budget: KSh {$budget}");
@@ -193,7 +195,7 @@ class CreateTestCampaign extends Command
             }
 
         } catch (\Exception $e) {
-            $this->error('Failed to create test campaign: ' . $e->getMessage());
+            $this->error('Failed to create test campaign: '.$e->getMessage());
             \Log::error('Test campaign creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
     }
@@ -205,6 +207,7 @@ class CreateTestCampaign extends Command
             'app_downloads' => 5.0,
             'product_launch' => 5.0,
             'apartment_listing' => 5.0,
+            'deal_listing' => 5.0,
             'brand_awareness' => 1.0,
             'event_promotion' => 1.0,
             'social_cause' => 1.0,
