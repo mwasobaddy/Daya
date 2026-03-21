@@ -169,6 +169,7 @@ class CampaignMatchingService
                     'product_launch' => 'product_launch',
                     'apartment_listing' => 'apartment_listing',
                     'event_promotion' => 'events',
+                    'deal_listing' => 'deals',
                     'brand_awareness' => ['movies', 'games', 'mobile_apps'], // Brand awareness can work with multiple content types
                     'social_cause' => 'education', // Social causes often educational
                 ];

@@ -61,11 +61,11 @@ class ScanService
         if ($campaignId) {
             $scan = $this->qrCodeService->recordCampaignScan($dcdId, $campaignId, $geoData);
             $campaign = \App\Models\Campaign::findOrFail($campaignId);
-            $redirectUrl = $campaign->digital_product_link;
+            $redirectUrl = $campaign->getScanRedirectUrl();
         } else {
             $result = $this->qrCodeService->recordDcdScan($dcdId, $geoData);
             $campaign = $result['campaign'];
-            $redirectUrl = $campaign->digital_product_link;
+            $redirectUrl = $campaign->getScanRedirectUrl();
         }
 
         return [

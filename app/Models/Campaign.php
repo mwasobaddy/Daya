@@ -80,7 +80,7 @@ class Campaign extends Model
      */
     public function getRemainingBudget(): float
     {
-        return max(0, (float)$this->budget - (float)$this->spent_amount);
+        return max(0, (float) $this->budget - (float) $this->spent_amount);
     }
 
     /**
@@ -91,6 +91,7 @@ class Campaign extends Model
         if ($this->max_scans <= 0) {
             return 0;
         }
+
         return max(0, $this->max_scans - $this->total_scans);
     }
 
@@ -120,6 +121,38 @@ class Campaign extends Model
      */
     public function getRemainingCredit(): float
     {
-        return max(0, (float)$this->campaign_credit);
+        return max(0, (float) $this->campaign_credit);
+    }
+
+    public function isLocationBasedObjective(): bool
+    {
+        return in_array($this->campaign_objective, ['event_promotion', 'apartment_listing', 'deal_listing'], true);
+    }
+
+    public function getLocationRedirectUrl(): ?string
+    {
+        $metadata = $this->metadata ?? [];
+        $latitude = $metadata['location_latitude'] ?? null;
+        $longitude = $metadata['location_longitude'] ?? null;
+
+        if (is_numeric($latitude) && is_numeric($longitude)) {
+            $coordinates = $latitude.','.$longitude;
+
+            return 'https://www.google.com/maps?q='.rawurlencode($coordinates);
+        }
+
+        return null;
+    }
+
+    public function getScanRedirectUrl(): string
+    {
+        if ($this->isLocationBasedObjective()) {
+            $locationUrl = $this->getLocationRedirectUrl();
+            if ($locationUrl) {
+                return $locationUrl;
+            }
+        }
+
+        return (string) $this->digital_product_link;
     }
 }
