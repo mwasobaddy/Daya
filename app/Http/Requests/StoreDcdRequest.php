@@ -42,7 +42,7 @@ class StoreDcdRequest extends FormRequest
 
             // Campaign Preferences
             'campaign_types' => 'required|array|min:1',
-            'campaign_types.*' => 'in:music,movies,games,mobile_apps,product_launch,apartment_listing,surveys,events,education',
+            'campaign_types.*' => 'in:music,movies,games,mobile_apps,product_launch,apartment_listing,deals,surveys,events,education',
 
             // Music Preferences
             'music_genres' => 'required_if:campaign_types.*,music|array',

@@ -29,9 +29,12 @@ class SubmitCampaignRequest extends FormRequest
             'campaign_title' => 'required|string|max:255',
             'digital_product_link' => 'required|url|max:500',
             'explainer_video_url' => 'nullable|url|max:500',
-            'campaign_objective' => 'required|in:music_promotion,app_downloads,brand_awareness,product_launch,apartment_listing,event_promotion,social_cause',
+            'campaign_objective' => 'required|in:music_promotion,app_downloads,brand_awareness,product_launch,apartment_listing,event_promotion,deal_listing,social_cause',
             'budget' => 'required|numeric|min:50',
             'description' => 'nullable|string|max:2000',
+            'location_name' => 'nullable|string|max:255',
+            'location_latitude' => 'required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-90,90',
+            'location_longitude' => 'required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-180,180',
 
             // Targeting & Budget
             'content_safety_preferences' => 'required|array|min:1',
@@ -53,6 +56,16 @@ class SubmitCampaignRequest extends FormRequest
             'target_audience' => 'nullable|string|max:1000',
             'objectives' => 'nullable|string|max:500',
             'turnstile_token' => ['required', new \App\Rules\TurnstileToken],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'location_latitude.required_if' => 'Please provide the latitude for the location pin.',
+            'location_longitude.required_if' => 'Please provide the longitude for the location pin.',
+            'location_latitude.between' => 'Latitude must be between -90 and 90.',
+            'location_longitude.between' => 'Longitude must be between -180 and 180.',
         ];
     }
 }
