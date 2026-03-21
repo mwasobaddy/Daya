@@ -211,3 +211,84 @@ test('dcd scan redirect uses location for event promotion campaigns', function (
         'redirect_url' => 'https://www.google.com/maps?q=-1.286389%2C36.817223',
     ]);
 });
+
+test('dcd scan chooses nearest deal_listing campaign based on passenger location', function () {
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'DealDcd', 'account_type' => 'business', 'ward_id' => $ward->id]);
+
+    $today = now()->format('Y-m-d');
+    $tomorrow = now()->addDay()->format('Y-m-d');
+
+    $nearCampaign = Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Nearby Deal',
+        'budget' => 50,
+        'campaign_credit' => 50,
+        'county' => 'Example County',
+        'target_audience' => 'Travelers',
+        'duration' => "$today to $tomorrow",
+        'objectives' => 'Nearby deal',
+        'campaign_objective' => 'deal_listing',
+        'digital_product_link' => 'https://example.com/nearby',
+        'status' => 'live',
+        'metadata' => [
+            'business_name' => 'DealDcd',
+            'business_types' => ['business'],
+            'start_date' => $today,
+            'end_date' => $tomorrow,
+            'location_name' => 'Near Listing',
+            'location_latitude' => 1.001,
+            'location_longitude' => 1.001,
+        ],
+    ]);
+
+    $farCampaign = Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Far Deal',
+        'budget' => 50,
+        'campaign_credit' => 50,
+        'county' => 'Example County',
+        'target_audience' => 'Travelers',
+        'duration' => "$today to $tomorrow",
+        'objectives' => 'Far deal',
+        'campaign_objective' => 'deal_listing',
+        'digital_product_link' => 'https://example.com/far',
+        'status' => 'live',
+        'metadata' => [
+            'business_name' => 'DealDcd',
+            'business_types' => ['business'],
+            'start_date' => $today,
+            'end_date' => $tomorrow,
+            'location_name' => 'Far Listing',
+            'location_latitude' => 20.0,
+            'location_longitude' => 20.0,
+        ],
+    ]);
+
+    $url = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $dcd->id]);
+    $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
+
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'fingerprint' => 'test-fingerprint-deal-geoloc',
+        'latitude' => 1.002,
+        'longitude' => 1.002,
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson(['message' => 'Scan recorded successfully']);
+    $apiResponse->assertJsonPath('redirect_url', 'https://www.google.com/maps?q=1.001%2C1.001');
+
+    $scan = Scan::latest()->first();
+    expect($scan)->not->toBeNull();
+    expect($scan->campaign_id)->toBe($nearCampaign->id);
+});

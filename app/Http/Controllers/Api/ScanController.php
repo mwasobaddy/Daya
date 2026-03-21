@@ -139,6 +139,8 @@ class ScanController extends Controller
                 'fingerprint' => $request->fingerprint,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude'),
             ];
 
             $result = $this->scanService->recordScanWithFingerprint($data);

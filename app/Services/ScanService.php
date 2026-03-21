@@ -56,6 +56,8 @@ class ScanService
             'fingerprint' => $data['fingerprint'] ?? null,
             'ip_address' => $data['ip_address'] ?? null,
             'user_agent' => $data['user_agent'] ?? null,
+            'latitude' => $data['latitude'] ?? null,
+            'longitude' => $data['longitude'] ?? null,
         ];
 
         if ($campaignId) {
