@@ -1,10 +1,10 @@
 <?php
 
 use App\Models\Campaign;
-use App\Models\User;
 use App\Models\Scan;
-use Illuminate\Support\Facades\URL;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
@@ -35,7 +35,7 @@ test('dcd scan redirect finds active campaign and redirects to product', functio
         'digital_product_link' => 'https://example.com',
         'status' => 'live',
         'metadata' => [
-            'business_name' => 'TestDcd', 
+            'business_name' => 'TestDcd',
             'business_types' => ['business'],
             'start_date' => $today,
             'end_date' => $tomorrow,
@@ -129,7 +129,7 @@ test('dcd scan redirect shows no active campaigns when campaign is expired', fun
         'digital_product_link' => 'https://example.com',
         'status' => 'approved',
         'metadata' => [
-            'business_name' => 'TestDcd', 
+            'business_name' => 'TestDcd',
             'business_types' => ['business'],
             'start_date' => $yesterday,
             'end_date' => $yesterday,
@@ -155,5 +155,59 @@ test('dcd scan redirect shows no active campaigns when campaign is expired', fun
     $apiResponse->assertJson([
         'message' => 'No active campaigns found for this DCD',
         'error_type' => 'no_campaigns',
+    ]);
+});
+
+test('dcd scan redirect uses location for event promotion campaigns', function () {
+    $country = \App\Models\Country::create(['code' => 'ken', 'name' => 'Kenya', 'county_label' => 'County', 'subcounty_label' => 'Subcounty']);
+    $county = \App\Models\County::create(['country_id' => $country->id, 'name' => 'Test County']);
+    $subcounty = \App\Models\Subcounty::create(['county_id' => $county->id, 'name' => 'Test Subcounty']);
+    $ward = \App\Models\Ward::create(['subcounty_id' => $subcounty->id, 'name' => 'Test Ward', 'code' => 'TW']);
+
+    $client = User::factory()->create(['role' => 'client', 'ward_id' => $ward->id]);
+    $dcd = User::factory()->create(['role' => 'dcd', 'business_name' => 'EventDcd', 'account_type' => 'business', 'ward_id' => $ward->id]);
+
+    $today = now()->format('Y-m-d');
+    $tomorrow = now()->addDay()->format('Y-m-d');
+
+    $campaign = Campaign::create([
+        'client_id' => $client->id,
+        'dcd_id' => $dcd->id,
+        'title' => 'Live Event Campaign',
+        'budget' => 50,
+        'campaign_credit' => 50,
+        'county' => 'Example County',
+        'target_audience' => 'General Audience',
+        'duration' => "$today to $tomorrow",
+        'objectives' => 'Test objectives',
+        'campaign_objective' => 'event_promotion',
+        'digital_product_link' => 'https://example.com',
+        'status' => 'live',
+        'metadata' => [
+            'business_name' => 'EventDcd',
+            'business_types' => ['business'],
+            'start_date' => $today,
+            'end_date' => $tomorrow,
+            'location_name' => 'Nairobi Convention Center',
+            'location_latitude' => -1.286389,
+            'location_longitude' => 36.817223,
+        ],
+    ]);
+
+    $url = URL::temporarySignedRoute('scan.dcd', now()->addYear(), ['dcd' => $dcd->id]);
+    $response = $this->get($url);
+    $response->assertStatus(200);
+    $response->assertViewIs('scan-processing');
+
+    $apiResponse = $this->postJson('/api/scan/record-with-fingerprint', [
+        'dcd_id' => $dcd->id,
+        'campaign_id' => $campaign->id,
+        'fingerprint' => 'test-fingerprint-event-location',
+    ]);
+
+    $apiResponse->assertStatus(200);
+    $apiResponse->assertJson([
+        'message' => 'Scan recorded successfully',
+        'redirect_url' => 'https://www.google.com/maps?q=-1.286389%2C36.817223',
     ]);
 });
