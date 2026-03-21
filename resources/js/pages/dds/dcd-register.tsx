@@ -1183,6 +1183,7 @@ export default function DcdRegister() {
         { value: 'mobile_apps', label: 'Mobile Apps' },
         { value: 'product_launch', label: 'Product Launch' },
         { value: 'apartment_listing', label: 'Apartment Listing' },
+        { value: 'deals', label: 'Deals & Discounts' },
         { value: 'surveys', label: 'Surveys' },
         { value: 'events', label: 'Events & Promotions' },
         { value: 'education', label: 'Education & Learning' },

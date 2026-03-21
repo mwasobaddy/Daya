@@ -92,6 +92,7 @@ const cpcMap: Record<string, number> = {
     'app_downloads': 5,        // Moderate-Touch
     'product_launch': 5,       // Moderate-Touch
     'apartment_listing': 5,    // Moderate-Touch
+    'deal_listing': 5,         // Moderate-Touch
 };
 
 const getCostPerClick = (objective: string, countryCode: string): number => {
@@ -149,6 +150,9 @@ export default function CampaignSubmit({ flash }: Props) {
         // allow custom 'other' business type from targeting UI
         other_business_type: '',
         music_genres: [] as string[],
+        location_name: '',
+        location_latitude: '',
+        location_longitude: '',
         turnstile_token: import.meta.env.DEV ? 'dev-bypass-token' : '',
     });
 
@@ -572,6 +576,18 @@ export default function CampaignSubmit({ flash }: Props) {
             if (!data.budget || parseFloat(data.budget) <= 0) {
                 setError('budget', 'Budget must be greater than $0');
                 hasErrors = true;
+            }
+
+            const locationObjectives = ['event_promotion', 'apartment_listing', 'deal_listing'];
+            if (locationObjectives.includes(data.campaign_objective)) {
+                if (!data.location_latitude) {
+                    setError('location_latitude', 'Location latitude is required');
+                    hasErrors = true;
+                }
+                if (!data.location_longitude) {
+                    setError('location_longitude', 'Location longitude is required');
+                    hasErrors = true;
+                }
             }
 
 
@@ -1105,6 +1121,7 @@ export default function CampaignSubmit({ flash }: Props) {
                                             <SelectItem value="product_launch"><Rocket /> Product Launch</SelectItem>
                                             <SelectItem value="apartment_listing"><Home /> Apartment Listing</SelectItem>
                                             <SelectItem value="event_promotion"><PartyPopper /> Event Promotion</SelectItem>
+                                            <SelectItem value="deal_listing"><HandPlatter /> Deals & Discounts</SelectItem>
                                             <SelectItem value="social_cause"><Heart /> Surveys</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -1146,6 +1163,55 @@ export default function CampaignSubmit({ flash }: Props) {
                                     )}
                                 </div>
                             </div>
+
+                            {['event_promotion', 'apartment_listing', 'deal_listing'].includes(data.campaign_objective) && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div className="md:col-span-3">
+                                        <Label htmlFor="location_name" className="text-sm font-medium mb-2 block">
+                                            Location Name (Optional)
+                                        </Label>
+                                        <Input
+                                            id="location_name"
+                                            type="text"
+                                            value={data.location_name}
+                                            onChange={(e) => updateData('location_name', e.target.value)}
+                                            placeholder="e.g. Westlands Convention Center"
+                                            className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
+                                        />
+                                        <InputError message={errors.location_name} />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="location_latitude" className="text-sm font-medium mb-2 block">
+                                            Latitude <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Input
+                                            id="location_latitude"
+                                            type="number"
+                                            step="0.000001"
+                                            value={data.location_latitude}
+                                            onChange={(e) => updateData('location_latitude', e.target.value)}
+                                            placeholder="-1.286389"
+                                            className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
+                                        />
+                                        <InputError message={errors.location_latitude} />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="location_longitude" className="text-sm font-medium mb-2 block">
+                                            Longitude <span className='text-red-500 dark:text-red-400'>*</span>
+                                        </Label>
+                                        <Input
+                                            id="location_longitude"
+                                            type="number"
+                                            step="0.000001"
+                                            value={data.location_longitude}
+                                            onChange={(e) => updateData('location_longitude', e.target.value)}
+                                            placeholder="36.817223"
+                                            className="mt-2 border-purple-300 dark:border-purple-600/20 bg-white dark:bg-slate-800 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none"
+                                        />
+                                        <InputError message={errors.location_longitude} />
+                                    </div>
+                                </div>
+                            )}
 
 
                         </div>
@@ -1597,6 +1663,15 @@ export default function CampaignSubmit({ flash }: Props) {
                                         <div className="flex justify-between py-2">
                                             <span className="text-gray-600">Music Genres:</span>
                                             <span className="font-medium text-gray-900">{Array.isArray(data.music_genres) ? data.music_genres.join(', ') : data.music_genres}</span>
+                                        </div>
+                                    )}
+                                    {['event_promotion', 'apartment_listing', 'deal_listing'].includes(data.campaign_objective) && (
+                                        <div className="flex justify-between py-2">
+                                            <span className="text-gray-600">Pinned Location:</span>
+                                            <span className="font-medium text-gray-900">
+                                                {data.location_name ? `${data.location_name} ` : ''}
+                                                {data.location_latitude && data.location_longitude ? `(${data.location_latitude}, ${data.location_longitude})` : 'Not provided'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
