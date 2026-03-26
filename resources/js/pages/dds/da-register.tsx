@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
+import { validatePhone } from './phone';
 import { CheckCircle, Loader2, Users, Award, TrendingUp, Sparkles, User, ArrowRight, ArrowLeft, Wallet, FileText, MapPin, Globe, Instagram, Twitter, Facebook, MessageCircle, Linkedin, Music, XCircle, Shield, AlertCircle } from 'lucide-react';
 import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -403,7 +404,7 @@ export default function DaRegister() {
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [data.phone]);  
 
     const handlePlatformChange = (platform: string, checked: boolean | "indeterminate") => {
         const isChecked = checked === true;
@@ -813,11 +814,6 @@ export default function DaRegister() {
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
-    };
-
-    const validatePhone = (phone: string): boolean => {
-        const phoneRegex = /^0[\d\s\-()]{10,}$/;
-        return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
     const validateNationalId = (nationalId: string): boolean => {

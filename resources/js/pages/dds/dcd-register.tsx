@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
+import { validatePhone } from './phone';
 import { CheckCircle, Loader2, Shield, Building, Music, Wallet, FileText, Sparkles, TrendingUp, Users, Award, User, ArrowRight, ArrowLeft, MapPin, Tv, XCircle, AlertCircle } from 'lucide-react';
 import * as ReactToastify from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -400,7 +401,7 @@ export default function DcdRegister() {
         }, 500); // Debounce validation
 
         return () => clearTimeout(timeoutId);
-    }, [data.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [data.phone]);  
 
     // Update labels based on selected country
     const updateLabels = (countryValue: string) => {
@@ -833,11 +834,6 @@ export default function DcdRegister() {
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
-    };
-
-    const validatePhone = (phone: string): boolean => {
-        const phoneRegex = /^0[\d\s\-()]{10,}$/;
-        return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
     const validateNationalId = (nationalId: string): boolean => {

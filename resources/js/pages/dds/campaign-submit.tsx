@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
+import { validatePhone } from './phone';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -499,11 +500,6 @@ export default function CampaignSubmit({ flash }: Props) {
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
-    };
-
-    const validatePhone = (phone: string): boolean => {
-        const phoneRegex = /^0[\d\s\-()]{10,}$/;
-        return phoneRegex.test(phone.replace(/\s/g, ''));
     };
 
     const validateUrl = (url: string): boolean => {
