@@ -24,10 +24,32 @@
             }
         }
 
+        // Get GPS coordinates (with coarse timeout, never block the scan)
+        function getCurrentPosition() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve({});
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                    }),
+                    () => resolve({}), // silently fail — fall back to fairness
+                    { timeout: 5000, maximumAge: 300000, enableHighAccuracy: true }
+                );
+            });
+        }
+
         async function processScan() {
             try {
-                // Generate device fingerprint
-                const fingerprint = await generateFingerprint()
+                // Generate device fingerprint and get GPS in parallel
+                const [fingerprint, coords] = await Promise.all([
+                    generateFingerprint(),
+                    getCurrentPosition(),
+                ]);
 
                 // Get scan parameters from URL
                 const urlParams = new URLSearchParams(window.location.search)
@@ -35,12 +57,15 @@
                 const campaignId = {{ $campaignId ?: 'null' }}
                 const signature = '{{ $signature }}'
 
-                // Record scan with fingerprint
+                // Record scan with fingerprint and GPS
                 const scanData = {
                     dcd_id: dcdId,
                     campaign_id: campaignId,
                     fingerprint: fingerprint,
-                    signature: signature
+                    signature: signature,
+                    latitude: coords.latitude || null,
+                    longitude: coords.longitude || null,
+                    accuracy: coords.accuracy || null,
                 }
 
                 // Send scan data to API

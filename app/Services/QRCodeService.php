@@ -195,7 +195,18 @@ class QRCodeService
     }
 
     /**
-     * Find the active campaign for a DCD using smart selection logic
+     * Find the active campaign for a DCD using smart selection logic.
+     *
+     * === GPS-based matching (location campaigns) ===
+     * 1. Sort ALL active campaigns by geographic distance to the passenger (nearest first),
+     *    regardless of prior scan history.
+     * 2. Walk nearest-first, filtering out budget-exhausted campaigns.
+     * 3. Return the first nearest campaign that can still accept scans (budget permitting).
+     *    Location always wins — no prior history at other campaigns matters.
+     *    Per-device-once earning is enforced downstream by ScanRewardService.
+     *
+     * === No GPS / fairness fallback ===
+     * Falls to: least scans → closest to deadline → oldest creation → highest remaining budget → random.
      */
     private function findActiveCampaignForDcd(User $dcd, ?string $deviceFingerprint = null, ?array $geoData = null): ?\App\Models\Campaign
     {
@@ -218,7 +229,7 @@ class QRCodeService
             return null;
         }
 
-        // Step 1: Filter out campaigns where device has already earned (to allow scanning multiple campaigns)
+        // Resolve device identifier for dedup checks
         if ($geoData && isset($geoData['ip_address'])) {
             $identifier = $geoData['ip_address'];
             $identifierField = 'ip_address';
@@ -226,10 +237,58 @@ class QRCodeService
             $identifier = $deviceFingerprint;
             $identifierField = 'device_fingerprint';
         } else {
-            // No identifier, skip filtering
             $identifier = null;
         }
 
+        // ====================================================================
+        // GPS-based matching: location always wins, prior history ignored
+        // ====================================================================
+        if (! empty($geoData['latitude']) && ! empty($geoData['longitude'])
+            && is_numeric($geoData['latitude']) && is_numeric($geoData['longitude'])) {
+            $passengerLatitude = (float) $geoData['latitude'];
+            $passengerLongitude = (float) $geoData['longitude'];
+
+            // Sort ALL active campaigns by distance (including ones already earned)
+            $sortedByDistance = $campaigns->filter(function ($campaign) {
+                $metadata = $campaign->metadata ?? [];
+                return isset($metadata['location_latitude'], $metadata['location_longitude'])
+                    && is_numeric($metadata['location_latitude'])
+                    && is_numeric($metadata['location_longitude']);
+            })->sortBy(function ($campaign) use ($passengerLatitude, $passengerLongitude) {
+                $metadata = $campaign->metadata ?? [];
+                $campaignLatitude = (float) $metadata['location_latitude'];
+                $campaignLongitude = (float) $metadata['location_longitude'];
+
+                return $this->calculateDistanceMeters($passengerLatitude, $passengerLongitude, $campaignLatitude, $campaignLongitude);
+            });
+
+            // Walk nearest-first, picking the best campaign
+            foreach ($sortedByDistance as $candidateCampaign) {
+                // Check if this campaign can still accept scans (budget permitting)
+                if (! $candidateCampaign->canAcceptScans()) {
+                    \Log::info('GPS matching: campaign '.$candidateCampaign->id
+                        .' cannot accept more scans, skipping to next nearest');
+                    continue;
+                }
+
+                // Location always wins — match to nearest campaign regardless of prior earnings
+                // Reward dedup is handled downstream by ScanRewardService::creditScanReward
+                \Log::info('GPS matching: matched passenger at '
+                    .$passengerLatitude.','.$passengerLongitude
+                    .' to nearest campaign '.$candidateCampaign->id
+                    .' ('.$candidateCampaign->title.')');
+                return $candidateCampaign;
+            }
+
+            // Every nearby campaign is budget-exhausted — fall to fairness below
+            \Log::info('GPS matching: all nearby campaigns budget-exhausted, falling back to fairness');
+        }
+
+        // ====================================================================
+        // No GPS data — fairness algorithm
+        // ====================================================================
+
+        // Filter out campaigns where device has already earned
         if ($identifier) {
             $campaigns = $campaigns->filter(function ($campaign) use ($identifier, $identifierField) {
                 $query = \App\Models\Earning::where('type', 'scan')->whereHas('scan', function ($q) use ($identifier, $identifierField, $campaign) {
@@ -244,29 +303,6 @@ class QRCodeService
 
                 return ! $query->exists(); // Keep campaigns where no earning exists
             });
-        }
-
-        // If passenger coordinates are available, select nearest location-based campaign first
-        if (! empty($geoData['latitude']) && ! empty($geoData['longitude']) && is_numeric($geoData['latitude']) && is_numeric($geoData['longitude'])) {
-            $passengerLatitude = (float) $geoData['latitude'];
-            $passengerLongitude = (float) $geoData['longitude'];
-
-            $nearbyCampaign = $campaigns->filter(function ($campaign) {
-                $metadata = $campaign->metadata ?? [];
-                return isset($metadata['location_latitude'], $metadata['location_longitude'])
-                    && is_numeric($metadata['location_latitude'])
-                    && is_numeric($metadata['location_longitude']);
-            })->sortBy(function ($campaign) use ($passengerLatitude, $passengerLongitude) {
-                $metadata = $campaign->metadata ?? [];
-                $campaignLatitude = (float) $metadata['location_latitude'];
-                $campaignLongitude = (float) $metadata['location_longitude'];
-
-                return $this->calculateDistanceMeters($passengerLatitude, $passengerLongitude, $campaignLatitude, $campaignLongitude);
-            })->first();
-
-            if ($nearbyCampaign) {
-                return $nearbyCampaign;
-            }
         }
 
         if ($campaigns->isEmpty()) {
