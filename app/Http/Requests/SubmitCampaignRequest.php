@@ -19,7 +19,7 @@ class SubmitCampaignRequest extends FormRequest
             'business_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:11|regex:/^0[\d\s\-()]{10}$/',
+            'phone' => 'required|string|min:7|max:16|regex:/^\+?\d{1,3}(?:[-\s]?\d{1,4}){2,4}[-\s]?\d{3,7}$/',
             'country' => 'required|string|max:10',
             'referral_code' => 'nullable|string|max:50',
             'referred_by_code' => 'nullable|string|max:50', // DA referral code
@@ -33,8 +33,8 @@ class SubmitCampaignRequest extends FormRequest
             'budget' => 'required|numeric|min:50',
             'description' => 'nullable|string|max:2000',
             'location_name' => 'nullable|string|max:255',
-            'location_latitude' => 'required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-90,90',
-            'location_longitude' => 'required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-180,180',
+            'location_latitude' => 'nullable|required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-90,90',
+            'location_longitude' => 'nullable|required_if:campaign_objective,event_promotion,apartment_listing,deal_listing|numeric|between:-180,180',
 
             // Targeting & Budget
             'content_safety_preferences' => 'required|array|min:1',
